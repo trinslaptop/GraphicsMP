@@ -139,17 +139,17 @@ MPEngine::MPEngine()
     // 1 to hide secondary camera
     this->_im->on({input::key(GLFW_KEY_1)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         this->_secondaryCamera = 0;
-    }, input::Event::Hold);
+    });
 
     // 2 for first person camera
     this->_im->on({input::key(GLFW_KEY_2)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         this->_secondaryCamera = 1;
-    }, input::Event::Hold);
+    });
 
     // 3 for sky camera
     this->_im->on({input::key(GLFW_KEY_3)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         this->_secondaryCamera = 2;
-    }, input::Event::Hold);
+    });
 }
 
 MPEngine::~MPEngine() {}
