@@ -82,6 +82,7 @@ class A3Engine final : public CSCI441::OpenGLEngine {
         std::unique_ptr<glutils::TextureManager> _tm;
 
         /*** Objects ***/
+        std::shared_ptr<mcmodel::Drawable> _skybox;
         std::shared_ptr<mcmodel::Drawable> _grid;
         std::shared_ptr<Block> _block_planks;
         std::shared_ptr<Block> _block_log;

@@ -41,6 +41,7 @@ A3Engine::A3Engine()
     _im(nullptr),
     _tm(nullptr),
     _grid(nullptr),
+    _skybox(nullptr),
     _block_planks(nullptr),
     _block_log(nullptr),
     _block_leaves(nullptr),
@@ -186,6 +187,21 @@ void A3Engine::mSetupBuffers() {
     // Make default.png texture handle 1, any textures that fail to load will fallback to this
     this->_tm->load("assets/textures/default.png");
 
+    // Create skybox
+    this->_skybox = mcmodel::group({
+        mcmodel::cube(
+            *this->_shaderProgram,
+            std::array<std::array<GLuint, 2>, 6> {
+                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/negx.png"), this->_tm->load("assets/textures/dull.png")},
+                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/posx.png"), this->_tm->load("assets/textures/dull.png")},
+                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/negy.png"), this->_tm->load("assets/textures/dull.png")},
+                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/posy.png"), this->_tm->load("assets/textures/dull.png")},
+                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/negz.png"), this->_tm->load("assets/textures/dull.png")},
+                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/posz.png"), this->_tm->load("assets/textures/dull.png")}
+            }
+        )
+    }, {32.0f, 5.0f, 32.0f}, {0.0f, 0.0f, 0.0f}, {10.0f, 10.0f, 10.0f});
+
     // Place ground grid
     this->_grid = mcmodel::TexturedFace::from(
         *this->_shaderProgram,
@@ -314,6 +330,7 @@ void A3Engine::mCleanupBuffers() {
     this->_block_mushroom = nullptr;
     this->_block_amethyst = nullptr;
     this->_grid = nullptr;
+    this->_skybox = nullptr;
     this->_player = nullptr;
 }
 
@@ -364,6 +381,7 @@ void A3Engine::_renderScene(glutils::RenderContext& ctx) const {
     this->_shaderProgram->useProgram();
     ctx.bind(*this->_shaderProgram);
 
+    this->_skybox->draw(ctx);
     this->_grid->draw(ctx);
     this->_world->draw(ctx);
     this->_player->draw(ctx);
