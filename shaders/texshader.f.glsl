@@ -34,7 +34,7 @@ void main() {
         vec3 ambient = vec3(diffuseTexel)*0.35*lightColor;
 
         vec4 specularTexel = texture(specularTexture, fTexCoord);
-        vec3 specular = vec3(specularTexel)*lightColor*pow(max(dot(V, R), 0.0), 32.0*specularTexel.a);
+        vec3 specular = max(vec3(specularTexel)*lightColor*pow(max(dot(V, R), 0.0), 32.0*specularTexel.a), vec3(0.0, 0.0, 0.0));
 
         fColorOut = vec4(diffuse + specular + ambient, 1.0);
     } else {
