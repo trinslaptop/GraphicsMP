@@ -175,6 +175,14 @@ namespace glutils {
                 }
             }
 
+            inline const glm::mat4 getViewMatrix() const {
+                return this->_viewMatrix;
+            }
+
+            inline const glm::mat4 getProjectionMatrix() const {
+                return this->_projectionMatrix;
+            }
+
             /// Clear all transforms
             inline void resetTransformation()  {
                 this->_transformationStack = {glm::mat4(1.0)};

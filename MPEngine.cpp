@@ -5,6 +5,7 @@
 #include <CSCI441/objects.hpp>
 
 #include <cmath>
+#include <string>
 
 #include <glm/gtc/constants.hpp>
 
@@ -30,7 +31,7 @@ inline char const* get_gl_error_message(GLenum const err) noexcept {
 
 /*** Engine Interface ***/
 
-A3Engine::A3Engine()
+MPEngine::MPEngine()
     : CSCI441::OpenGLEngine(4, 1, 720, 720, "A3: Begin the Transformation"),
     _freecam(nullptr),
     _primaryCamera(1),
@@ -38,6 +39,7 @@ A3Engine::A3Engine()
     _lastTime(0.0f),
     // Most objects have to be initialized later on once OpenGL is ready
     _shaderProgram(nullptr),
+    _skyboxShaderProgram(nullptr),
     _im(nullptr),
     _tm(nullptr),
     _grid(nullptr),
@@ -150,11 +152,11 @@ A3Engine::A3Engine()
     }, input::Event::Hold);
 }
 
-A3Engine::~A3Engine() {}
+MPEngine::~MPEngine() {}
 
 /*** Engine Setup ***/
 
-void A3Engine::mSetupGLFW() {
+void MPEngine::mSetupGLFW() {
     CSCI441::OpenGLEngine::mSetupGLFW();
 
     // Set callbacks
@@ -164,7 +166,7 @@ void A3Engine::mSetupGLFW() {
     glfwSetScrollCallback(mpWindow, scroll_callback);
 }
 
-void A3Engine::mSetupOpenGL() {
+void MPEngine::mSetupOpenGL() {
     glEnable(GL_DEPTH_TEST);					                    // Enable depth testing
     glDepthFunc(GL_LESS);							                // Use less than depth test
 
@@ -174,33 +176,32 @@ void A3Engine::mSetupOpenGL() {
     glClearColor(0.4f, 0.4f, 0.4f, 1.0f);	// Clear the frame buffer to gray
 }
 
-void A3Engine::mSetupShaders() {
+void MPEngine::mSetupShaders() {
     // Load shaders
-    this->_shaderProgram = std::make_unique<ShaderProgram>("shaders/a3shader.v.glsl", "shaders/a3shader.f.glsl" );
+    this->_shaderProgram = std::make_unique<ShaderProgram>("shaders/texshader.v.glsl", "shaders/texshader.f.glsl");
     this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("diffuseTexture"), 0);
     this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("specularTexture"), 1);
+    this->_shaderProgram->setProgramUniform("lit", true);
     this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("lightPos"), glm::vec3(25.0, 5.0, 25.0));
     this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("lightColor"), glm::vec3(1.0, 0.96, 0.90) /* Slight gold */); // glm::vec3(0.95, 1.0, 1.0)); /* Slight blue */
+
+    this->_skyboxShaderProgram = std::make_unique<ShaderProgram>("shaders/skybox.v.glsl", "shaders/skybox.f.glsl");
+    this->_skyboxShaderProgram->setProgramUniform("skybox", 0);
 }
 
-void A3Engine::mSetupBuffers() {
+void MPEngine::mSetupBuffers() {
     // Make default.png texture handle 1, any textures that fail to load will fallback to this
     this->_tm->load("assets/textures/default.png");
 
     // Create skybox
-    this->_skybox = mcmodel::group({
-        mcmodel::cube(
-            *this->_shaderProgram,
-            std::array<std::array<GLuint, 2>, 6> {
-                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/negx.png"), this->_tm->load("assets/textures/dull.png")},
-                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/posx.png"), this->_tm->load("assets/textures/dull.png")},
-                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/negy.png"), this->_tm->load("assets/textures/dull.png")},
-                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/posy.png"), this->_tm->load("assets/textures/dull.png")},
-                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/negz.png"), this->_tm->load("assets/textures/dull.png")},
-                std::array<GLuint, 2> {this->_tm->load("assets/textures/skybox/posz.png"), this->_tm->load("assets/textures/dull.png")}
-            }
-        )
-    }, {32.0f, 5.0f, 32.0f}, {0.0f, 0.0f, 0.0f}, {10.0f, 10.0f, 10.0f});
+    this->_skybox = std::make_shared<Skybox>(*this->_skyboxShaderProgram, std::array<std::string, 6> {
+        "assets/textures/skybox/posx.jpg",
+        "assets/textures/skybox/negx.jpg",
+        "assets/textures/skybox/posy.jpg",
+        "assets/textures/skybox/negy.jpg",
+        "assets/textures/skybox/posz.jpg",
+        "assets/textures/skybox/negz.jpg"
+    });
 
     // Place ground grid
     this->_grid = mcmodel::TexturedFace::from(
@@ -279,7 +280,7 @@ void A3Engine::mSetupBuffers() {
 }
 
 /// Generates a tree at pos with variable log height
-void A3Engine::_place_tree(const glm::ivec3 pos, const size_t height) {
+void MPEngine::_place_tree(const glm::ivec3 pos, const size_t height) {
     for(int dy = 0; dy <= height; dy++) {
         this->_world->setBlock(pos + glm::ivec3(0, dy, 0), dy == height ? this->_block_leaves : this->_block_log);
         
@@ -303,7 +304,7 @@ void A3Engine::_place_tree(const glm::ivec3 pos, const size_t height) {
     }
 }
 
-void A3Engine::mSetupScene() {
+void MPEngine::mSetupScene() {
     this->_freecam = std::make_shared<CSCI441::FreeCam>((GLfloat)mWindowWidth / (GLfloat)mWindowHeight, 45.0f, 0.001f, 1000.0f);
     this->_freecam->setPosition(glm::vec3(-4.0f, 4.0f, -4.0f));
     this->_freecam->setTheta(-1.25f*M_PI);
@@ -316,12 +317,13 @@ void A3Engine::mSetupScene() {
 }
 
 /*** Engine Cleanup ***/
-void A3Engine::mCleanupShaders() {
+void MPEngine::mCleanupShaders() {
     fprintf( stdout, "[INFO]: ...deleting Shaders.\n" );
     this->_shaderProgram = nullptr;
+    this->_skyboxShaderProgram = nullptr;
 }
 
-void A3Engine::mCleanupBuffers() {
+void MPEngine::mCleanupBuffers() {
     fprintf( stdout, "[INFO]: ...deleting VAOs....\n" );
     this->_world = nullptr;
     this->_block_planks = nullptr;
@@ -334,19 +336,19 @@ void A3Engine::mCleanupBuffers() {
     this->_player = nullptr;
 }
 
-void A3Engine::mCleanupTextures() {
+void MPEngine::mCleanupTextures() {
     fprintf( stdout, "[INFO]: ...deleting textures\n" );
     this->_tm = nullptr;
 }
 
-void A3Engine::mCleanupScene() {
+void MPEngine::mCleanupScene() {
     fprintf( stdout, "[INFO]: ...deleting scene...\n" );
     this->_freecam = nullptr;
 }
 
 /*** Camera Utility ***/
 
-CSCI441::Camera* A3Engine::getPrimaryCamera() const {
+CSCI441::Camera* MPEngine::getPrimaryCamera() const {
     switch(_primaryCamera) {
         case 1:
             return &this->_player->getArcballCamera();
@@ -355,7 +357,7 @@ CSCI441::Camera* A3Engine::getPrimaryCamera() const {
     }
 }
 
-glm::vec2 A3Engine::getPrimaryCameraRotationScale() const {
+glm::vec2 MPEngine::getPrimaryCameraRotationScale() const {
     switch(_primaryCamera) {
         case 1:
             return glm::vec2(1.0f, -1.0f);
@@ -364,7 +366,7 @@ glm::vec2 A3Engine::getPrimaryCameraRotationScale() const {
     }
 }
 
-CSCI441::Camera* A3Engine::getSecondaryCamera() const {
+CSCI441::Camera* MPEngine::getSecondaryCamera() const {
     switch(_secondaryCamera) {
         case 1:
             return &this->_player->getFirstPersonCamera();
@@ -377,17 +379,18 @@ CSCI441::Camera* A3Engine::getSecondaryCamera() const {
 
 /*** Rendering/Drawing Functions ***/
 
-void A3Engine::_renderScene(glutils::RenderContext& ctx) const {
+void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
+    this->_skybox->draw(ctx);
+
     this->_shaderProgram->useProgram();
     ctx.bind(*this->_shaderProgram);
 
-    this->_skybox->draw(ctx);
     this->_grid->draw(ctx);
     this->_world->draw(ctx);
     this->_player->draw(ctx);
 }
 
-void A3Engine::_updateScene() {
+void MPEngine::_updateScene() {
     GLfloat currTime = (GLfloat)glfwGetTime();
     GLfloat deltaTime = currTime - _lastTime;
     this->_lastTime = currTime;
@@ -399,7 +402,7 @@ void A3Engine::_updateScene() {
     this->_player->update(deltaTime);
 }
 
-void A3Engine::run() {
+void MPEngine::run() {
     //  This is our draw loop - all rendering is done here.  We use a loop to keep the window open
     //	until the user decides to close the window and quit the program.  Without a loop, the
     //	window will display once and then the program exits.
@@ -445,13 +448,13 @@ void A3Engine::run() {
 }
 
 // Need to expose to callbacks
-input::InputManager& A3Engine::getInputManager() {
+input::InputManager& MPEngine::getInputManager() {
     return *this->_im;
 }
 
 /*** Callbacks (forward to input manager) ***/
 void keyboard_callback(GLFWwindow *window, const int key, const int scancode, const int action, const int mods) {
-    auto engine = static_cast<A3Engine*>(glfwGetWindowUserPointer(window));
+    auto engine = static_cast<MPEngine*>(glfwGetWindowUserPointer(window));
     if(key != GLFW_KEY_UNKNOWN) {
         if(action == GLFW_PRESS) {
             engine->getInputManager().dispatch(window, input::key(key), input::State::Press);
@@ -462,12 +465,12 @@ void keyboard_callback(GLFWwindow *window, const int key, const int scancode, co
 }
 
 void cursor_callback(GLFWwindow *window, const double x, const double y) {
-    auto engine = static_cast<A3Engine*>(glfwGetWindowUserPointer(window));
+    auto engine = static_cast<MPEngine*>(glfwGetWindowUserPointer(window));
     engine->getInputManager().cursor(glm::vec2(x, engine->getWindowHeight() - y));
 }
 
 void mouse_button_callback(GLFWwindow *window, const int button, const int action, const int mods) {
-    auto engine = static_cast<A3Engine*>(glfwGetWindowUserPointer(window));
+    auto engine = static_cast<MPEngine*>(glfwGetWindowUserPointer(window));
     if(action == GLFW_PRESS) {
         engine->getInputManager().dispatch(window, input::mouse(button), input::State::Press);
     } else if(action == GLFW_RELEASE) {
@@ -476,6 +479,6 @@ void mouse_button_callback(GLFWwindow *window, const int button, const int actio
 }
 
 void scroll_callback(GLFWwindow *window, const double xOffset, const double yOffset) {
-    const auto engine = static_cast<A3Engine*>(glfwGetWindowUserPointer(window));
+    const auto engine = static_cast<MPEngine*>(glfwGetWindowUserPointer(window));
     engine->getInputManager().scroll(glm::vec2(xOffset, yOffset));
 }

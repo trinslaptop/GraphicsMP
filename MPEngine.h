@@ -1,8 +1,8 @@
-#ifndef A3ENGINE_H
-#define A3ENGINE_H
+#ifndef MPEngine_H
+#define MPEngine_H
 
 /*
- * A3Engine.hpp
+ * MPEngine.hpp
  * Trin Wasinger - Fall 2025
  *
  * The core of this project, manages world, input, updating scene, rendering, most object lifetimes, etc...
@@ -23,12 +23,13 @@
 #include "Player.hpp"
 #include "Block.hpp"
 #include "World.hpp"
+#include "Skybox.hpp"
 
-class A3Engine final : public CSCI441::OpenGLEngine {
+class MPEngine final : public CSCI441::OpenGLEngine {
     public:
         /*** Engine Interface ***/
-        A3Engine();
-        ~A3Engine() override;
+        MPEngine();
+        ~MPEngine() override;
 
         void run() override;
 
@@ -76,13 +77,16 @@ class A3Engine final : public CSCI441::OpenGLEngine {
 
         /// Shader program that performs texturing and Phong shading
         std::unique_ptr<ShaderProgram> _shaderProgram;
+        
+        /// Cubemap shader
+        std::unique_ptr<ShaderProgram> _skyboxShaderProgram;
 
         /*** Helper Classes ***/
         std::unique_ptr<input::InputManager> _im;
         std::unique_ptr<glutils::TextureManager> _tm;
 
         /*** Objects ***/
-        std::shared_ptr<mcmodel::Drawable> _skybox;
+        std::shared_ptr<Skybox> _skybox;
         std::shared_ptr<mcmodel::Drawable> _grid;
         std::shared_ptr<Block> _block_planks;
         std::shared_ptr<Block> _block_log;
@@ -103,4 +107,4 @@ void cursor_callback(GLFWwindow *window, double x, double y);
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
 void scroll_callback(GLFWwindow *window, double xOffset, double yOffset);
 
-#endif// A3ENGINE_H
+#endif// MPEngine_H

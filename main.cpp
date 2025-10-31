@@ -17,9 +17,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-// Our main function
+// Launch engine
 int main() {
-    const auto engine = new A3Engine();
+    const auto engine = new MPEngine();
     engine->initialize();
     if (engine->getError() == CSCI441::OpenGLEngine::OPENGL_ENGINE_ERROR_NO_ERROR) {
         engine->run();
