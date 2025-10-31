@@ -11,7 +11,8 @@
  *
  */
 
-#include "A3Engine.h"
+#define CSCI441_SCREENSHOT_IMPLEMENTATION
+#include "MPEngine.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
