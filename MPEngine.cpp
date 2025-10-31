@@ -32,7 +32,7 @@ inline char const* get_gl_error_message(GLenum const err) noexcept {
 /*** Engine Interface ***/
 
 MPEngine::MPEngine()
-    : CSCI441::OpenGLEngine(4, 1, 720, 720, "A3: Begin the Transformation"),
+    : CSCI441::OpenGLEngine(4, 1, 720, 720, "MP: Moria"),
     _freecam(nullptr),
     _primaryCamera(1),
     _secondaryCamera(1),
@@ -225,7 +225,7 @@ void MPEngine::mSetupBuffers() {
         std::array<GLuint, 2> {this->_tm->load("assets/textures/log_side.png"), this->_tm->load("assets/textures/dull.png")},
         std::array<GLuint, 2> {this->_tm->load("assets/textures/log_side.png"), this->_tm->load("assets/textures/dull.png")}
     }));
-    this->_block_leaves = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), false);
+    this->_block_leaves = Block::from(mcmodel::oscillate(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.1875f), false);
     this->_block_amethyst = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
     this->_block_mushroom = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/mushroom.png"), this->_tm->load("assets/textures/shiny.png")}), false);
 
@@ -394,6 +394,8 @@ void MPEngine::_updateScene() {
     GLfloat currTime = (GLfloat)glfwGetTime();
     GLfloat deltaTime = currTime - _lastTime;
     this->_lastTime = currTime;
+
+    this->_shaderProgram->setProgramUniform("time", currTime);
 
     // Update keybinds
     this->_im->poll(this->mpWindow, deltaTime);

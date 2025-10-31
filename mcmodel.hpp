@@ -212,6 +212,16 @@ namespace mcmodel {
         });
     }
 
+    
+    inline std::shared_ptr<Drawable> oscillate(const ShaderProgram& shader, std::shared_ptr<Drawable> child, const GLfloat oscillation = 0.0625f) {
+        const GLuint handle = shader.getShaderProgramHandle(), attrloc = shader.getUniformLocation("oscillation");
+        return std::make_shared<Lambda>([handle, attrloc, child, oscillation](glutils::RenderContext& ctx) {
+            glProgramUniform1f(handle, attrloc, oscillation);
+            child->draw(ctx);
+            glProgramUniform1f(handle, attrloc, 0.0f);
+        });
+    }
+
     /// Helper to create a Group, cuts out `std::make_shared<Group>(std::initializer_list<Drawable> {...})`
     inline std::shared_ptr<Drawable> group(std::initializer_list<std::shared_ptr<Drawable>> children, const glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), const glm::vec3 rotation = glm::vec3(0.0f, 0.0f, 0.0f), const glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f), const bool hidden = false) {
         return std::make_shared<Group>(children, position, rotation, scale, hidden);
