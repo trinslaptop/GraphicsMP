@@ -30,7 +30,7 @@ void ArcballCamera::moveForward(GLfloat movementFactor) {
     this->recomputeOrientation();
 }
 
-//s/ aka increase radius
+/// aka increase radius
 void ArcballCamera::moveBackward(GLfloat movementFactor) {
     this->mCameraRadius = std::clamp(this->mCameraRadius - movementFactor, this->_bounds.x, this->_bounds.y);
     this->recomputeOrientation();
