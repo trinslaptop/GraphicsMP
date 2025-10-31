@@ -116,17 +116,27 @@ class Skybox final : mcmodel::Drawable {
         }
 
         inline virtual void draw(glutils::RenderContext& ctx) const override {
+            GLint depthFunc;
+            glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
+
+            // Configure
+            glDepthFunc(GL_LEQUAL);
             glDepthMask(GL_FALSE);
+
             this->_shader.useProgram();
 
             // Remove view rotation
             this->_shader.setProgramUniform(this->_vploc, ctx.getProjectionMatrix()*glm::mat4(glm::mat3(ctx.getViewMatrix())));
 
+            // Draw
             glBindVertexArray(this->_vao);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_CUBE_MAP, this->_texture);
             glDrawArrays(GL_TRIANGLES, 0, 36);
+            
+            // Restore
             glDepthMask(GL_TRUE);
+            glDepthFunc(depthFunc);
         }
 };
 #endif

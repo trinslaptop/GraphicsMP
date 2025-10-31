@@ -8,5 +8,5 @@ out vec3 fTexCoord;
 
 void main() {
     fTexCoord = vPos;
-    gl_Position = vpMatrix*vec4(vPos, 1.0);
+    gl_Position = (vpMatrix*vec4(vPos, 1.0)).xyww;
 }
