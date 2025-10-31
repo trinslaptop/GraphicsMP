@@ -1,7 +1,7 @@
 /*
  *  CSCI 441, Computer Graphics, Fall 2025
  *
- *  Project: A3
+ *  Project: MP
  *  File: main.cpp
  *
  *  Description: Basic entry point for the assignment, not much here
