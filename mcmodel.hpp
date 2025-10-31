@@ -192,7 +192,7 @@ namespace mcmodel {
 
     /// Wrap a drawable with this to enable face fulling, restores old state when done
     /// Useful for performance gains if you know you won't see the back face or to remove z-fighting when placing two opposite facing faces together 
-    inline std::shared_ptr<Drawable> cull_face(std::shared_ptr<Drawable> child, const GLenum face = GL_BACK) {
+    inline std::shared_ptr<Drawable> cullface(std::shared_ptr<Drawable> child, const GLenum face = GL_BACK) {
         return std::make_shared<Lambda>([child, face](glutils::RenderContext& ctx) {
             // Get old values
             const GLboolean _enabled = glIsEnabled(GL_CULL_FACE);
@@ -259,7 +259,7 @@ namespace mcmodel {
 
     /// Creates a cross of two y aligned planes, good for basic plants
     inline std::shared_ptr<Drawable> cross(const ShaderProgram& shader, const std::array<GLuint, 2>& textures, const glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), const GLfloat size = 1.0f) {
-        return cull_face(group({
+        return cullface(group({
             TexturedFace::from(shader, textures, {
                 pos + size*glm::vec3(0, 0, 0), pos + size*glm::vec3(1, 0, 1), pos + size*glm::vec3(1, 1, 1), pos + size*glm::vec3(0, 1, 0)
             }, glm::vec2(0, 0), glm::vec2(size, size)),
