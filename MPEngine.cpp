@@ -50,6 +50,9 @@ MPEngine::MPEngine()
     _block_mushroom(nullptr),
     _block_amethyst(nullptr),
     _player(nullptr),
+    _player1(nullptr),
+    _player2(nullptr),
+    _player3(nullptr),
     _world()
 {
     this->_tm = std::make_unique<glutils::TextureManager>();
@@ -274,9 +277,16 @@ void MPEngine::mSetupBuffers() {
         }
     }
 
-    // Setup player
-    this->_player = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
-    this->_player->setPosition({32.0f, 0, 32.0f});
+    // Setup players
+    this->_player1 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
+    this->_player1->setPosition({32.0f, 0, 32.0f});
+    this->_player = this->_player1.get();
+
+    this->_player2 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape2.png"), this->_tm->load("assets/textures/cape2_specular.png")});
+    this->_player2->setPosition({35.0f, 0, 32.0f});
+
+    this->_player3 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true);
+    this->_player3->setPosition({32.0f, 0, 35.0f});
 }
 
 /// Generates a tree at pos with variable log height
@@ -334,6 +344,9 @@ void MPEngine::mCleanupBuffers() {
     this->_grid = nullptr;
     this->_skybox = nullptr;
     this->_player = nullptr;
+    this->_player1 = nullptr;
+    this->_player2 = nullptr;
+    this->_player3 = nullptr;
 }
 
 void MPEngine::mCleanupTextures() {
@@ -387,7 +400,10 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
 
     this->_grid->draw(ctx);
     this->_world->draw(ctx);
-    this->_player->draw(ctx);
+
+    this->_player1->draw(ctx);
+    this->_player2->draw(ctx);
+    this->_player3->draw(ctx);
 }
 
 void MPEngine::_updateScene() {
@@ -400,8 +416,10 @@ void MPEngine::_updateScene() {
     // Update keybinds
     this->_im->poll(this->mpWindow, deltaTime);
 
-    // Update player
-    this->_player->update(deltaTime);
+    // Update players
+    this->_player1->update(deltaTime);
+    this->_player2->update(deltaTime);
+    this->_player3->update(deltaTime);
 }
 
 void MPEngine::run() {

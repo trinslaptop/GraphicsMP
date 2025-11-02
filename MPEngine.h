@@ -94,7 +94,10 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         std::shared_ptr<Block> _block_mushroom;
         std::shared_ptr<Block> _block_amethyst;
         std::shared_ptr<World> _world;
-        std::shared_ptr<Player> _player;
+        std::shared_ptr<Player> _player1;
+        std::shared_ptr<Player> _player2;
+        std::shared_ptr<Player> _player3;
+        Player* _player;
 
         /// Generates a tree at pos with variable log height
         void _place_tree(const glm::ivec3 pos, const size_t height = 5);
@@ -107,4 +110,4 @@ void cursor_callback(GLFWwindow *window, double x, double y);
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
 void scroll_callback(GLFWwindow *window, double xOffset, double yOffset);
 
-#endif// MPEngine_H
+#endif // MPEngine_H

@@ -115,6 +115,10 @@ class Skybox final : mcmodel::Drawable {
             glDeleteBuffers(1, &this->_vbo);
         }
 
+        // Non-Copyable
+        Skybox(const Skybox&) = delete;
+        Skybox& operator=(const Skybox&) = delete;
+
         inline virtual void draw(glutils::RenderContext& ctx) const override {
             GLint depthFunc;
             glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
