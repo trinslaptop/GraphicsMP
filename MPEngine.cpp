@@ -186,7 +186,13 @@ void MPEngine::mSetupShaders() {
     this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("specularTexture"), 1);
     this->_shaderProgram->setProgramUniform("lit", true);
     this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("lightPos"), glm::vec3(25.0, 5.0, 25.0));
-    this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("lightColor"), glm::vec3(1.0, 0.96, 0.90) /* Slight gold */); // glm::vec3(0.95, 1.0, 1.0)); /* Slight blue */
+    this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("lightColor"), glm::vec3(0.95, 1.0, 1.0) /* Slight blue */);
+    
+    
+    // Directional Light
+    this->_shaderProgram->setProgramUniform("sunColor", glm::vec3(1.0f, 0.96f, 0.90f) /* Slight gold */);
+    this->_shaderProgram->setProgramUniform("sunDirection", glm::vec3(1.0f, -1.0f, 1.0f));
+    this->_shaderProgram->setProgramUniform("sunIntensity", 0.35f);
 
     this->_skyboxShaderProgram = std::make_unique<ShaderProgram>("shaders/skybox.v.glsl", "shaders/skybox.f.glsl");
     this->_skyboxShaderProgram->setProgramUniform("skybox", 0);
