@@ -213,7 +213,7 @@ namespace mcmodel {
     }
 
     
-    inline std::shared_ptr<Drawable> oscillate(const ShaderProgram& shader, std::shared_ptr<Drawable> child, const GLfloat oscillation = 0.0625f) {
+    inline std::shared_ptr<Drawable> oscillate(const ShaderProgram& shader, std::shared_ptr<Drawable> child, const GLfloat oscillation = 1.0f) {
         const GLuint handle = shader.getShaderProgramHandle(), attrloc = shader.getUniformLocation("oscillation");
         return std::make_shared<Lambda>([handle, attrloc, child, oscillation](glutils::RenderContext& ctx) {
             glProgramUniform1f(handle, attrloc, oscillation);
