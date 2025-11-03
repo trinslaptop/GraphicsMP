@@ -39,8 +39,16 @@ vec4 phong(const vec3 L, const vec3 lColor) {
 }
 
 /// Calculate illumination from a spotlight
-vec4 spot_light(const vec3 lColor) {
-    return vec4(0.0); // TODO
+/// Based on https://learnopengl.com/Lighting/Light-casters
+/// Radius is in radians
+vec4 spot_light(const vec3 lPos, const vec3 lDirection, const float radius, const vec3 lColor) {
+    vec3 L = normalize(lPos - fPos);
+
+    if(dot(L, -normalize(lDirection)) > cos(radius)) {
+        return phong(L, lColor);
+    } else {
+        return vec4(0.0, 0.0, 0.0, 1.0); // Outside of cone
+    }
 }
 
 // Calculate illumination from a single point source
@@ -62,10 +70,13 @@ void main() {
     }
 
     if(lit) {
-        // Compute Phong shading for all three lights (TODO spot light!)
+        // Compute Phong shading for all three lights
+        // TODO attenuate spot and point, change spot to use uniforms!
         // Point and spot lights are distance attenuated, but sun light isn't, so reduce it by a constant factor so it isn't overpowering
         // (That could be accounted for in the color itself, but this seems more consistent)
-        fColorOut = point_light(lightPos, lightColor) + sunIntensity*directional_light(sunDirection, sunColor);
+        fColorOut = point_light(lightPos, lightColor) + sunIntensity*directional_light(sunDirection, sunColor) + spot_light(
+            vec3(32.0, 5.0, 32.0), vec3(0.0, -1.0, 0.0), radians(12.5), vec3(1.0, 0.0, 1.0)
+        );
     } else {
         fColorOut = diffuseTexel;
     }
