@@ -16,7 +16,7 @@ out vec3 fNormal;
 out vec3 fPos;
 
 void main() {
-    vec3 vOffsetPos = vPos + vec3(0.1*oscillation*cos(time + length(vec3(modelMatrix*vec4(vPos, 1.0)))));
+    vec3 vOffsetPos = vPos + vec3(0.0625*oscillation*cos(time + length(vec3(modelMatrix*vec4(vPos, 1.0)))));
     // Output position and forward rest of work to fragment shader
     gl_Position = vpMatrix*modelMatrix*vec4(vOffsetPos, 1.0);
     fTexCoord = vTexCoord;
