@@ -24,7 +24,10 @@ out vec4 fColorOut;
 /// Don't use this directly, instead call one of the specific light types below
 vec4 phong(const vec3 L, const vec3 lColor) {
     vec3 N = fNormal;
+    
+    // Flip backface normals
     if(!gl_FrontFacing) N *= -1;
+    
     vec3 V = normalize(eyePos - fPos);
     vec3 R = -L + 2*dot(N, L)*N;
 
