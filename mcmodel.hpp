@@ -257,37 +257,6 @@ namespace mcmodel {
         });
     }
 
-    /// Creates a cube with textures and normals applied to the inside faces, if 6 texture sets are given, each -+xyz face gets one in that order; otherwise, each face uses the first texture set
-    /// (Use with cullface when trying to properly render lighting inside a cutout block)
-    template<size_t NUM_TEXTURES> inline std::shared_ptr<Drawable> invcube(const ShaderProgram& shader, const std::array<std::array<GLuint, 2>, NUM_TEXTURES>& textures, const glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), const glm::vec3 size = glm::vec3(1.0f, 1.0f, 1.0f)) {
-        static_assert(NUM_TEXTURES == 1 || NUM_TEXTURES == 6, "NUM_TEXTURES must be 1 or 6");
-        return std::make_shared<Group>(std::initializer_list<std::shared_ptr<Drawable>> {
-            // x
-            TexturedFace::from(shader, textures[NUM_TEXTURES == 1 ? 0 : 0], {
-                pos + size*glm::vec3(0, 0, 0), pos + size*glm::vec3(0, 1, 0), pos + size*glm::vec3(0, 1, 1), pos + size*glm::vec3(0, 0, 1)
-            }, glm::vec2(pos.y, pos.z), glm::vec2(size.y, size.z), true),
-            TexturedFace::from(shader, textures[NUM_TEXTURES == 1 ? 0 : 1], {
-                pos + size*glm::vec3(1, 0, 0), pos + size*glm::vec3(1, 0, 1), pos + size*glm::vec3(1, 1, 1), pos + size*glm::vec3(1, 1, 0)
-            }, glm::vec2(pos.y, pos.z), glm::vec2(size.y, size.z)),
-            
-            // y
-            TexturedFace::from(shader, textures[NUM_TEXTURES == 1 ? 0 : 2], {
-                pos + size*glm::vec3(0, 0, 0), pos + size*glm::vec3(0, 0, 1), pos + size*glm::vec3(1, 0, 1), pos + size*glm::vec3(1, 0, 0)
-            }, glm::vec2(pos.x, pos.z), glm::vec2(size.x, size.z)),
-            TexturedFace::from(shader, textures[NUM_TEXTURES == 1 ? 0 : 3], {
-                pos + size*glm::vec3(0, 1, 0), pos + size*glm::vec3(1, 1, 0), pos + size*glm::vec3(1, 1, 1), pos + size*glm::vec3(0, 1, 1)
-            }, glm::vec2(pos.x, pos.z), glm::vec2(size.x, size.z), true),
-            
-            // z
-            TexturedFace::from(shader, textures[NUM_TEXTURES == 1 ? 0 : 4], {
-                pos + size*glm::vec3(0, 0, 0), pos + size*glm::vec3(1, 0, 0), pos + size*glm::vec3(1, 1, 0), pos + size*glm::vec3(0, 1, 0)
-            }, glm::vec2(pos.x, pos.y), glm::vec2(size.x, size.y)),
-            TexturedFace::from(shader, textures[NUM_TEXTURES == 1 ? 0 : 5], {
-                pos + size*glm::vec3(0, 0, 1), pos + size*glm::vec3(0, 1, 1), pos + size*glm::vec3(1, 1, 1), pos + size*glm::vec3(1, 0, 1)
-            }, glm::vec2(pos.x, pos.y), glm::vec2(size.x, size.y), true)
-        });
-    }
-
     /// Creates a cross of two y aligned planes, good for basic plants
     inline std::shared_ptr<Drawable> cross(const ShaderProgram& shader, const std::array<GLuint, 2>& textures, const glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), const GLfloat size = 1.0f) {
         return cullface(group({
