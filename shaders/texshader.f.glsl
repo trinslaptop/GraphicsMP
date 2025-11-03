@@ -72,6 +72,7 @@ void main() {
     if(lit) {
         // Compute Phong shading for all three lights
         // TODO attenuate spot and point, change spot to use uniforms!
+        // TODO add extra directional lights, rgb?
         // Point and spot lights are distance attenuated, but sun light isn't, so reduce it by a constant factor so it isn't overpowering
         // (That could be accounted for in the color itself, but this seems more consistent)
         fColorOut = point_light(lightPos, lightColor) + sunIntensity*directional_light(sunDirection, sunColor) + spot_light(
