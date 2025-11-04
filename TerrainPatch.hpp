@@ -3,8 +3,11 @@
 
 #include <memory>
 #include <array>
+#include <cmath>
+#include <glm/glm.hpp>
 
 #include "mcmodel.hpp"
+
 
 class TerrainPatch final : public mcmodel::Drawable {
     private:
@@ -20,11 +23,17 @@ class TerrainPatch final : public mcmodel::Drawable {
             glDeleteBuffers(1, &this->_vbo);
         }
 
-        inline static std::shared_ptr<Drawable> from(
+        inline static std::shared_ptr<TerrainPatch> from(
             const ShaderProgram& shader,
             const GLfloat size,
             const std::array<GLuint, 2> textures
         ) {
+            //  (z)
+            //   2 ------- 3
+            //   |      /  |
+            //   |    x    |
+            //   |  /      |
+            //   0 ------- 1 (x)
             struct Vertex {
                 glm::vec3 vPos;
             } vertices[4] = {
@@ -58,6 +67,7 @@ class TerrainPatch final : public mcmodel::Drawable {
         TerrainPatch(const TerrainPatch&) = delete;
         TerrainPatch& operator=(const TerrainPatch&) = delete;
 
+        /// Bind shaders, textures, and uniforms then draw patches
         inline virtual void draw(glutils::RenderContext& ctx) const override {
             glPatchParameteri(GL_PATCH_VERTICES, 4);
             
@@ -72,6 +82,34 @@ class TerrainPatch final : public mcmodel::Drawable {
 
             glBindVertexArray(this->_vao);
             glDrawArrays(GL_PATCHES, 0, 4);
+        }
+
+        /// Get the computed/rendered y value of the terrain at a given x, z
+        inline GLfloat getTerrainHeight(const GLfloat x, const GLfloat z) const {
+            // Same formula for y as in shaders/terrain.te.glsl
+            return 3*std::pow(std::sin(0.0005*(x*x + z*z)), 2) + std::pow(std::sin(0.1*x), 2) + 0.0625;
+        }
+
+        /// Gets the position of the terrain's surface at a given x, z
+        inline glm::vec3 getTerrainPosition(const GLfloat x, const GLfloat z) const {
+            // Same formula for y as in shaders/terrain.te.glsl
+            return glm::vec3(x, this->getTerrainHeight(x, z), z);
+        }
+
+        /// Gets the integer position of the terrain's surface at a given x, z grid position
+        inline glm::ivec3 getTerrainPosition(const GLint x, const GLint z) const {
+            // Same formula for y as in shaders/terrain.te.glsl
+            return glm::ivec3(x, this->getTerrainHeight(x + 0.5, z + 0.5), z);
+        }
+
+        /// Get a vector pointing away from the terrain at a given x, z
+        inline glm::vec3 getTerrainNormal(const GLfloat x, const GLfloat z) const {
+            // Same formula as fNormal in shaders/terrain.te.glsl
+            return glm::normalize(glm::vec3(
+                0.006*x*std::sin(0.0005*(x*x + z*z))*std::cos(0.0005*(x*x + z*z)) + 0.2*std::sin(0.1*x)*std::cos(0.1*x), // partial x
+                -1.0,
+                0.006*z*std::sin(0.0005*(x*x + z*z))*std::cos(0.0005*(x*x + z*z)) // partial z
+            ));
         }
 };
 

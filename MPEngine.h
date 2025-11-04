@@ -24,6 +24,7 @@
 #include "Block.hpp"
 #include "World.hpp"
 #include "Skybox.hpp"
+#include "TerrainPatch.hpp"
 
 class MPEngine final : public CSCI441::OpenGLEngine {
     public:
@@ -91,7 +92,7 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         /*** Objects ***/
         std::shared_ptr<Skybox> _skybox;
         std::shared_ptr<mcmodel::Drawable> _grid;
-        std::shared_ptr<mcmodel::Drawable> _terrain;
+        std::shared_ptr<TerrainPatch> _terrain;
         std::shared_ptr<Block> _block_planks;
         std::shared_ptr<Block> _block_log;
         std::shared_ptr<Block> _block_leaves;

@@ -11,8 +11,6 @@
 
 #include <iostream>
 
-#include "TerrainPatch.hpp"
-
 static constexpr GLfloat GLM_PI = glm::pi<float>();
 static constexpr GLfloat GLM_2PI = glm::two_pi<float>();
 
@@ -181,25 +179,35 @@ void MPEngine::mSetupOpenGL() {
     glClearColor(0.4f, 0.4f, 0.4f, 1.0f);	// Clear the frame buffer to gray
 }
 
+// Terrain shader and basic texture shader use some of the same uniforms
+inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
+    // Common uniforms
+    shader.setProgramUniform("diffuseTexture", 0);
+    shader.setProgramUniform("specularTexture", 1);
+    shader.setProgramUniform("lit", true);
+
+    // Positional Light
+    shader.setProgramUniform("lightPos", glm::vec3(25.0, 5.0, 25.0));
+    shader.setProgramUniform("lightColor", glm::vec3(0.95, 1.0, 1.0) /* Slight blue */);
+    
+    // Directional Light
+    shader.setProgramUniform("sunColor", glm::vec3(1.0f, 0.96f, 0.90f) /* Slight gold */);
+    shader.setProgramUniform("sunDirection", glm::vec3(1.0f, -1.0f, 1.0f));
+    shader.setProgramUniform("sunIntensity", 0.35f);
+
+    
+}
+
 void MPEngine::mSetupShaders() {
     // Load shaders
     this->_shaderProgram = std::make_unique<ShaderProgram>("shaders/texshader.v.glsl", "shaders/texshader.f.glsl");
-    this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("diffuseTexture"), 0);
-    this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("specularTexture"), 1);
-    this->_shaderProgram->setProgramUniform("lit", true);
-    this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("lightPos"), glm::vec3(25.0, 5.0, 25.0));
-    this->_shaderProgram->setProgramUniform(this->_shaderProgram->getUniformLocation("lightColor"), glm::vec3(0.95, 1.0, 1.0) /* Slight blue */);
+    initCommonFragmentShaderUniforms(*this->_shaderProgram);
     
-    
-    // Directional Light
-    this->_shaderProgram->setProgramUniform("sunColor", glm::vec3(1.0f, 0.96f, 0.90f) /* Slight gold */);
-    this->_shaderProgram->setProgramUniform("sunDirection", glm::vec3(1.0f, -1.0f, 1.0f));
-    this->_shaderProgram->setProgramUniform("sunIntensity", 0.35f);
-
     this->_skyboxShaderProgram = std::make_unique<ShaderProgram>("shaders/skybox.v.glsl", "shaders/skybox.f.glsl");
     this->_skyboxShaderProgram->setProgramUniform("skybox", 0);
 
-    this->_terrainShaderProgram = std::make_unique<ShaderProgram>("shaders/terrain.v.glsl", "shaders/terrain.tc.glsl", "shaders/terrain.te.glsl", "shaders/terrain.f.glsl");
+    this->_terrainShaderProgram = std::make_unique<ShaderProgram>("shaders/terrain.v.glsl", "shaders/terrain.tc.glsl", "shaders/terrain.te.glsl", "shaders/texshader.f.glsl");
+    initCommonFragmentShaderUniforms(*this->_terrainShaderProgram);
 }
 
 void MPEngine::mSetupBuffers() {
@@ -241,7 +249,7 @@ void MPEngine::mSetupBuffers() {
         std::array<GLuint, 2> {this->_tm->load("assets/textures/log_side.png"), this->_tm->load("assets/textures/dull.png")},
         std::array<GLuint, 2> {this->_tm->load("assets/textures/log_side.png"), this->_tm->load("assets/textures/dull.png")}
     }));
-    this->_block_leaves = Block::from(mcmodel::oscillate(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.25f), false);
+    this->_block_leaves = Block::from(mcmodel::oscillate(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.5f), false);
     this->_block_amethyst = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
     this->_block_mushroom = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/mushroom.png"), this->_tm->load("assets/textures/shiny.png")}), false);
 
@@ -255,21 +263,21 @@ void MPEngine::mSetupBuffers() {
     this->_world->setBlock(glm::ivec3(1, 0, 9), this->_block_mushroom);
 
     // Place some trees
-    this->_place_tree({10, 0, 10});
-    this->_place_tree({12, 0, 38}, 7);
-    this->_place_tree({40, 0, 30});
-    this->_place_tree({32, 0, 50}, 4);
-    this->_place_tree({10, 0, 25}, 8);
-    this->_place_tree({50, 0, 8});
-    this->_place_tree({9, 0, 56}, 6);
-    this->_place_tree({46, 0, 50});
+    this->_place_tree(this->_terrain->getTerrainPosition(10, 10));
+    this->_place_tree(this->_terrain->getTerrainPosition(12, 38), 7);
+    this->_place_tree(this->_terrain->getTerrainPosition(40, 30));
+    this->_place_tree(this->_terrain->getTerrainPosition(32, 50), 5);
+    this->_place_tree(this->_terrain->getTerrainPosition(10, 25), 8);
+    this->_place_tree(this->_terrain->getTerrainPosition(50, 8));
+    this->_place_tree(this->_terrain->getTerrainPosition(9, 56), 6);
+    this->_place_tree(this->_terrain->getTerrainPosition(46, 50));
 
     // Place amethyst pyramid
     for(int dy = 0; dy < 3; dy++) {
         int r = 3 - dy - 1;
         for(int dx = -r; dx <= r; dx++) {
             for(int dz = -r; dz <= r; dz++) {
-                this->_world->setBlock(glm::ivec3(20, 0, 20) + glm::ivec3(dx, dy, dz), this->_block_amethyst);
+                this->_world->setBlock(glm::ivec3(20, this->_terrain->getTerrainHeight(20.5, 20.5), 20) + glm::ivec3(dx, dy, dz), this->_block_amethyst);
             }
         }
     }
@@ -277,15 +285,16 @@ void MPEngine::mSetupBuffers() {
     // Place collision test
     for(int dz = 0; dz < 9; dz++) {
         if(dz < 3 || dz > 5) {
-            this->_world->setBlock(glm::vec3(32.0f, 0.0f, 5.0f + dz), this->_block_planks);
+            this->_world->setBlock(this->_terrain->getTerrainPosition(34.0f, 5.0f) + glm::vec3(0.0f, 0.0f, dz), this->_block_planks);
         }
-        this->_world->setBlock(glm::vec3(32.0f, 1.0f, 5.0f + dz), this->_block_planks);
+        this->_world->setBlock(this->_terrain->getTerrainPosition(34.0f, 5.0f) + glm::vec3(0.0f, 1.0f, dz), this->_block_planks);
     }
 
     // Scatter mushrooms
-    for(size_t i = 0; i < 25; i++) {
-        const glm::ivec3 pos = {glutils::randi(0, World::WORLD_SIZE), 0, glutils::randi(0, World::WORLD_SIZE)};
-        if(!this->_world->getBlock(pos)) {
+    for(size_t i = 0; i < 100; i++) {
+        const glm::ivec3 pos = this->_terrain->getTerrainPosition(glutils::randi(0, World::WORLD_SIZE), glutils::randi(0, World::WORLD_SIZE));
+        // Check if ground mostly flat and empty
+        if(this->_terrain->getTerrainHeight(pos.x, pos.z) - pos.y < 0.125 && !this->_world->getBlock(pos)) {
             this->_world->setBlock(pos, this->_block_mushroom);
         }
     }
@@ -458,8 +467,7 @@ void MPEngine::run() {
 
         // Draw primary camera to the whole window
         glViewport(0, 0, framebufferWidth, framebufferHeight);
-        this->_shaderProgram->setProgramUniform("eyePos", this->getPrimaryCamera()->getPosition());
-        glutils::RenderContext ctx(this->getPrimaryCamera()->getViewMatrix(), this->getPrimaryCamera()->getProjectionMatrix());
+        glutils::RenderContext ctx(*this->getPrimaryCamera());
         _renderScene(ctx);
 
         // Optional secondary cameras
@@ -472,8 +480,7 @@ void MPEngine::run() {
             
             // Draw secondary camera
             glViewport(framebufferWidth*0.75, framebufferHeight*0.75, framebufferWidth*0.25, framebufferHeight*0.25);
-            this->_shaderProgram->setProgramUniform("eyePos", this->getSecondaryCamera()->getPosition());
-            glutils::RenderContext ctx(this->getSecondaryCamera()->getViewMatrix(), this->getSecondaryCamera()->getProjectionMatrix());
+            glutils::RenderContext ctx(*this->getSecondaryCamera());
             _renderScene(ctx);
             // Reset
             glViewport(0, 0, framebufferWidth, framebufferHeight);

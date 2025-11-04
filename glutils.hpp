@@ -31,6 +31,7 @@
 #endif
 
 #include "ShaderProgram.hpp"
+#include <CSCI441/Camera.hpp>
 
 #define _STRC(x) #x
 /// Stringify macro, useful for attribute/uniform names
@@ -129,6 +130,7 @@ namespace glutils {
         private:
             std::vector<glm::mat4> _transformationStack;
             glm::mat4 _modelMatrix, _viewMatrix, _projectionMatrix;
+            glm::vec3 _eyePos;
             GLuint _shader;
             GLint _modelMatrixLocation, _normalMatrixLocation;
             
@@ -140,16 +142,18 @@ namespace glutils {
             }
 
         public:
-            inline RenderContext(const glm::mat4 viewMatrix, const glm::mat4 projectionMatrix) : _viewMatrix(viewMatrix), _projectionMatrix(projectionMatrix), _transformationStack {glm::mat4(1.0)}, _modelMatrix(1.0), _shader(0), _modelMatrixLocation(0), _normalMatrixLocation(0) {}
+            inline RenderContext(const glm::mat4 viewMatrix, const glm::mat4 projectionMatrix, const glm::vec3 eyePos) : _viewMatrix(viewMatrix), _projectionMatrix(projectionMatrix), _eyePos(eyePos), _transformationStack {glm::mat4(1.0)}, _modelMatrix(1.0), _shader(0), _modelMatrixLocation(0), _normalMatrixLocation(0) {}
+            inline RenderContext(const CSCI441::Camera& camera) : RenderContext(camera.getViewMatrix(), camera.getProjectionMatrix(), camera.getPosition()) {}
 
             // Non-Copyable
             RenderContext(const RenderContext&) = delete;
             RenderContext& operator=(const RenderContext&) = delete;
 
             /// Set which shader this context should update
-            inline void bind(const ShaderProgram& shader, const char* modelMatrixUniformName = "modelMatrix", const char* vpMatrixUniformName = "vpMatrix", const char* normalMatrixUniformName = "normalMatrix") {
+            inline void bind(const ShaderProgram& shader, const char* modelMatrixUniformName = "modelMatrix", const char* vpMatrixUniformName = "vpMatrix", const char* normalMatrixUniformName = "normalMatrix", const char* eyePosUniformName = "eyePos") {
                 this->_shader = shader.getShaderProgramHandle();
                 shader.setProgramUniform(vpMatrixUniformName, this->_projectionMatrix * this->_viewMatrix);
+                shader.setProgramUniform(eyePosUniformName, this->_eyePos);
                 this->_modelMatrixLocation = shader.getUniformLocation(modelMatrixUniformName);
                 this->_normalMatrixLocation = shader.getUniformLocation(normalMatrixUniformName);
                 this->_updateShader();
@@ -181,6 +185,10 @@ namespace glutils {
 
             inline const glm::mat4 getProjectionMatrix() const {
                 return this->_projectionMatrix;
+            }
+
+            inline const glm::vec3 getEyePos() const {
+                return this->_eyePos;
             }
 
             /// Clear all transforms
