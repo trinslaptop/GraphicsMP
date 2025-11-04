@@ -11,6 +11,8 @@
 
 #include <iostream>
 
+#include "TerrainPatch.hpp"
+
 static constexpr GLfloat GLM_PI = glm::pi<float>();
 static constexpr GLfloat GLM_2PI = glm::two_pi<float>();
 
@@ -196,6 +198,8 @@ void MPEngine::mSetupShaders() {
 
     this->_skyboxShaderProgram = std::make_unique<ShaderProgram>("shaders/skybox.v.glsl", "shaders/skybox.f.glsl");
     this->_skyboxShaderProgram->setProgramUniform("skybox", 0);
+
+    this->_terrainShaderProgram = std::make_unique<ShaderProgram>("shaders/terrain.v.glsl", "shaders/terrain.tc.glsl", "shaders/terrain.te.glsl", "shaders/terrain.f.glsl");
 }
 
 void MPEngine::mSetupBuffers() {
@@ -223,6 +227,9 @@ void MPEngine::mSetupBuffers() {
             glm::vec3 {World::WORLD_SIZE, 0.0f, 0.0f}
         }, {0.0f, 0.0f}, {World::WORLD_SIZE, World::WORLD_SIZE}
     );
+
+    // Place terrain
+    this->_terrain = TerrainPatch::from(*this->_terrainShaderProgram, World::WORLD_SIZE, {this->_tm->load("assets/textures/grass.png"), this->_tm->load("assets/textures/dull.png")});
 
     // Register blocks
     this->_block_planks = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/planks.png"), this->_tm->load("assets/textures/dull.png")}}));
@@ -337,6 +344,7 @@ void MPEngine::mCleanupShaders() {
     fprintf( stdout, "[INFO]: ...deleting Shaders.\n" );
     this->_shaderProgram = nullptr;
     this->_skyboxShaderProgram = nullptr;
+    this->_terrainShaderProgram = nullptr;
 }
 
 void MPEngine::mCleanupBuffers() {
@@ -353,6 +361,7 @@ void MPEngine::mCleanupBuffers() {
     this->_player1 = nullptr;
     this->_player2 = nullptr;
     this->_player3 = nullptr;
+    this->_terrain = nullptr;
 }
 
 void MPEngine::mCleanupTextures() {
@@ -400,6 +409,8 @@ CSCI441::Camera* MPEngine::getSecondaryCamera() const {
 
 void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
+
+    this->_terrain->draw(ctx);
 
     this->_shaderProgram->useProgram();
     ctx.bind(*this->_shaderProgram);

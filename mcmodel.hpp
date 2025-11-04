@@ -43,7 +43,7 @@ namespace mcmodel {
             TexturedFace& operator=(const TexturedFace&) = delete;
 
         public:
-            inline TexturedFace(GLuint vao, const std::array<GLuint, 2> buffers, const std::array<GLuint, 2> textures) : _vao(vao), _buffers {buffers[0], buffers[1]}, _textures {textures[0], textures[1]} {}
+            inline TexturedFace(const GLuint vao, const std::array<GLuint, 2> buffers, const std::array<GLuint, 2> textures) : _vao(vao), _buffers {buffers[0], buffers[1]}, _textures {textures[0], textures[1]} {}
             
             inline virtual ~TexturedFace() override {
                 glDeleteVertexArrays(1, &this->_vao);

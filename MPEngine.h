@@ -81,6 +81,9 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         /// Cubemap shader
         std::unique_ptr<ShaderProgram> _skyboxShaderProgram;
 
+        /// Terrain Patch Shader
+        std::unique_ptr<ShaderProgram> _terrainShaderProgram;
+
         /*** Helper Classes ***/
         std::unique_ptr<input::InputManager> _im;
         std::unique_ptr<glutils::TextureManager> _tm;
@@ -88,6 +91,7 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         /*** Objects ***/
         std::shared_ptr<Skybox> _skybox;
         std::shared_ptr<mcmodel::Drawable> _grid;
+        std::shared_ptr<mcmodel::Drawable> _terrain;
         std::shared_ptr<Block> _block_planks;
         std::shared_ptr<Block> _block_log;
         std::shared_ptr<Block> _block_leaves;

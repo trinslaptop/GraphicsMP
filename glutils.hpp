@@ -147,7 +147,7 @@ namespace glutils {
             RenderContext& operator=(const RenderContext&) = delete;
 
             /// Set which shader this context should update
-            inline void bind(ShaderProgram& shader, const char* modelMatrixUniformName = "modelMatrix", const char* vpMatrixUniformName = "vpMatrix", const char* normalMatrixUniformName = "normalMatrix") {
+            inline void bind(const ShaderProgram& shader, const char* modelMatrixUniformName = "modelMatrix", const char* vpMatrixUniformName = "vpMatrix", const char* normalMatrixUniformName = "normalMatrix") {
                 this->_shader = shader.getShaderProgramHandle();
                 shader.setProgramUniform(vpMatrixUniformName, this->_projectionMatrix * this->_viewMatrix);
                 this->_modelMatrixLocation = shader.getUniformLocation(modelMatrixUniformName);
