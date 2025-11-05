@@ -41,6 +41,8 @@ class Player final : public mcmodel::Drawable {
 
         std::shared_ptr<World> _world;
 
+        bool _hidden = false;
+        
     public:
         Player(std::shared_ptr<World> world, const ShaderProgram& shader, const std::array<GLuint, 2> textures, bool thinArms = true, const std::optional<const std::array<GLuint, 2>> cape = std::nullopt) : _world(world), _arcballcamera({1.0f, 6.0f}), _skycamera(), _fpcamera() {
             // Create player model
@@ -103,12 +105,12 @@ class Player final : public mcmodel::Drawable {
 
                 this->_skycamera.setPosition(this->_position + glm::vec3(0.0f, 12.0f, 0.0f));
                 this->_skycamera.setLookAtPoint(this->_position);
-                this->_skycamera.setUpVector(this->getForwardVector());
+                this->_skycamera.setUpVector(this->getHorizontalForwardVector());
                 this->_skycamera.computeViewMatrix();
 
                 this->_fpcamera.setPosition(this->_position + 0.5f*this->getForwardVector() + glm::vec3(0.0f, 1.75f, 0.0f));
                 this->_fpcamera.setLookAtPoint(this->_position + 2.0f*this->getForwardVector() + glm::vec3(0.0f, 1.75f, 0.0f));
-                this->_fpcamera.setUpVector(glm::vec3(0.0f, 1.0f, 0.0f));
+                this->_fpcamera.setUpVector(this->getUpVector());
                 this->_fpcamera.computeViewMatrix();
             }
         }
@@ -123,12 +125,12 @@ class Player final : public mcmodel::Drawable {
             // Update cameras
             this->_skycamera.setPosition(this->_position + glm::vec3(0.0f, 12.0f, 0.0f));
             this->_skycamera.setLookAtPoint(this->_position);
-            this->_skycamera.setUpVector(this->getForwardVector());
+            this->_skycamera.setUpVector(this->getHorizontalForwardVector());
             this->_skycamera.computeViewMatrix();
 
-            this->_fpcamera.setPosition(this->_position + 0.5f*this->getForwardVector() + glm::vec3(0.0f, 1.75f, 0.0f));
+            this->_fpcamera.setPosition(this->_position + glm::vec3(0.0f, 1.75f, 0.0f));
             this->_fpcamera.setLookAtPoint(this->_position + 2.0f*this->getForwardVector() + glm::vec3(0.0f, 1.75f, 0.0f));
-            this->_fpcamera.setUpVector(glm::vec3(0.0f, 1.0f, 0.0f));
+            this->_fpcamera.setUpVector(this->getUpVector());
             this->_fpcamera.computeViewMatrix();
         }
 
@@ -149,8 +151,16 @@ class Player final : public mcmodel::Drawable {
         }
 
         // An xz aligned vector representing direction of player
-        inline glm::vec3 getForwardVector() const {
+        inline glm::vec3 getHorizontalForwardVector() const {
             return glm::vec3(glm::cos(this->_rotation.x), 0.0f, -glm::sin(this->_rotation.x));
+        }
+
+        inline glm::vec3 getForwardVector() const {
+            return glm::vec3(glm::yawPitchRoll(this->_rotation.x, this->_rotation.y, this->_rotation.z)*glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+        }
+
+        inline glm::vec3 getUpVector() const {
+            return glm::vec3(glm::yawPitchRoll(this->_rotation.x, this->_rotation.y, this->_rotation.z)*glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
         }
 
         inline void update(GLfloat deltaTime) {
@@ -173,10 +183,20 @@ class Player final : public mcmodel::Drawable {
             std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glutils::PI/8.0f * glm::sin(3.0f*glm::length(this->_position)));
         }
 
+        inline void setHidden(const bool hidden) {
+            this->_hidden = hidden;
+        }
+
+        inline bool isHidden() const {
+            return this->_hidden;
+        }
+
         inline virtual void draw(glutils::RenderContext& ctx) const override {
-            ctx.pushTransformation(glm::translate(glm::mat4(1.0f), this->_position)*glm::yawPitchRoll(this->_rotation.x, this->_rotation.y, this->_rotation.z));
-                    this->_root->draw(ctx);
-            ctx.popTransformation();
+            if(!this->_hidden) {
+                ctx.pushTransformation(glm::translate(glm::mat4(1.0f), this->_position)*glm::yawPitchRoll(this->_rotation.x, this->_rotation.y, this->_rotation.z));
+                        this->_root->draw(ctx);
+                ctx.popTransformation();
+            }
         }
 };
 #endif

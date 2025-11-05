@@ -100,7 +100,7 @@ MPEngine::MPEngine()
         if(this->_primaryCamera == 0) {
             this->_freecam->moveForward(20.0f*deltaTime);
         } else {
-            this->_player->setPosition(this->_player->getPosition() + this->_player->getForwardVector()*5.0f*deltaTime);
+            this->_player->setPosition(this->_player->getPosition() + this->_player->getHorizontalForwardVector()*5.0f*deltaTime);
         }
     }, input::Event::Hold);
 
@@ -109,7 +109,7 @@ MPEngine::MPEngine()
         if(this->_primaryCamera == 0) {
             this->_freecam->moveBackward(20.0f*deltaTime);
         } else {
-            this->_player->setPosition(this->_player->getPosition() - this->_player->getForwardVector()*5.0f*deltaTime);
+            this->_player->setPosition(this->_player->getPosition() - this->_player->getHorizontalForwardVector()*5.0f*deltaTime);
         }
     }, input::Event::Hold);
 
@@ -301,14 +301,14 @@ void MPEngine::mSetupBuffers() {
 
     // Setup players
     this->_player1 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
-    this->_player1->setPosition({32.0f, 0, 32.0f});
+    this->_player1->setPosition(this->_terrain->getTerrainPosition(32.0f, 32.0f));
     this->_player = this->_player1.get();
 
     this->_player2 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape2.png"), this->_tm->load("assets/textures/cape2_specular.png")});
-    this->_player2->setPosition({35.0f, 0, 32.0f});
+    this->_player2->setPosition(this->_terrain->getTerrainPosition(35.0f, 32.0f));
 
     this->_player3 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true);
-    this->_player3->setPosition({32.0f, 0, 35.0f});
+    this->_player3->setPosition(this->_terrain->getTerrainPosition(35.0f, 35.0f));
 }
 
 /// Generates a tree at pos with variable log height
@@ -416,6 +416,12 @@ CSCI441::Camera* MPEngine::getSecondaryCamera() const {
 
 /*** Rendering/Drawing Functions ***/
 
+void drawTerrainAlignedPlayer(glutils::RenderContext& ctx, const Player& player, const TerrainPatch& terrain) {
+    ctx.pushTransformation(glm::translate(glm::mat4(1.0f), player.getPosition())*glm::toMat4(glm::rotation(glm::vec3(0.0, -1.0, 0.0), terrain.getTerrainNormal(player.getPosition().x, player.getPosition().z)))*glm::translate(glm::mat4(1.0f), -player.getPosition()));
+    player.draw(ctx);
+    ctx.popTransformation();
+}
+
 void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
 
@@ -428,6 +434,7 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_world->draw(ctx);
 
     this->_player1->draw(ctx);
+    // drawTerrainAlignedPlayer(ctx, *this->_player1, *this->_terrain);
     this->_player2->draw(ctx);
     this->_player3->draw(ctx);
 }
@@ -446,6 +453,13 @@ void MPEngine::_updateScene() {
     this->_player1->update(deltaTime);
     this->_player2->update(deltaTime);
     this->_player3->update(deltaTime);
+
+    // Move with terrain
+    this->_player->setPosition(this->_terrain->getTerrainPosition(this->_player->getPosition().x, this->_player->getPosition().z));
+
+    // This isn't quite right, but it looks fine... so it's good enough
+    const glm::vec3 terrainRotation = glm::eulerAngles(glm::rotation(glm::vec3(0.0, -1.0, 0.0), this->_terrain->getTerrainNormal(this->_player->getPosition().x, this->_player->getPosition().z)));
+    this->_player->setRotation({this->_player->getRotation().x , terrainRotation.y*cos(this->_player->getRotation().x), terrainRotation.z*cos(this->_player->getRotation().x)});
 }
 
 void MPEngine::run() {
@@ -453,7 +467,7 @@ void MPEngine::run() {
     //	until the user decides to close the window and quit the program.  Without a loop, the
     //	window will display once and then the program exits.
     while(!glfwWindowShouldClose(mpWindow)) {	            // check if the window was instructed to be closed
-        glDrawBuffer(GL_BACK);				                // work with our back frame buffer
+        glDrawBuffer(GL_BACK);		                        // work with our back frame buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// clear the current color contents and depth buffer in the window
 
         // Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
@@ -472,6 +486,7 @@ void MPEngine::run() {
 
         // Optional secondary cameras
         if(this->getSecondaryCamera() != nullptr) {
+            
             // Clear just the region of the mini-viewport
             glEnable(GL_SCISSOR_TEST);
             glScissor(framebufferWidth*0.75, framebufferHeight*0.75, framebufferWidth*0.25, framebufferHeight*0.25);
@@ -481,9 +496,15 @@ void MPEngine::run() {
             // Draw secondary camera
             glViewport(framebufferWidth*0.75, framebufferHeight*0.75, framebufferWidth*0.25, framebufferHeight*0.25);
             glutils::RenderContext ctx(*this->getSecondaryCamera());
+            
+            if(this->getSecondaryCamera() == &this->_player->getFirstPersonCamera()) {
+                this->_player->setHidden(true); // Hide in first person view
+            }
             _renderScene(ctx);
+
             // Reset
             glViewport(0, 0, framebufferWidth, framebufferHeight);
+            this->_player->setHidden(false);
         }
         
         glfwSwapBuffers(mpWindow); // Flush the OpenGL commands and make sure they get rendered!
