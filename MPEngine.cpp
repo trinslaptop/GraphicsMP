@@ -49,6 +49,10 @@ MPEngine::MPEngine()
     _block_leaves(nullptr),
     _block_mushroom(nullptr),
     _block_amethyst(nullptr),
+    _block_torch(nullptr),
+    _block_red_spotlight(nullptr),
+    _block_green_spotlight(nullptr),
+    _block_blue_spotlight(nullptr),
     _player(nullptr),
     _player1(nullptr),
     _player2(nullptr),
@@ -186,16 +190,19 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     shader.setProgramUniform("specularTexture", 1);
     shader.setProgramUniform("lit", true);
 
-    // Positional Light
-    shader.setProgramUniform("lightPos", glm::vec3(25.0, 5.0, 25.0));
-    shader.setProgramUniform("lightColor", glm::vec3(0.95, 1.0, 1.0) /* Slight blue */);
-    
-    // Directional Light
-    shader.setProgramUniform("sunColor", glm::vec3(1.0f, 0.96f, 0.90f) /* Slight gold */);
-    shader.setProgramUniform("sunDirection", glm::vec3(1.0f, -1.0f, 1.0f));
-    shader.setProgramUniform("sunIntensity", 0.35f);
+    // Positional Light (Torch)
+    shader.setProgramUniform("torchPos", glm::vec3(20.5, 4.5, 20.5));
+    shader.setProgramUniform("torchColor", glm::vec3(1.0f, 0.96f, 0.90f) /* Slight gold */);
 
-    
+    // Directional Light (Sun)
+    shader.setProgramUniform("sunColor", glm::vec3(0.95, 1.0, 1.0) /* Slight blue */);
+    shader.setProgramUniform("sunDirection", glm::vec3(1.0f, -1.0f, 1.0f));
+    shader.setProgramUniform("sunIntensity", 0.85f);
+
+    // Spot lights colors are hardcoded in shader
+    shader.setProgramUniform("redSpotlightPos", glm::vec3(32.5f, 5.5f, 32.5f));
+    shader.setProgramUniform("greenSpotlightPos", glm::vec3(30.5, 5.5, 32.5));
+    shader.setProgramUniform("blueSpotlightPos", glm::vec3(31.5, 5.5, 32.5 + glm::sqrt(2)));
 }
 
 void MPEngine::mSetupShaders() {
@@ -253,6 +260,11 @@ void MPEngine::mSetupBuffers() {
     this->_block_amethyst = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
     this->_block_mushroom = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/mushroom.png"), this->_tm->load("assets/textures/shiny.png")}), false);
 
+    this->_block_torch = Block::from(mcmodel::ignore_light(*this->_shaderProgram, mcmodel::group({mcmodel::wrapped_cube(*this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/torch.png"), this->_tm->load("assets/textures/dull.png")}, {0.125f, 0.5f, 0.125f})}, {0.5f, 0.25f, 0.5f})), false);
+    this->_block_red_spotlight = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/red_spotlight.png"), this->_tm->load("assets/textures/dull.png")}), false);
+    this->_block_green_spotlight = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/green_spotlight.png"), this->_tm->load("assets/textures/dull.png")}), false);
+    this->_block_blue_spotlight = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/blue_spotlight.png"), this->_tm->load("assets/textures/dull.png")}), false);
+
     this->_world = std::make_shared<World>();
 
     // Place one of each block for testing
@@ -261,6 +273,11 @@ void MPEngine::mSetupBuffers() {
     this->_world->setBlock(glm::ivec3(1, 0, 5), this->_block_leaves);
     this->_world->setBlock(glm::ivec3(1, 0, 7), this->_block_amethyst);
     this->_world->setBlock(glm::ivec3(1, 0, 9), this->_block_mushroom);
+
+    this->_world->setBlock(glm::ivec3(20, 4, 20), this->_block_torch);
+    this->_world->setBlock(glm::ivec3(32, 5, 32), this->_block_red_spotlight);
+    this->_world->setBlock(glm::ivec3(30, 5, 32), this->_block_green_spotlight);
+    this->_world->setBlock(glm::ivec3(31, 5, 34), this->_block_blue_spotlight);
 
     // Place some trees
     this->_place_tree(this->_terrain->getTerrainPosition(10, 10));
@@ -364,6 +381,10 @@ void MPEngine::mCleanupBuffers() {
     this->_block_leaves = nullptr;
     this->_block_mushroom = nullptr;
     this->_block_amethyst = nullptr;
+    this->_block_torch = nullptr;
+    this->_block_red_spotlight = nullptr;
+    this->_block_green_spotlight = nullptr;
+    this->_block_blue_spotlight = nullptr;
     this->_grid = nullptr;
     this->_skybox = nullptr;
     this->_player = nullptr;

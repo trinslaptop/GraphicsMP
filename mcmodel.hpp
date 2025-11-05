@@ -222,6 +222,15 @@ namespace mcmodel {
         });
     }
 
+    inline std::shared_ptr<Drawable> ignore_light(const ShaderProgram& shader, std::shared_ptr<Drawable> child) {
+        const GLuint handle = shader.getShaderProgramHandle(), attrloc = shader.getUniformLocation("lit");
+        return std::make_shared<Lambda>([handle, attrloc, child](glutils::RenderContext& ctx) {
+            glProgramUniform1i(handle, attrloc, 0);
+            child->draw(ctx);
+            glProgramUniform1i(handle, attrloc, 1);
+        });
+    }
+
     /// Helper to create a Group, cuts out `std::make_shared<Group>(std::initializer_list<Drawable> {...})`
     inline std::shared_ptr<Drawable> group(std::initializer_list<std::shared_ptr<Drawable>> children, const glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), const glm::vec3 rotation = glm::vec3(0.0f, 0.0f, 0.0f), const glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f), const bool hidden = false) {
         return std::make_shared<Group>(children, position, rotation, scale, hidden);
@@ -234,10 +243,10 @@ namespace mcmodel {
             // x
             TexturedFace::from(shader, textures[NUM_TEXTURES == 1 ? 0 : 0], {
                 pos + size*glm::vec3(0, 0, 0), pos + size*glm::vec3(0, 0, 1), pos + size*glm::vec3(0, 1, 1), pos + size*glm::vec3(0, 1, 0)
-            }, glm::vec2(pos.y, pos.z), glm::vec2(size.y, size.z)),
+            }, glm::vec2(pos.y, pos.z), glm::vec2(size.z, size.y)),
             TexturedFace::from(shader, textures[NUM_TEXTURES == 1 ? 0 : 1], {
                 pos + size*glm::vec3(1, 0, 0), pos + size*glm::vec3(1, 1, 0), pos + size*glm::vec3(1, 1, 1), pos + size*glm::vec3(1, 0, 1)
-            }, glm::vec2(pos.y, pos.z), glm::vec2(size.y, size.z), true),
+            }, glm::vec2(pos.y, pos.z), glm::vec2(size.z, size.y), true),
             
             // y
             TexturedFace::from(shader, textures[NUM_TEXTURES == 1 ? 0 : 2], {
