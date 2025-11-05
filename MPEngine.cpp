@@ -174,6 +174,11 @@ MPEngine::MPEngine()
         std::getline(std::cin, path);
         this->_movie = md5camera::load(path.c_str());
     });
+
+    // Space for screenshot
+    this->_im->on({input::key(GLFW_KEY_SPACE)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        this->saveScreenshot(NULL);
+    });
 }
 
 MPEngine::~MPEngine() {}
@@ -378,7 +383,7 @@ void MPEngine::mSetupScene() {
     this->_freecam->recomputeOrientation();
     
     this->_fixedcam = std::make_shared<CSCI441::FixedCam>();
-
+    
     // All other cameras are handled by the Player
 
     _lastTime = (GLfloat)glfwGetTime();
@@ -510,7 +515,7 @@ void MPEngine::_updateScene() {
         this->_fixedcam->setPosition(frame.eyePos);
         this->_fixedcam->setLookAtPoint(frame.eyePos + frame.camDir);
         this->_fixedcam->setUpVector(frame.upVec);
-        this->_fixedcam->setVerticalFOV(frame.fov);
+        this->_fixedcam->setVerticalFOV(glm::radians(42.0f)); // TODO fix this
         this->_fixedcam->computeViewMatrix();
     }
 }
