@@ -6,10 +6,9 @@
 
 #include <cmath>
 #include <string>
+#include <iostream>
 
 #include <glm/gtc/constants.hpp>
-
-#include <iostream>
 
 static constexpr GLfloat GLM_PI = glm::pi<float>();
 static constexpr GLfloat GLM_2PI = glm::two_pi<float>();
@@ -34,6 +33,7 @@ inline char const* get_gl_error_message(GLenum const err) noexcept {
 MPEngine::MPEngine()
     : CSCI441::OpenGLEngine(4, 1, 720, 720, "MP: Moria"),
     _freecam(nullptr),
+    _fixedcam(nullptr),
     _primaryCamera(1),
     _secondaryCamera(1),
     _lastTime(0.0f),
@@ -82,13 +82,21 @@ MPEngine::MPEngine()
         this->setWindowShouldClose();
     });
 
-    // C to cycle between primary cameras (arcball, freecam) for debugging
+    // C to switch between arcball and freecam in primary viewport
+    // Note: can't manually select move camera
     this->_im->on({input::key(GLFW_KEY_C)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        if(!this->_movie.empty()) return;
         this->_primaryCamera = (this->_primaryCamera + 1) % 2;
     });
 
-    // V to print position for debugging
+    // V to switch between first person, sky, and none in secondary viewport
     this->_im->on({input::key(GLFW_KEY_V)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        if(!this->_movie.empty()) return;
+        this->_secondaryCamera = (this->_secondaryCamera + 1) % 3;
+    });
+
+    // Z to print position for debugging
+    this->_im->on({input::key(GLFW_KEY_Z)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         fprintf(stdout, "Player is at (%f, %f, %f)\n", this->_player->getPosition().x, this->_player->getPosition().y, this->_player->getPosition().z);
     });
 
@@ -143,19 +151,28 @@ MPEngine::MPEngine()
         }
     });
 
-    // 1 to hide secondary camera
+    // 1 for Player 1
     this->_im->on({input::key(GLFW_KEY_1)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
-        this->_secondaryCamera = 0;
+        this->_player = this->_player1.get();
     });
 
-    // 2 for first person camera
+    // 2 for Player 2
     this->_im->on({input::key(GLFW_KEY_2)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
-        this->_secondaryCamera = 1;
+        this->_player = this->_player2.get();
     });
 
-    // 3 for sky camera
+    // 3 for Player 3
     this->_im->on({input::key(GLFW_KEY_3)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
-        this->_secondaryCamera = 2;
+        this->_player = this->_player3.get();
+    });
+
+    // P to play movie, enter file name into stdin when prompted
+    this->_im->on({input::key(GLFW_KEY_P)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        if(!this->_movie.empty()) return;
+        std::string path;
+        std::cout << "Enter md5camera movie file to play: ";
+        std::getline(std::cin, path);
+        this->_movie = md5camera::load(path.c_str());
     });
 }
 
@@ -359,6 +376,8 @@ void MPEngine::mSetupScene() {
     this->_freecam->setTheta(-1.25f*M_PI);
     this->_freecam->setPhi(M_PI / 2.8f);
     this->_freecam->recomputeOrientation();
+    
+    this->_fixedcam = std::make_shared<CSCI441::FixedCam>();
 
     // All other cameras are handled by the Player
 
@@ -402,46 +421,46 @@ void MPEngine::mCleanupTextures() {
 void MPEngine::mCleanupScene() {
     fprintf( stdout, "[INFO]: ...deleting scene...\n" );
     this->_freecam = nullptr;
+    this->_fixedcam = nullptr;
 }
 
 /*** Camera Utility ***/
 
 CSCI441::Camera* MPEngine::getPrimaryCamera() const {
-    switch(_primaryCamera) {
+    switch(this->_primaryCamera) {
+        case 2:
+            return this->_fixedcam.get();
         case 1:
             return &this->_player->getArcballCamera();
+        case 0:
         default:
             return this->_freecam.get();
     }
 }
 
 glm::vec2 MPEngine::getPrimaryCameraRotationScale() const {
-    switch(_primaryCamera) {
+    switch(this->_primaryCamera) {
         case 1:
             return glm::vec2(1.0f, -1.0f);
+        case 0:
         default:
             return glm::vec2(1.0f, 1.0f);
     }
 }
 
 CSCI441::Camera* MPEngine::getSecondaryCamera() const {
-    switch(_secondaryCamera) {
+    switch(this->_secondaryCamera) {
         case 1:
             return &this->_player->getFirstPersonCamera();
         case 2:
             return &this->_player->getSkyCamera();
+        case 0:
         default:
             return nullptr;
     }
 }
 
 /*** Rendering/Drawing Functions ***/
-
-void drawTerrainAlignedPlayer(glutils::RenderContext& ctx, const Player& player, const TerrainPatch& terrain) {
-    ctx.pushTransformation(glm::translate(glm::mat4(1.0f), player.getPosition())*glm::toMat4(glm::rotation(glm::vec3(0.0, -1.0, 0.0), terrain.getTerrainNormal(player.getPosition().x, player.getPosition().z)))*glm::translate(glm::mat4(1.0f), -player.getPosition()));
-    player.draw(ctx);
-    ctx.popTransformation();
-}
 
 void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
@@ -455,7 +474,6 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_world->draw(ctx);
 
     this->_player1->draw(ctx);
-    // drawTerrainAlignedPlayer(ctx, *this->_player1, *this->_terrain);
     this->_player2->draw(ctx);
     this->_player3->draw(ctx);
 }
@@ -481,6 +499,20 @@ void MPEngine::_updateScene() {
     // This isn't quite right, but it looks fine... so it's good enough
     const glm::vec3 terrainRotation = glm::eulerAngles(glm::rotation(glm::vec3(0.0, -1.0, 0.0), this->_terrain->getTerrainNormal(this->_player->getPosition().x, this->_player->getPosition().z)));
     this->_player->setRotation({this->_player->getRotation().x , terrainRotation.y*cos(this->_player->getRotation().x), terrainRotation.z*cos(this->_player->getRotation().x)});
+
+    // Play movie
+    if(!this->_movie.empty()) {
+        const md5camera::CameraConfig frame = this->_movie.front();
+        this->_movie.pop();
+
+        this->_primaryCamera = frame.primaryCamera;
+        this->_secondaryCamera = frame.secondaryCamera;
+        this->_fixedcam->setPosition(frame.eyePos);
+        this->_fixedcam->setLookAtPoint(frame.eyePos + frame.camDir);
+        this->_fixedcam->setUpVector(frame.upVec);
+        this->_fixedcam->setVerticalFOV(frame.fov);
+        this->_fixedcam->computeViewMatrix();
+    }
 }
 
 void MPEngine::run() {

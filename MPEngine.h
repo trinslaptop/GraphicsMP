@@ -25,6 +25,7 @@
 #include "World.hpp"
 #include "Skybox.hpp"
 #include "TerrainPatch.hpp"
+#include "md5camera.hpp"
 
 class MPEngine final : public CSCI441::OpenGLEngine {
     public:
@@ -56,9 +57,15 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         /// Handles animations and updating camera
         void _updateScene();
         
+        /// Time last frame was rendered
+        GLfloat _lastTime;
+
         /*** Camera Information ***/
         /// A free camera for debugging
         std::shared_ptr<CSCI441::FreeCam> _freecam;
+
+        /// A camera for movies
+        std::shared_ptr<CSCI441::FixedCam> _fixedcam;
 
         /// Index of current primary camera [Free Camera, Player Arcball Camera]
         unsigned int _primaryCamera;
@@ -71,11 +78,10 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         unsigned int _secondaryCamera;
         CSCI441::Camera* getSecondaryCamera() const;
 
-        /// time last frame was rendered
-        GLfloat _lastTime;
+        /// Frame by frame camera config
+        md5camera::MD5Movie _movie;
 
         /*** Shader Program Information ***/
-
         /// Shader program that performs texturing and Phong shading
         std::unique_ptr<ShaderProgram> _shaderProgram;
         

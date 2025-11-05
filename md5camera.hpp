@@ -2,39 +2,58 @@
 #define MD5CAMERA_HPP
 
 #include <glm/glm.hpp>
-#include <vector>
-#include <cstdio>
+#include <queue>
 #include <fstream>
+#include <cstdio>
 
-// TODO
+#include <iostream>
 
 namespace md5camera {
-    struct FrameConfig {
+    struct CameraConfig {
+        unsigned int primaryCamera = 0, secondaryCamera = 0;
         const glm::vec3 eyePos, camDir, upVec;
         float fov;
     };
 
-    typedef std::vector<FrameConfig> MD5Movie;
+    typedef std::queue<CameraConfig> MD5Movie;
 
     inline MD5Movie load(const char* path) {
-        std::ifstream stream("test.txt");
-        if(!stream.is_open()) {
-            return MD5Movie();
+        MD5Movie result;
+
+        std::ifstream stream(path);
+        if(stream.is_open()) {
+            float eyePosX, eyePosY, eyePosZ, camDirX, camDirY, camDirZ, upVecX, upVecY, upVecZ, fov;
+            size_t n;
+            stream >> n;
+            for(size_t frame = 0; frame < n; frame++) {
+                stream >> eyePosX >> eyePosY >> eyePosZ
+                    >> camDirX >> camDirY >> camDirZ
+                    >> upVecX  >> upVecY  >> upVecZ
+                    >> fov;
+                result.push(CameraConfig {
+                    .primaryCamera = 2,
+                    .secondaryCamera = 0,
+                    .eyePos = glm::vec3(eyePosX, eyePosY, eyePosZ),
+                    .camDir = glm::vec3(camDirX, camDirY, camDirZ),
+                    .upVec = glm::vec3(upVecX, upVecY, upVecZ),
+                    .fov = fov
+                });
+            }
+
+            // Last frame to reset cameras
+            result.push(CameraConfig {
+                .primaryCamera = 1,
+                .secondaryCamera = 1,
+                .eyePos = glm::vec3(eyePosX, eyePosY, eyePosZ),
+                .camDir = glm::vec3(camDirX, camDirY, camDirZ),
+                .upVec = glm::vec3(0.0f, 1.0f, 0.0f),
+                .fov = 45.0f
+            });
+        } else {
+            fprintf(stderr, "[ERROR]: Could not read movie file \"%s\"\n", path);
         }
-        
-        float eyePosX, eyePosY, eyePosZ, camDirX, camDirY, camDirZ, upVecX, upVecY, upVecZ, fov;
-        size_t n;
-        // std::cout << n << " frames" << std::endl;
-        
-        stream >> n;
-        for(size_t frame = 0; frame < n; frame++) {
-            stream >> eyePosX >> eyePosY >> eyePosZ
-                >> camDirX >> camDirY >> camDirZ
-                >> upVecX  >> upVecY  >> upVecZ
-                >> fov;
-                
-            fprintf(stdout, "Frame %d: eyePos={%f, %f, %f}, camDir={%f, %f, %f}, upVec={%f, %f, %f}, fov=%f\n", n, eyePosX, eyePosY, eyePosZ, camDirX, camDirY, camDirZ, upVecX, upVecY, upVecZ, fov);
-        }
+
+        return result;
     }
 }
 
