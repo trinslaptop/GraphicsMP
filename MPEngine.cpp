@@ -379,7 +379,7 @@ void MPEngine::mSetupBuffers() {
     this->_player2 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/fuyuzetsu.png"), this->_tm->load("assets/textures/fuyuzetsu_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape2.png"), this->_tm->load("assets/textures/cape2_specular.png")});
     this->_player2->setPosition(this->_terrain->getTerrainPosition(35.0f, 32.0f));
 
-    this->_player3 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true);
+    this->_player3 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/jonsnow.png"), this->_tm->load("assets/textures/jonsnow_specular.png")}, true);
     this->_player3->setPosition(this->_terrain->getTerrainPosition(35.0f, 35.0f));
 }
 
