@@ -549,7 +549,7 @@ void MPEngine::_updateScene() {
         this->_fixedcam->setPosition(frame.eyePos);
         this->_fixedcam->setLookAtPoint(frame.eyePos + frame.camDir);
         this->_fixedcam->setUpVector(frame.upVec);
-        this->_fixedcam->setVerticalFOV(glm::radians(42.0f)); // TODO fix this
+        this->_fixedcam->setVerticalFOV(frame.fov);
         this->_fixedcam->computeViewMatrix();
     }
 }
