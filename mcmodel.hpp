@@ -212,7 +212,7 @@ namespace mcmodel {
         });
     }
 
-    
+    /// Adds full object cosine position oscillation, parameter is standard px (1.0f/16.0f) distance to oscillate 
     inline std::shared_ptr<Drawable> oscillate(const ShaderProgram& shader, const std::shared_ptr<Drawable> child, const GLfloat oscillation = 1.0f) {
         const GLuint handle = shader.getShaderProgramHandle(), attrloc = shader.getUniformLocation("oscillation");
         return std::make_shared<Lambda>([handle, attrloc, child, oscillation](glutils::RenderContext& ctx) {
@@ -222,6 +222,7 @@ namespace mcmodel {
         });
     }
 
+    /// Disables lighting, useful when an object will be positioned at a light and should look illuminated despite having opposite normals
     inline std::shared_ptr<Drawable> ignore_light(const ShaderProgram& shader, const std::shared_ptr<Drawable> child) {
         const GLuint handle = shader.getShaderProgramHandle(), attrloc = shader.getUniformLocation("lit");
         return std::make_shared<Lambda>([handle, attrloc, child](glutils::RenderContext& ctx) {
@@ -231,12 +232,25 @@ namespace mcmodel {
         });
     }
 
+    /// Multiply the diffuse (and ambient) texture by a color vector, useful for reusing textures to make things of different colors
     inline std::shared_ptr<Drawable> tint(const ShaderProgram& shader, const std::shared_ptr<Drawable> child, const glm::vec3 tint) {
         const GLuint handle = shader.getShaderProgramHandle(), attrloc = shader.getUniformLocation("tint");
         return std::make_shared<Lambda>([handle, attrloc, child, tint](glutils::RenderContext& ctx) {
             glProgramUniform4fv(handle, attrloc, 1, glm::value_ptr(glm::vec4(tint, 1.0f)));
             child->draw(ctx);
             glProgramUniform4fv(handle, attrloc, 1, glm::value_ptr(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)));
+        });
+    }
+
+    /// Animate (lerp) through a series of vertically stacked diffuse (and ambient) texture keyframes, frameCount should be the number of frames in the image, frameTime is time between keyframes
+    inline std::shared_ptr<Drawable> animtex(const ShaderProgram& shader, const std::shared_ptr<Drawable> child, const GLuint frameCount, const GLfloat frameTime = 1.0f) {
+        const GLuint handle = shader.getShaderProgramHandle(), frameCountAttrloc = shader.getUniformLocation("frameCount"), frameTimeAttrloc = shader.getUniformLocation("frameTime");
+        return std::make_shared<Lambda>([handle, frameCountAttrloc, frameTimeAttrloc, child, frameCount, frameTime](glutils::RenderContext& ctx) {
+            glProgramUniform1ui(handle, frameCountAttrloc, frameCount);
+            glProgramUniform1f(handle, frameTimeAttrloc, frameTime);
+            child->draw(ctx);
+            glProgramUniform1ui(handle, frameCountAttrloc, 1);
+            glProgramUniform1f(handle, frameTimeAttrloc, 1.0f);
         });
     }
 
@@ -277,20 +291,14 @@ namespace mcmodel {
 
     /// Creates a cross of two y aligned planes, good for basic plants
     inline std::shared_ptr<Drawable> cross(const ShaderProgram& shader, const std::array<GLuint, 2>& textures, const glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), const GLfloat size = 1.0f) {
-        return cullface(group({
+        return group({
             TexturedFace::from(shader, textures, {
                 pos + size*glm::vec3(0, 0, 0), pos + size*glm::vec3(1, 0, 1), pos + size*glm::vec3(1, 1, 1), pos + size*glm::vec3(0, 1, 0)
             }, glm::vec2(0, 0), glm::vec2(size, size)),
             TexturedFace::from(shader, textures, {
-                pos + size*glm::vec3(0, 1, 0), pos + size*glm::vec3(1, 1, 1), pos + size*glm::vec3(1, 0, 1), pos + size*glm::vec3(0, 0, 0)
-            }, glm::vec2(0, 0), glm::vec2(size, -size)),
-            TexturedFace::from(shader, textures, {
                 pos + size*glm::vec3(1, 0, 0), pos + size*glm::vec3(0, 0, 1), pos + size*glm::vec3(0, 1, 1), pos + size*glm::vec3(1, 1, 0)
             }, glm::vec2(0, 0), glm::vec2(size, size)),
-            TexturedFace::from(shader, textures, {
-                pos + size*glm::vec3(1, 1, 0), pos + size*glm::vec3(0, 1, 1), pos + size*glm::vec3(0, 0, 1), pos + size*glm::vec3(1, 0, 0)
-            }, glm::vec2(0, 0), glm::vec2(size, -size))
-        }));
+        });
     }
 
     /// Creates a cube and wraps a single texture set around it

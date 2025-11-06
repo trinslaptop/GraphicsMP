@@ -48,6 +48,7 @@ MPEngine::MPEngine()
     _block_log(nullptr),
     _block_leaves(nullptr),
     _block_mushroom(nullptr),
+    _block_tall_grass(nullptr),
     _block_amethyst(nullptr),
     _block_torch(nullptr),
     _block_red_spotlight(nullptr),
@@ -211,6 +212,8 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     shader.setProgramUniform("diffuseTexture", 0);
     shader.setProgramUniform("specularTexture", 1);
     shader.setProgramUniform("lit", true);
+    shader.setProgramUniform("frameCount", (GLuint) 1);
+    shader.setProgramUniform("frameTime", 1.0f);
     shader.setProgramUniform("tint", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
     // Positional Light (Torch)
@@ -281,8 +284,12 @@ void MPEngine::mSetupBuffers() {
     }));
     this->_block_leaves = Block::from(mcmodel::oscillate(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.5f), false);
     this->_block_amethyst = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
-    this->_block_mushroom = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/mushroom.png"), this->_tm->load("assets/textures/shiny.png")}), false);
-
+    this->_block_mushroom = Block::from(
+        mcmodel::animtex(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/mushroom_anim.png"), this->_tm->load("assets/textures/shiny.png")}), 4, 8.0f),
+    false);
+    this->_block_tall_grass = Block::from(
+        mcmodel::group({mcmodel::tint(*this->_shaderProgram, mcmodel::oscillate(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/tall_grass.png"), this->_tm->load("assets/textures/dull.png")})), glm::vec4(0.19f, 0.5f, 0.0f, 1.0f))}, glm::vec3(0.0f, -0.0625f, 0.0f)),
+    false);
     this->_block_torch = Block::from(mcmodel::ignore_light(*this->_shaderProgram, mcmodel::group({mcmodel::wrapped_cube(*this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/torch.png"), this->_tm->load("assets/textures/dull.png")}, {0.125f, 0.5f, 0.125f})}, {0.5f, 0.25f, 0.5f})), false);
     this->_block_red_spotlight = Block::from(
         mcmodel::group({
@@ -311,6 +318,7 @@ void MPEngine::mSetupBuffers() {
     this->_world->setBlock(glm::ivec3(1, 0, 5), this->_block_leaves);
     this->_world->setBlock(glm::ivec3(1, 0, 7), this->_block_amethyst);
     this->_world->setBlock(glm::ivec3(1, 0, 9), this->_block_mushroom);
+    this->_world->setBlock(glm::ivec3(1, 0, 11), this->_block_tall_grass);
 
     this->_world->setBlock(glm::ivec3(20, 4, 20), this->_block_torch);
     this->_world->setBlock(glm::ivec3(32, 5, 32), this->_block_red_spotlight);
@@ -346,11 +354,20 @@ void MPEngine::mSetupBuffers() {
     }
 
     // Scatter mushrooms
-    for(size_t i = 0; i < 100; i++) {
+    for(size_t i = 0; i < 75; i++) {
         const glm::ivec3 pos = this->_terrain->getTerrainPosition(glutils::randi(0, World::WORLD_SIZE), glutils::randi(0, World::WORLD_SIZE));
         // Check if ground mostly flat and empty
         if(this->_terrain->getTerrainHeight(pos.x, pos.z) - pos.y < 0.125 && !this->_world->getBlock(pos)) {
             this->_world->setBlock(pos, this->_block_mushroom);
+        }
+    }
+
+    // Scatter tall grass
+    for(size_t i = 0; i < 100; i++) {
+        const glm::ivec3 pos = this->_terrain->getTerrainPosition(glutils::randi(0, World::WORLD_SIZE), glutils::randi(0, World::WORLD_SIZE));
+        // Check if ground mostly flat and empty
+        if(this->_terrain->getTerrainHeight(pos.x, pos.z) - pos.y < 0.1875 && !this->_world->getBlock(pos)) {
+            this->_world->setBlock(pos, this->_block_tall_grass);
         }
     }
 
@@ -420,6 +437,7 @@ void MPEngine::mCleanupBuffers() {
     this->_block_log = nullptr;
     this->_block_leaves = nullptr;
     this->_block_mushroom = nullptr;
+    this->_block_tall_grass = nullptr;
     this->_block_amethyst = nullptr;
     this->_block_torch = nullptr;
     this->_block_red_spotlight = nullptr;

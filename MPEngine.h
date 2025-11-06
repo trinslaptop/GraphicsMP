@@ -103,6 +103,7 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         std::shared_ptr<Block> _block_log;
         std::shared_ptr<Block> _block_leaves;
         std::shared_ptr<Block> _block_mushroom;
+        std::shared_ptr<Block> _block_tall_grass;
         std::shared_ptr<Block> _block_amethyst;
         std::shared_ptr<Block> _block_torch;
         std::shared_ptr<Block> _block_red_spotlight;
