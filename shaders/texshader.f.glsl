@@ -20,6 +20,8 @@ uniform vec3 blueSpotlightPos;
 
 uniform bool lit;
 
+uniform vec4 tint;
+
 in vec2 fTexCoord;
 in vec3 fNormal;
 in vec3 fPos;
@@ -36,7 +38,7 @@ vec4 phong(const vec3 L, const vec3 lColor) {
     vec3 V = normalize(eyePos - fPos);
     vec3 R = -L + 2*dot(N, L)*N;
 
-    vec4 diffuseTexel = texture(diffuseTexture, fTexCoord);
+    vec4 diffuseTexel = tint*texture(diffuseTexture, fTexCoord);
     vec3 diffuse = vec3(diffuseTexel)*lColor*max(dot(L, N), 0);
 
     vec3 ambient = vec3(diffuseTexel)*0.35*lColor;
@@ -44,7 +46,7 @@ vec4 phong(const vec3 L, const vec3 lColor) {
     vec4 specularTexel = texture(specularTexture, fTexCoord);
     vec3 specular = max(vec3(specularTexel)*lColor*pow(max(dot(V, R), 0.0), 32.0*specularTexel.a), vec3(0.0, 0.0, 0.0));
 
-    return vec4(diffuse + specular + ambient, 1.0);
+    return clamp(vec4(diffuse + specular + ambient, 1.0), vec4(0.0), vec4(1.0));
 }
 
 vec4 attenuate(const vec3 lPos, const vec4 i, const vec3 weights) {
@@ -76,7 +78,7 @@ vec4 directional_light(const vec3 lDirection, const vec3 lColor) {
 }
 
 void main() {
-    vec4 diffuseTexel = texture(diffuseTexture, fTexCoord);
+    vec4 diffuseTexel = tint*texture(diffuseTexture, fTexCoord);
 
     // Ignore low alpha for cutout textures
     if(diffuseTexel.a < 0.5) {

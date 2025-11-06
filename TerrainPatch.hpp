@@ -74,6 +74,7 @@ class TerrainPatch final : public mcmodel::Drawable {
             this->_shader.useProgram();
             ctx.bind(this->_shader);
             this->_shader.setProgramUniform("size", this->_size);
+            this->_shader.setProgramUniform("tint", glm::vec4(0.19f, 0.5f, 0.0f, 1.0f));
 
             for(size_t i = 0; i < sizeof(this->_textures)/sizeof(this->_textures[0]); i++) {
                 glActiveTexture(GL_TEXTURE0 + i);
@@ -82,6 +83,9 @@ class TerrainPatch final : public mcmodel::Drawable {
 
             glBindVertexArray(this->_vao);
             glDrawArrays(GL_PATCHES, 0, 4);
+
+            // Reset
+            this->_shader.setProgramUniform("tint", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         }
 
         /// Get the computed/rendered y value of the terrain at a given x, z

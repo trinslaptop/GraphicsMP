@@ -211,6 +211,7 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     shader.setProgramUniform("diffuseTexture", 0);
     shader.setProgramUniform("specularTexture", 1);
     shader.setProgramUniform("lit", true);
+    shader.setProgramUniform("tint", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
     // Positional Light (Torch)
     shader.setProgramUniform("torchPos", glm::vec3(20.5, 4.5, 20.5));
@@ -283,9 +284,24 @@ void MPEngine::mSetupBuffers() {
     this->_block_mushroom = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/mushroom.png"), this->_tm->load("assets/textures/shiny.png")}), false);
 
     this->_block_torch = Block::from(mcmodel::ignore_light(*this->_shaderProgram, mcmodel::group({mcmodel::wrapped_cube(*this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/torch.png"), this->_tm->load("assets/textures/dull.png")}, {0.125f, 0.5f, 0.125f})}, {0.5f, 0.25f, 0.5f})), false);
-    this->_block_red_spotlight = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/red_spotlight.png"), this->_tm->load("assets/textures/dull.png")}), false);
-    this->_block_green_spotlight = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/green_spotlight.png"), this->_tm->load("assets/textures/dull.png")}), false);
-    this->_block_blue_spotlight = Block::from(mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/blue_spotlight.png"), this->_tm->load("assets/textures/dull.png")}), false);
+    this->_block_red_spotlight = Block::from(
+        mcmodel::group({
+            mcmodel::tint(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight_overlay.png"), this->_tm->load("assets/textures/dull.png")}), glm::vec3(1.0f, 0.0f, 0.0f)),
+            mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight.png"), this->_tm->load("assets/textures/dull.png")}),
+        }),
+    false);
+    this->_block_green_spotlight = Block::from(
+        mcmodel::group({
+            mcmodel::tint(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight_overlay.png"), this->_tm->load("assets/textures/dull.png")}), glm::vec3(0.0f, 1.0f, 0.0f)),
+            mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight.png"), this->_tm->load("assets/textures/dull.png")}),
+        }),
+    false);
+    this->_block_blue_spotlight = Block::from(
+        mcmodel::group({
+            mcmodel::tint(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight_overlay.png"), this->_tm->load("assets/textures/dull.png")}), glm::vec3(0.0f, 0.0f, 1.0f)),
+            mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight.png"), this->_tm->load("assets/textures/dull.png")}),
+        }),
+    false);
 
     this->_world = std::make_shared<World>();
 

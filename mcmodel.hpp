@@ -213,7 +213,7 @@ namespace mcmodel {
     }
 
     
-    inline std::shared_ptr<Drawable> oscillate(const ShaderProgram& shader, std::shared_ptr<Drawable> child, const GLfloat oscillation = 1.0f) {
+    inline std::shared_ptr<Drawable> oscillate(const ShaderProgram& shader, const std::shared_ptr<Drawable> child, const GLfloat oscillation = 1.0f) {
         const GLuint handle = shader.getShaderProgramHandle(), attrloc = shader.getUniformLocation("oscillation");
         return std::make_shared<Lambda>([handle, attrloc, child, oscillation](glutils::RenderContext& ctx) {
             glProgramUniform1f(handle, attrloc, oscillation);
@@ -222,12 +222,21 @@ namespace mcmodel {
         });
     }
 
-    inline std::shared_ptr<Drawable> ignore_light(const ShaderProgram& shader, std::shared_ptr<Drawable> child) {
+    inline std::shared_ptr<Drawable> ignore_light(const ShaderProgram& shader, const std::shared_ptr<Drawable> child) {
         const GLuint handle = shader.getShaderProgramHandle(), attrloc = shader.getUniformLocation("lit");
         return std::make_shared<Lambda>([handle, attrloc, child](glutils::RenderContext& ctx) {
             glProgramUniform1i(handle, attrloc, 0);
             child->draw(ctx);
             glProgramUniform1i(handle, attrloc, 1);
+        });
+    }
+
+    inline std::shared_ptr<Drawable> tint(const ShaderProgram& shader, const std::shared_ptr<Drawable> child, const glm::vec3 tint) {
+        const GLuint handle = shader.getShaderProgramHandle(), attrloc = shader.getUniformLocation("tint");
+        return std::make_shared<Lambda>([handle, attrloc, child, tint](glutils::RenderContext& ctx) {
+            glProgramUniform4fv(handle, attrloc, 1, glm::value_ptr(glm::vec4(tint, 1.0f)));
+            child->draw(ctx);
+            glProgramUniform4fv(handle, attrloc, 1, glm::value_ptr(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)));
         });
     }
 
