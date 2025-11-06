@@ -157,6 +157,26 @@ MPEngine::MPEngine()
     this->_im->on({input::key(GLFW_KEY_3)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         this->_secondaryCamera = 2;
     });
+
+    this->_im->on({input::key(GLFW_KEY_LEFT)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        if (this->_player == this->_player3.get()){
+            this->_player = this->_player2.get();
+        } else if (this->_player == this->_player2.get()){
+            this->_player = this->_player1.get();
+        } else{
+            this->_player = this->_player3.get();
+        }
+    });
+
+    this->_im->on({input::key(GLFW_KEY_RIGHT)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        if (this->_player == this->_player1.get()){
+            this->_player = this->_player2.get();
+        } else if (this->_player == this->_player2.get()){
+            this->_player = this->_player3.get();
+        } else{
+            this->_player = this->_player1.get();
+        }
+    });
 }
 
 MPEngine::~MPEngine() {}
@@ -200,9 +220,9 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     shader.setProgramUniform("sunIntensity", 0.85f);
 
     // Spot lights colors are hardcoded in shader
-    shader.setProgramUniform("redSpotlightPos", glm::vec3(32.5f, 5.5f, 32.5f));
-    shader.setProgramUniform("greenSpotlightPos", glm::vec3(30.5, 5.5, 32.5));
-    shader.setProgramUniform("blueSpotlightPos", glm::vec3(31.5, 5.5, 32.5 + glm::sqrt(2)));
+    shader.setProgramUniform("redSpotlightPos", glm::vec3(34.0f, 5.5f, 32.0f));
+    shader.setProgramUniform("greenSpotlightPos", glm::vec3(31.0, 5.5, 31.0));
+    shader.setProgramUniform("blueSpotlightPos", glm::vec3(31.0, 5.5, 33.0 + glm::sqrt(2)));
 }
 
 void MPEngine::mSetupShaders() {
@@ -275,9 +295,9 @@ void MPEngine::mSetupBuffers() {
     this->_world->setBlock(glm::ivec3(1, 0, 9), this->_block_mushroom);
 
     this->_world->setBlock(glm::ivec3(20, 4, 20), this->_block_torch);
-    this->_world->setBlock(glm::ivec3(32, 5, 32), this->_block_red_spotlight);
-    this->_world->setBlock(glm::ivec3(30, 5, 32), this->_block_green_spotlight);
-    this->_world->setBlock(glm::ivec3(31, 5, 34), this->_block_blue_spotlight);
+    this->_world->setBlock(glm::ivec3(33, 5, 32), this->_block_red_spotlight);
+    this->_world->setBlock(glm::ivec3(30, 5, 31), this->_block_green_spotlight);
+    this->_world->setBlock(glm::ivec3(30, 5, 33), this->_block_blue_spotlight);
 
     // Place some trees
     this->_place_tree(this->_terrain->getTerrainPosition(10, 10));
@@ -318,14 +338,14 @@ void MPEngine::mSetupBuffers() {
 
     // Setup players
     this->_player1 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
-    this->_player1->setPosition(this->_terrain->getTerrainPosition(32.0f, 32.0f));
+    this->_player1->setPosition(this->_terrain->getTerrainPosition(34.0f, 32.0f));
     this->_player = this->_player1.get();
 
     this->_player2 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape2.png"), this->_tm->load("assets/textures/cape2_specular.png")});
-    this->_player2->setPosition(this->_terrain->getTerrainPosition(35.0f, 32.0f));
+    this->_player2->setPosition(this->_terrain->getTerrainPosition(31.0f, 31.0f));
 
-    this->_player3 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true);
-    this->_player3->setPosition(this->_terrain->getTerrainPosition(35.0f, 35.0f));
+    this->_player3 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/jonsnow.png"), this->_tm->load("assets/textures/jonsnow_specular.png")}, true);
+    this->_player3->setPosition(this->_terrain->getTerrainPosition(31.0f, 33.0f));
 }
 
 /// Generates a tree at pos with variable log height
