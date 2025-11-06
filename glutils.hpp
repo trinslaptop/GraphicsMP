@@ -84,7 +84,7 @@ namespace glutils {
             // Retrieves texture from cache or loads it
             inline GLuint load(const std::string path) {
                 // Try find existing
-                auto iter = this->_textures.find(path);
+                std::map<std::string, GLuint>::iterator iter = this->_textures.find(path);
                 if(iter != this->_textures.end()) {
                     return iter->second;
                 }
