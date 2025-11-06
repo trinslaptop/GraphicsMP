@@ -1,13 +1,22 @@
 #ifndef TERRAINPATCH_HPP
 #define TERRAINPATCH_HPP
 
+/*
+ * TerrainPatch.hpp
+ * Trin Wasinger - Fall 2025
+ *
+ * Creates a GL patch, tessellates it, and uses it to create a curved surface
+ * Instead of using Bezier Curves, this uses a single sine/cosine equation that I think looks very nice
+ * 
+ * Also handles positions and rotations for entities moving along surface
+ */
+
 #include <memory>
 #include <array>
 #include <cmath>
 #include <glm/glm.hpp>
 
 #include "mcmodel.hpp"
-
 
 class TerrainPatch final : public mcmodel::Drawable {
     private:
