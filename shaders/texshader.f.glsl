@@ -32,16 +32,13 @@ uniform float time;
 uniform float frameTime;
 uniform uint frameCount;
 
+/// Gets the diffuse texture for this fragment, applies tint and frame animation
 vec4 diffuse() {
     vec2 fTexCoord1 = fTexCoord / vec2(1.0, frameCount) + vec2(0.0, floor(time/frameTime)/frameCount);
     vec2 fTexCoord2 = fTexCoord / vec2(1.0, frameCount) + vec2(0.0, mod(floor(time/frameTime) + 1.0, frameCount)/frameCount);
 
-
     // Lerp between animation frames
     return tint*mix(texture(diffuseTexture, fTexCoord1), texture(diffuseTexture, fTexCoord2), mod(time, frameTime)/frameTime);
-    // return tint*mix(texture(diffuseTexture, fTexCoord/frameCount), texture(diffuseTexture, fTexCoord/frameCount), mod(time, frameTime)/frameTime);
-
-    // return tint*texture(diffuseTexture, fTexCoord);
 }
 
 /// Don't use this directly, instead call one of the specific light types below
@@ -54,7 +51,7 @@ vec4 phong(const vec3 L, const vec3 lColor) {
     vec3 V = normalize(eyePos - fPos);
     vec3 R = -L + 2*dot(N, L)*N;
 
-    vec4 diffuseTexel = diffuse();//tint*texture(diffuseTexture, fTexCoord);
+    vec4 diffuseTexel = diffuse(); // tint*texture(diffuseTexture, fTexCoord);
     vec3 diffuse = vec3(diffuseTexel)*lColor*max(dot(L, N), 0);
 
     vec3 ambient = vec3(diffuseTexel)*0.35*lColor;
@@ -94,7 +91,7 @@ vec4 directional_light(const vec3 lDirection, const vec3 lColor) {
 }
 
 void main() {
-    vec4 diffuseTexel = diffuse();//tint*texture(diffuseTexture, fTexCoord);
+    vec4 diffuseTexel = diffuse();
 
     // Ignore low alpha for cutout textures
     if(diffuseTexel.a < 0.5) {
