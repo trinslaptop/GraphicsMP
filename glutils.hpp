@@ -66,7 +66,7 @@ namespace glutils {
     /// Repeatedly calling `load()` with the same path (same literally, not logically, "./a.png" != "a.png") returns cached result
     class TextureManager final {
         private:
-            std::map<const std::string, GLuint> _textures;
+            std::map<std::string, GLuint> _textures;
 
         public:
             TextureManager() = default;
@@ -84,7 +84,7 @@ namespace glutils {
             // Retrieves texture from cache or loads it
             inline GLuint load(const std::string path) {
                 // Try find existing
-                const std::map<std::string, GLuint>::iterator iter = this->_textures.find(path);
+                std::map<std::string, GLuint>::iterator iter = this->_textures.find(path);
                 if(iter != this->_textures.end()) {
                     return iter->second;
                 }
