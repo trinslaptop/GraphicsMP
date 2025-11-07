@@ -34,8 +34,8 @@ uniform uint frameCount;
 
 /// Gets the diffuse texture for this fragment, applies tint and frame animation
 vec4 diffuse() {
-    vec2 fTexCoord1 = fTexCoord / vec2(1.0, frameCount) + vec2(0.0, floor(time/frameTime)/frameCount);
-    vec2 fTexCoord2 = fTexCoord / vec2(1.0, frameCount) + vec2(0.0, mod(floor(time/frameTime) + 1.0, frameCount)/frameCount);
+    vec2 fTexCoord1 = fTexCoord/vec2(1.0, frameCount) + vec2(0.0, floor(time/frameTime)/frameCount);
+    vec2 fTexCoord2 = fTexCoord/vec2(1.0, frameCount) + vec2(0.0, mod(floor(time/frameTime) + 1.0, frameCount)/frameCount);
 
     // Lerp between animation frames
     return tint*mix(texture(diffuseTexture, fTexCoord1), texture(diffuseTexture, fTexCoord2), mod(time, frameTime)/frameTime);
