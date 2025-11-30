@@ -152,7 +152,8 @@ namespace glutils {
             /// Set which shader this context should update
             inline void bind(const ShaderProgram& shader, const char* modelMatrixUniformName = "modelMatrix", const char* vpMatrixUniformName = "vpMatrix", const char* normalMatrixUniformName = "normalMatrix", const char* eyePosUniformName = "eyePos") {
                 this->_shader = shader.getShaderProgramHandle();
-                shader.setProgramUniform(vpMatrixUniformName, this->_projectionMatrix * this->_viewMatrix);
+                shader.useProgram();
+                shader.setProgramUniform(vpMatrixUniformName, this->_projectionMatrix*this->_viewMatrix);
                 shader.setProgramUniform(eyePosUniformName, this->_eyePos);
                 this->_modelMatrixLocation = shader.getUniformLocation(modelMatrixUniformName);
                 this->_normalMatrixLocation = shader.getUniformLocation(normalMatrixUniformName);

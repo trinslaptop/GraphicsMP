@@ -115,6 +115,11 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         std::shared_ptr<Player> _player3;
         Player* _player;
 
+
+        std::shared_ptr<Chunk> _TEST_CHUNK;
+        std::unique_ptr<ShaderProgram> _TEST_SHADER;
+
+
         /// Generates a tree at pos with variable log height
         void _place_tree(const glm::ivec3 pos, const size_t height = 5);
 };

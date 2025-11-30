@@ -241,6 +241,9 @@ void MPEngine::mSetupShaders() {
 
     this->_terrainShaderProgram = std::make_unique<ShaderProgram>("shaders/terrain.v.glsl", "shaders/terrain.tc.glsl", "shaders/terrain.te.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_terrainShaderProgram);
+
+    this->_TEST_SHADER = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
+    initCommonFragmentShaderUniforms(*this->_TEST_SHADER);
 }
 
 void MPEngine::mSetupBuffers() {
@@ -271,6 +274,8 @@ void MPEngine::mSetupBuffers() {
 
     // Place terrain
     this->_terrain = TerrainPatch::from(*this->_terrainShaderProgram, World::WORLD_SIZE, {this->_tm->load("assets/textures/grass.png"), this->_tm->load("assets/textures/dull.png")});
+
+    this->_TEST_CHUNK = Chunk::from(*this->_shaderProgram, *this->_TEST_SHADER, glm::ivec3(1, 0, 1), 0x80801, {this->_tm->load("assets/textures/grass.png"), this->_tm->load("assets/textures/dull.png")});
 
     // Register blocks
     this->_block_planks = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/planks.png"), this->_tm->load("assets/textures/dull.png")}}));
@@ -311,6 +316,8 @@ void MPEngine::mSetupBuffers() {
     false);
 
     this->_world = std::make_shared<World>();
+
+    this->_TEST_CHUNK->_blocks[glm::ivec3(0, 0, 0)] = this->_block_amethyst;
 
     // Place one of each block for testing
     this->_world->setBlock(glm::ivec3(1, 0, 1), this->_block_planks);
@@ -428,6 +435,7 @@ void MPEngine::mCleanupShaders() {
     this->_shaderProgram = nullptr;
     this->_skyboxShaderProgram = nullptr;
     this->_terrainShaderProgram = nullptr;
+    this->_TEST_SHADER = nullptr;
 }
 
 void MPEngine::mCleanupBuffers() {
@@ -450,6 +458,7 @@ void MPEngine::mCleanupBuffers() {
     this->_player2 = nullptr;
     this->_player3 = nullptr;
     this->_terrain = nullptr;
+    this->_TEST_CHUNK= nullptr;
 }
 
 void MPEngine::mCleanupTextures() {
@@ -504,7 +513,9 @@ CSCI441::Camera* MPEngine::getSecondaryCamera() const {
 void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
 
-    this->_terrain->draw(ctx);
+    this->_TEST_CHUNK->draw(ctx);
+
+    // this->_terrain->draw(ctx);
 
     this->_shaderProgram->useProgram();
     ctx.bind(*this->_shaderProgram);
