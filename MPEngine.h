@@ -86,14 +86,14 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         md5camera::MD5Movie _movie;
 
         /*** Shader Program Information ***/
-        /// Shader program that performs texturing and Phong shading
-        std::unique_ptr<ShaderProgram> _shaderProgram;
-        
-        /// Cubemap shader
-        std::unique_ptr<ShaderProgram> _skyboxShaderProgram;
-
-        /// Terrain Patch Shader
-        std::unique_ptr<ShaderProgram> _terrainShaderProgram;
+        struct {
+            /// Shader program that performs texturing and Phong shading
+            std::unique_ptr<ShaderProgram> primary;
+            /// Cubemap shader
+            std::unique_ptr<ShaderProgram> skybox;
+            /// Terrain Patch Shader
+            std::unique_ptr<ShaderProgram> terrain;
+        } _shaders;
 
         /*** Helper Classes ***/
         std::unique_ptr<input::InputManager> _im;
@@ -102,14 +102,11 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         /*** Objects ***/
         std::shared_ptr<Skybox> _skybox;
         std::shared_ptr<mcmodel::Drawable> _grid;
-        
+
         std::shared_ptr<World> _world;
         std::shared_ptr<Player> _player;
 
         std::unordered_map<std::string, std::shared_ptr<Block>> _blocks;
-
-        std::unique_ptr<ShaderProgram> _TEST_SHADER;
-
 
         /// Generates a tree at pos with variable log height
         void _place_tree(const glm::ivec3 pos, const size_t height = 5);

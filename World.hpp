@@ -5,7 +5,7 @@
  * World.hpp
  * Trin Wasinger - Fall 2025
  *
- * Stores and draws static object "blocks" in world
+ * Stores and draws "block" objects in world
  */
 
 #include <memory>
@@ -20,7 +20,7 @@
 
 #include "include/f8.hpp"
 
-// Allow hashing glm::ivec3 
+// Allow hashing glm::ivec3
 namespace std {
     namespace {
         template <class T> inline void hash_combine(std::size_t & s, const T & v) {
@@ -45,6 +45,7 @@ template<typename T> inline T bc(const T p0, const T p1, const T p2, const T p3,
     return glm::pow(1 - t, 3)*p0 + 3*glm::pow(1 - t, 2)*t*p1 + 3*(1-t)*glm::pow(t, 2)*p2 + glm::pow(t, 3)*p3;
 }
 
+/// A subregion of the world, if at y=0, also has terrain
 class Chunk final : public mcmodel::Drawable, NonCopyable  {
     public:
         static constexpr float CHUNK_SIZE = 16;
@@ -56,7 +57,7 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
         // The world is very sparse, so store as a map
         std::unordered_map<glm::ivec3, std::shared_ptr<Block>, std::hash<glm::ivec3>> _blocks;
 
-        const struct Shaders {
+        const struct {
             const ShaderProgram& block;
             const ShaderProgram& terrain;
         } _shaders;
@@ -223,17 +224,18 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
         }
 };
 
-/// Represents the blocks in the world (and eventually other stuff?)
+/// Represents the blocks in the world and terrain
+/// The world is made up of chunk regions
 class World final : public mcmodel::Drawable {
     private:
-        // This world is very sparse, so store as a map, also allows placing stuff outside a fixed region
+        // This world is very sparse, so store as a map
         std::unordered_map<glm::ivec3, std::shared_ptr<Chunk>, std::hash<glm::ivec3>> _chunks;
 
         const unsigned int _seed;
 
         const std::array<GLuint, 2> _terrain_textures;
 
-        const struct Shaders {
+        const struct {
             const ShaderProgram& block;
             const ShaderProgram& terrain;
         } _shaders;

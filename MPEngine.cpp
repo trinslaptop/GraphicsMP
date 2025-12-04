@@ -41,8 +41,6 @@ MPEngine::MPEngine()
     _secondaryCamera(1),
     _lastTime(0.0f),
     // Most objects have to be initialized later on once OpenGL is ready
-    _shaderProgram(nullptr),
-    _skyboxShaderProgram(nullptr),
     _im(nullptr),
     _tm(nullptr),
     _grid(nullptr),
@@ -215,26 +213,18 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     shader.setProgramUniform("sunColor", glm::vec3(0.95, 1.0, 1.0) /* Slight blue */);
     shader.setProgramUniform("sunDirection", glm::vec3(1.0f, -1.0f, 1.0f));
     shader.setProgramUniform("sunIntensity", 0.85f);
-
-    // Spot lights colors are hardcoded in shader
-    shader.setProgramUniform("redSpotlightPos", glm::vec3(32.5f, 5.5f, 32.5f));
-    shader.setProgramUniform("greenSpotlightPos", glm::vec3(30.5, 5.5, 32.5));
-    shader.setProgramUniform("blueSpotlightPos", glm::vec3(31.5, 5.5, 32.5 + glm::sqrt(2)));
 }
 
 void MPEngine::mSetupShaders() {
     // Load shaders
-    this->_shaderProgram = std::make_unique<ShaderProgram>("shaders/texshader.v.glsl", "shaders/texshader.f.glsl");
-    initCommonFragmentShaderUniforms(*this->_shaderProgram);
+    this->_shaders.primary = std::make_unique<ShaderProgram>("shaders/texshader.v.glsl", "shaders/texshader.f.glsl");
+    initCommonFragmentShaderUniforms(*this->_shaders.primary);
     
-    this->_skyboxShaderProgram = std::make_unique<ShaderProgram>("shaders/skybox.v.glsl", "shaders/skybox.f.glsl");
-    this->_skyboxShaderProgram->setProgramUniform("skybox", 0);
+    this->_shaders.skybox = std::make_unique<ShaderProgram>("shaders/skybox/skybox.v.glsl", "shaders/skybox/skybox.f.glsl");
+    this->_shaders.skybox->setProgramUniform("skybox", 0);
 
-    this->_terrainShaderProgram = std::make_unique<ShaderProgram>("shaders/terrain.v.glsl", "shaders/terrain.tc.glsl", "shaders/terrain.te.glsl", "shaders/texshader.f.glsl");
-    initCommonFragmentShaderUniforms(*this->_terrainShaderProgram);
-
-    this->_TEST_SHADER = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
-    initCommonFragmentShaderUniforms(*this->_TEST_SHADER);
+    this->_shaders.terrain = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
+    initCommonFragmentShaderUniforms(*this->_shaders.terrain);
 }
 
 void MPEngine::mSetupBuffers() {
@@ -247,7 +237,7 @@ void MPEngine::mSetupBuffers() {
     this->_tm->load("assets/textures/default.png");
 
     // Create skybox
-    this->_skybox = std::make_shared<Skybox>(*this->_skyboxShaderProgram, std::array<std::string, 6> {
+    this->_skybox = std::make_shared<Skybox>(*this->_shaders.skybox, std::array<std::string, 6> {
         "assets/textures/skybox/posx.jpg",
         "assets/textures/skybox/negx.jpg",
         "assets/textures/skybox/posy.jpg",
@@ -258,7 +248,7 @@ void MPEngine::mSetupBuffers() {
 
     // Place ground grid
     this->_grid = mcmodel::TexturedFace::from(
-        *this->_shaderProgram,
+        *this->_shaders.primary,
         {this->_tm->load("assets/textures/grid.png"), this->_tm->load("assets/textures/dull.png")},
         {
             glm::vec3 {0.0f, 0.0f, 0.0f},
@@ -270,9 +260,9 @@ void MPEngine::mSetupBuffers() {
 
     // Register blocks
     this->_blocks["air"] = nullptr;
-    this->_blocks["planks"] = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/planks.png"), this->_tm->load("assets/textures/dull.png")}}));
-    this->_blocks["glass"] = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/glass.png"), this->_tm->load("assets/textures/shiny.png")}}));
-    this->_blocks["log"] = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 6> {
+    this->_blocks["planks"] = Block::from(mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/planks.png"), this->_tm->load("assets/textures/dull.png")}}));
+    this->_blocks["glass"] = Block::from(mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/glass.png"), this->_tm->load("assets/textures/shiny.png")}}));
+    this->_blocks["log"] = Block::from(mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 6> {
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_top.png"), this->_tm->load("assets/textures/dull.png")},
@@ -280,31 +270,31 @@ void MPEngine::mSetupBuffers() {
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")}
     }));
-    this->_blocks["leaves"] = Block::from(mcmodel::oscillate(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.5f), false);
-    this->_blocks["amethyst"] = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
+    this->_blocks["leaves"] = Block::from(mcmodel::oscillate(*this->_shaders.primary, mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.5f), false);
+    this->_blocks["amethyst"] = Block::from(mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
     this->_blocks["mushroom"] = Block::from(
-        mcmodel::animtex(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/block/mushroom_anim.png"), this->_tm->load("assets/textures/shiny.png")}), 4, 8.0f),
+        mcmodel::animtex(*this->_shaders.primary, mcmodel::cross(*this->_shaders.primary, {this->_tm->load("assets/textures/block/mushroom_anim.png"), this->_tm->load("assets/textures/shiny.png")}), 4, 8.0f),
         false
     );
     this->_blocks["tall_grass"] = Block::from(
-        mcmodel::group({mcmodel::tint(*this->_shaderProgram, mcmodel::oscillate(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/block/tall_grass.png"), this->_tm->load("assets/textures/dull.png")})), glm::vec4(0.19f, 0.5f, 0.0f, 1.0f))}, glm::vec3(0.0f, -0.0625f, 0.0f)),
+        mcmodel::group({mcmodel::tint(*this->_shaders.primary, mcmodel::oscillate(*this->_shaders.primary, mcmodel::cross(*this->_shaders.primary, {this->_tm->load("assets/textures/block/tall_grass.png"), this->_tm->load("assets/textures/dull.png")})), glm::vec4(0.19f, 0.5f, 0.0f, 1.0f))}, glm::vec3(0.0f, -0.0625f, 0.0f)),
         false
     );
-    this->_blocks["torch"] = Block::from(mcmodel::ignore_light(*this->_shaderProgram, mcmodel::group({mcmodel::wrapped_cube(*this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/torch.png"), this->_tm->load("assets/textures/dull.png")}, {0.125f, 0.5f, 0.125f})}, {0.5f, 0.25f, 0.5f})), false);
+    this->_blocks["torch"] = Block::from(mcmodel::ignore_light(*this->_shaders.primary, mcmodel::group({mcmodel::wrapped_cube(*this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/torch.png"), this->_tm->load("assets/textures/dull.png")}, {0.125f, 0.5f, 0.125f})}, {0.5f, 0.25f, 0.5f})), false);
 
     // We do what we must because we can
     this->_blocks["cube"] = Block::from(
         mcmodel::group({
-            mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/base.png"), this->_tm->load("assets/textures/block/cube/base_shiny.png")}}),
-            mcmodel::ignore_light(*this->_shaderProgram, mcmodel::tint(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/lines.png"), this->_tm->load("assets/textures/dull.png")}}), glm::vec3(1.0f, 0.28f, 1.0f))),
+            mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/base.png"), this->_tm->load("assets/textures/block/cube/base_shiny.png")}}),
+            mcmodel::ignore_light(*this->_shaders.primary, mcmodel::tint(*this->_shaders.primary, mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/lines.png"), this->_tm->load("assets/textures/dull.png")}}), glm::vec3(1.0f, 0.28f, 1.0f))),
             mcmodel::group({
-                mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/shell.png"), this->_tm->load("assets/textures/block/cube/shell_shiny.png")}}),
-                mcmodel::ignore_light(*this->_shaderProgram, mcmodel::tint(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/heart.png"), this->_tm->load("assets/textures/dull.png")}}), glm::vec3(1.0f, 0.28f, 1.0f))),
+                mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/shell.png"), this->_tm->load("assets/textures/block/cube/shell_shiny.png")}}),
+                mcmodel::ignore_light(*this->_shaders.primary, mcmodel::tint(*this->_shaders.primary, mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/heart.png"), this->_tm->load("assets/textures/dull.png")}}), glm::vec3(1.0f, 0.28f, 1.0f))),
             }, glm::vec3(-0.03125f), glm::vec3(0.0f), glm::vec3(1.0625f))
         })
     );
 
-    this->_world = std::make_shared<World>(seed, *this->_shaderProgram, *this->_TEST_SHADER, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/grass.png"), this->_tm->load("assets/textures/dull.png")});
+    this->_world = std::make_shared<World>(seed, *this->_shaders.primary, *this->_shaders.terrain, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/grass.png"), this->_tm->load("assets/textures/dull.png")});
 
     // Initialize chunks
     for(size_t ckx = 0; ckx < 4; ckx++) {
@@ -365,7 +355,7 @@ void MPEngine::mSetupBuffers() {
     }
 
     // Setup players
-    this->_player = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
+    this->_player = std::make_shared<Player>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
     this->_player->setPosition({32.0f, this->_world->getTerrainHeight(32.0f, 32.0f), 32.0f});
 }
 
@@ -411,10 +401,9 @@ void MPEngine::mSetupScene() {
 /*** Engine Cleanup ***/
 void MPEngine::mCleanupShaders() {
     fprintf( stdout, "[INFO]: ...deleting Shaders.\n" );
-    this->_shaderProgram = nullptr;
-    this->_skyboxShaderProgram = nullptr;
-    this->_terrainShaderProgram = nullptr;
-    this->_TEST_SHADER = nullptr;
+    this->_shaders.primary = nullptr;
+    this->_shaders.skybox = nullptr;
+    this->_shaders.terrain = nullptr;
 }
 
 void MPEngine::mCleanupBuffers() {
@@ -478,15 +467,14 @@ CSCI441::Camera* MPEngine::getSecondaryCamera() const {
 void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
 
-    // this->_terrain->draw(ctx);
-
-    this->_shaderProgram->useProgram();
-    ctx.bind(*this->_shaderProgram);
+    this->_shaders.primary->useProgram();
+    ctx.bind(*this->_shaders.primary);
 
     this->_grid->draw(ctx);
+    this->_player->draw(ctx);
+
     this->_world->draw(ctx);
 
-    this->_player->draw(ctx);
 }
 
 /// Reads a line of text from stdin without blocking, returns empty string if no input
@@ -553,7 +541,7 @@ void MPEngine::_updateScene() {
     GLfloat deltaTime = currTime - _lastTime;
     this->_lastTime = currTime;
 
-    this->_shaderProgram->setProgramUniform("time", currTime);
+    this->_shaders.primary->setProgramUniform("time", currTime);
 
     // Update keybinds
     this->_im->poll(this->mpWindow, deltaTime);
