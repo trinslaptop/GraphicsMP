@@ -56,7 +56,7 @@ MPEngine::MPEngine()
     // ESC to exit
     this->_im->on({input::key(GLFW_KEY_ESCAPE)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         if(this->isDebuggingEnabled()) {
-            fprintf(stdout, "[INFO]: User hit escape");
+            fprintf(stdout, "\n[INFO]: User hit escape\n");
         }
         this->setWindowShouldClose();
     });
@@ -64,7 +64,7 @@ MPEngine::MPEngine()
     // Left CTRL+C to exit
     this->_im->on({input::key(GLFW_KEY_C)}, {input::key(GLFW_KEY_LEFT_CONTROL)}, [this](GLFWwindow *const window, const float deltaTime) {
         if(this->isDebuggingEnabled()) {
-            fprintf(stdout, "[INFO]: User hit control-c on window");
+            fprintf(stdout, "\n[INFO]: User hit control-c on window\n");
         }
         this->setWindowShouldClose();
     });
@@ -138,17 +138,8 @@ MPEngine::MPEngine()
         }
     });
 
-    // P to play movie, enter file name into stdin when prompted
-    this->_im->on({input::key(GLFW_KEY_P)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
-        if(!this->_movie.empty()) return;
-        std::string path;
-        std::cout << "Enter md5camera movie file to play: ";
-        std::getline(std::cin, path);
-        this->_movie = md5camera::load(path.c_str());
-    });
-
-    // Space for screenshot
-    this->_im->on({input::key(GLFW_KEY_SPACE)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+    // F2 for screenshot
+    this->_im->on({input::key(GLFW_KEY_F2)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         this->saveScreenshot(NULL);
     });
 }
@@ -525,6 +516,9 @@ void MPEngine::_handleConsoleInput() {
         } else {
             this->_world->setBlock(glm::vec3(x, y, z), block->second);
         }
+    } else if(cmd == "md5play") {
+        stream >> std::ws;
+        this->_movie = md5camera::load(std::string(std::istreambuf_iterator<char>(stream), {}).c_str());
     } else {
         fprintf(stderr, "[ERROR]: Unknown command '%s'\n", cmd.c_str());
     }
