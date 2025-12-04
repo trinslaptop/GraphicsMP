@@ -271,6 +271,7 @@ void MPEngine::mSetupBuffers() {
     // Register blocks
     this->_blocks["air"] = nullptr;
     this->_blocks["planks"] = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/planks.png"), this->_tm->load("assets/textures/dull.png")}}));
+    this->_blocks["glass"] = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/glass.png"), this->_tm->load("assets/textures/shiny.png")}}));
     this->_blocks["log"] = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 6> {
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
@@ -510,8 +511,6 @@ void MPEngine::_handleConsoleInput() {
     std::string cmd;
     stream >> cmd;
 
-    
-
     if(!cmd.size() || cmd.rfind('#', 0) == 0) {
         
     } else if(cmd == "exit") {
@@ -519,6 +518,7 @@ void MPEngine::_handleConsoleInput() {
     } else if(cmd == "tp") {
         float x, y, z;
         stream >> x >> y >> z;
+
         if(std::cin.fail()) {
             fprintf(stderr, "[ERROR]: Invalid position\n");
         } else {
@@ -529,7 +529,9 @@ void MPEngine::_handleConsoleInput() {
         std::string name;
         stream >> x >> y >> z;
         stream >> name;
+
         const auto block = this->_blocks.find(name);
+
         if(std::cin.fail() || block == this->_blocks.end()) {
             fprintf(stderr, "[ERROR]: Invalid position or block\n");
         } else {
