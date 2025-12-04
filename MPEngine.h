@@ -35,6 +35,8 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         void run() override;
 
         input::InputManager& getInputManager();
+
+        void initialize() override;
     private:
         /*** Engine Setup ***/
         void mSetupGLFW() override;
@@ -56,6 +58,9 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         /// Handles animations and updating camera
         void _updateScene();
         
+        /// Read debug commands from terminal
+        void _handleConsoleInput();
+
         /// Time last frame was rendered
         GLfloat _lastTime;
 
@@ -97,16 +102,11 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         /*** Objects ***/
         std::shared_ptr<Skybox> _skybox;
         std::shared_ptr<mcmodel::Drawable> _grid;
-        std::shared_ptr<Block> _block_planks;
-        std::shared_ptr<Block> _block_log;
-        std::shared_ptr<Block> _block_leaves;
-        std::shared_ptr<Block> _block_mushroom;
-        std::shared_ptr<Block> _block_tall_grass;
-        std::shared_ptr<Block> _block_amethyst;
-        std::shared_ptr<Block> _block_torch;
-        std::shared_ptr<Block> _block_cube;
+        
         std::shared_ptr<World> _world;
         std::shared_ptr<Player> _player;
+
+        std::unordered_map<std::string, std::shared_ptr<Block>> _blocks;
 
         std::unique_ptr<ShaderProgram> _TEST_SHADER;
 

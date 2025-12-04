@@ -47,15 +47,8 @@ MPEngine::MPEngine()
     _tm(nullptr),
     _grid(nullptr),
     _skybox(nullptr),
-    _block_planks(nullptr),
-    _block_log(nullptr),
-    _block_leaves(nullptr),
-    _block_mushroom(nullptr),
-    _block_tall_grass(nullptr),
-    _block_amethyst(nullptr),
-    _block_torch(nullptr),
-    _block_cube(nullptr),
     _player(nullptr),
+    _blocks(),
     _world()
 {
     this->_tm = std::make_unique<glutils::TextureManager>();
@@ -166,6 +159,15 @@ MPEngine::~MPEngine() {}
 
 /*** Engine Setup ***/
 
+void MPEngine::initialize() {
+    CSCI441::OpenGLEngine::initialize();
+
+    // Needed for readasync()
+    std::ios_base::sync_with_stdio(false);
+    fprintf(stdout, "> ");
+    fflush(stdout);
+}
+
 void MPEngine::mSetupGLFW() {
     CSCI441::OpenGLEngine::mSetupGLFW();
 
@@ -267,8 +269,9 @@ void MPEngine::mSetupBuffers() {
     );
 
     // Register blocks
-    this->_block_planks = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/planks.png"), this->_tm->load("assets/textures/dull.png")}}));
-    this->_block_log = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 6> {
+    this->_blocks["air"] = nullptr;
+    this->_blocks["planks"] = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/planks.png"), this->_tm->load("assets/textures/dull.png")}}));
+    this->_blocks["log"] = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 6> {
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_top.png"), this->_tm->load("assets/textures/dull.png")},
@@ -276,18 +279,20 @@ void MPEngine::mSetupBuffers() {
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
         std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")}
     }));
-    this->_block_leaves = Block::from(mcmodel::oscillate(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.5f), false);
-    this->_block_amethyst = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
-    this->_block_mushroom = Block::from(
+    this->_blocks["leaves"] = Block::from(mcmodel::oscillate(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.5f), false);
+    this->_blocks["amethyst"] = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
+    this->_blocks["mushroom"] = Block::from(
         mcmodel::animtex(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/block/mushroom_anim.png"), this->_tm->load("assets/textures/shiny.png")}), 4, 8.0f),
-    false);
-    this->_block_tall_grass = Block::from(
+        false
+    );
+    this->_blocks["tall_grass"] = Block::from(
         mcmodel::group({mcmodel::tint(*this->_shaderProgram, mcmodel::oscillate(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/block/tall_grass.png"), this->_tm->load("assets/textures/dull.png")})), glm::vec4(0.19f, 0.5f, 0.0f, 1.0f))}, glm::vec3(0.0f, -0.0625f, 0.0f)),
-    false);
-    this->_block_torch = Block::from(mcmodel::ignore_light(*this->_shaderProgram, mcmodel::group({mcmodel::wrapped_cube(*this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/torch.png"), this->_tm->load("assets/textures/dull.png")}, {0.125f, 0.5f, 0.125f})}, {0.5f, 0.25f, 0.5f})), false);
+        false
+    );
+    this->_blocks["torch"] = Block::from(mcmodel::ignore_light(*this->_shaderProgram, mcmodel::group({mcmodel::wrapped_cube(*this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/torch.png"), this->_tm->load("assets/textures/dull.png")}, {0.125f, 0.5f, 0.125f})}, {0.5f, 0.25f, 0.5f})), false);
 
     // We do what we must because we can
-    this->_block_cube = Block::from(
+    this->_blocks["cube"] = Block::from(
         mcmodel::group({
             mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/base.png"), this->_tm->load("assets/textures/block/cube/base_shiny.png")}}),
             mcmodel::ignore_light(*this->_shaderProgram, mcmodel::tint(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/lines.png"), this->_tm->load("assets/textures/dull.png")}}), glm::vec3(1.0f, 0.28f, 1.0f))),
@@ -307,7 +312,7 @@ void MPEngine::mSetupBuffers() {
         }
     }
 
-    this->_world->setBlock(glm::ivec3(63, 0, 63), this->_block_cube);
+    this->_world->setBlock(glm::ivec3(63, 0, 63), this->_blocks["cube"]);
 
     // Place some trees
     this->_place_tree({10, this->_world->getTerrainHeight(10.5f, 10.5f) - 0.5, 10});
@@ -320,12 +325,12 @@ void MPEngine::mSetupBuffers() {
     this->_place_tree({46, this->_world->getTerrainHeight(46.5f, 50.5f) - 0.5, 50});
 
     // Place amethyst pyramid
-    this->_world->setBlock(glm::ivec3(17, this->_world->getTerrainHeight(17.5, 17.5) + 3, 17), this->_block_torch);
+    this->_world->setBlock(glm::ivec3(17, this->_world->getTerrainHeight(17.5, 17.5) + 3, 17), this->_blocks["torch"]);
     for(int dy = 0; dy < 3; dy++) {
         int r = 3 - dy - 1;
         for(int dx = -r; dx <= r; dx++) {
             for(int dz = -r; dz <= r; dz++) {
-                this->_world->setBlock(glm::ivec3(17, this->_world->getTerrainHeight(17.5, 17.5), 17) + glm::ivec3(dx, dy, dz), this->_block_amethyst);
+                this->_world->setBlock(glm::ivec3(17, this->_world->getTerrainHeight(17.5, 17.5), 17) + glm::ivec3(dx, dy, dz), this->_blocks["amethyst"]);
             }
         }
     }
@@ -344,7 +349,7 @@ void MPEngine::mSetupBuffers() {
         const glm::vec3 pos = glm::vec3(x, this->_world->getTerrainHeight(x + 0.5f, z + 0.5f), z);
         // Check if ground mostly flat and empty
         if(this->_world->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.125 && !this->_world->getBlock(pos)) {
-            this->_world->setBlock(pos, this->_block_mushroom);
+            this->_world->setBlock(pos, this->_blocks["mushroom"]);
         }
     }
 
@@ -354,7 +359,7 @@ void MPEngine::mSetupBuffers() {
         const glm::vec3 pos = glm::vec3(x, this->_world->getTerrainHeight(x + 0.5f, z + 0.5f), z);
         // Check if ground mostly flat and empty
         if(this->_world->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.1875 && !this->_world->getBlock(pos)) {
-            this->_world->setBlock(pos, this->_block_tall_grass);
+            this->_world->setBlock(pos, this->_blocks["tall_grass"]);
         }
     }
 
@@ -366,13 +371,13 @@ void MPEngine::mSetupBuffers() {
 /// Generates a tree at pos with variable log height
 void MPEngine::_place_tree(const glm::ivec3 pos, const size_t height) {
     for(int dy = 0; dy <= height; dy++) {
-        this->_world->setBlock(pos + glm::ivec3(0, dy, 0), dy == height ? this->_block_leaves : this->_block_log);
+        this->_world->setBlock(pos + glm::ivec3(0, dy, 0), dy == height ? this->_blocks["leaves"] : this->_blocks["log"]);
         
         if(dy > height - 2) {
             for(int dx = -1; dx <= 1; dx++) {
                 for(int dz = -1; dz <= 1; dz++) {
                     if((dx == 0) ^ (dz == 0)) {
-                        this->_world->setBlock(pos + glm::ivec3(dx, dy, dz), this->_block_leaves);
+                        this->_world->setBlock(pos + glm::ivec3(dx, dy, dz), this->_blocks["leaves"]);
                     }
                 }
             }
@@ -380,7 +385,7 @@ void MPEngine::_place_tree(const glm::ivec3 pos, const size_t height) {
             for(int dx = -2; dx <= 2; dx++) {
                 for(int dz = -2; dz <= 2; dz++) {
                     if((dx != 0) || (dz != 0)) {
-                        this->_world->setBlock(pos + glm::ivec3(dx, dy, dz), this->_block_leaves);
+                        this->_world->setBlock(pos + glm::ivec3(dx, dy, dz), this->_blocks["leaves"]);
                     }
                 }
             }
@@ -414,17 +419,10 @@ void MPEngine::mCleanupShaders() {
 void MPEngine::mCleanupBuffers() {
     fprintf( stdout, "[INFO]: ...deleting VAOs....\n" );
     this->_world = nullptr;
-    this->_block_planks = nullptr;
-    this->_block_log = nullptr;
-    this->_block_leaves = nullptr;
-    this->_block_mushroom = nullptr;
-    this->_block_tall_grass = nullptr;
-    this->_block_amethyst = nullptr;
-    this->_block_torch = nullptr;
-    this->_block_cube = nullptr;
     this->_grid = nullptr;
     this->_skybox = nullptr;
     this->_player = nullptr;
+    this->_blocks.clear();
 }
 
 void MPEngine::mCleanupTextures() {
@@ -490,6 +488,64 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_player->draw(ctx);
 }
 
+/// Reads a line of text from stdin without blocking, returns empty string if no input
+std::string readasync() {
+    static std::string buffer;
+    char c;
+   
+    while(std::cin.readsome(&c, 1)) {
+        switch(c) {
+            case '\n': return std::move(buffer);
+            default: buffer.push_back(c);
+        }
+    }
+
+    return "";
+}
+
+/// Read debug commands from terminal
+void MPEngine::_handleConsoleInput() {
+    std::string line = readasync();
+    std::istringstream stream(line);
+    std::string cmd;
+    stream >> cmd;
+
+    
+
+    if(!cmd.size() || cmd.rfind('#', 0) == 0) {
+        
+    } else if(cmd == "exit") {
+        this->setWindowShouldClose();
+    } else if(cmd == "tp") {
+        float x, y, z;
+        stream >> x >> y >> z;
+        if(std::cin.fail()) {
+            fprintf(stderr, "[ERROR]: Invalid position\n");
+        } else {
+            this->_player->setPosition(glm::vec3(x, y, z), true);
+        }
+    } else if(cmd == "setblock") {
+        float x, y, z;
+        std::string name;
+        stream >> x >> y >> z;
+        stream >> name;
+        const auto block = this->_blocks.find(name);
+        if(std::cin.fail() || block == this->_blocks.end()) {
+            fprintf(stderr, "[ERROR]: Invalid position or block\n");
+        } else {
+            this->_world->setBlock(glm::vec3(x, y, z), block->second);
+        }
+    } else {
+        fprintf(stderr, "[ERROR]: Unknown command '%s'\n", cmd.c_str());
+    }
+
+    if(line != "") {
+        fprintf(stdout, "> ");
+        fflush(stdout);
+    }
+}
+
+
 void MPEngine::_updateScene() {
     GLfloat currTime = (GLfloat)glfwGetTime();
     GLfloat deltaTime = currTime - _lastTime;
@@ -539,6 +595,9 @@ void MPEngine::run() {
         // query what the actual size of the window we are rendering to is.
         GLint framebufferWidth, framebufferHeight;
         glfwGetFramebufferSize(mpWindow, &framebufferWidth, &framebufferHeight);
+
+        // Read console commands
+        _handleConsoleInput();
 
         // Update the scene
         _updateScene();
