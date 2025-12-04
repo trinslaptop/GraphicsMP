@@ -7,13 +7,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <CSCI441/FixedCam.hpp>
+#include <CSCI441/ArcballCam.hpp>
 
 #include "ShaderProgram.hpp"
 #include "World.hpp"
 #include "mcmodel.hpp"
 #include "glutils.hpp"
-
-#include "ArcballCamera.hpp"
 
 /*
  * Player.hpp
@@ -35,7 +34,7 @@ class Player final : public mcmodel::Drawable {
         glm::vec3 _position = glm::vec3(0.0f, 0.0f, 0.0f);
         glm::vec3 _rotation = glm::vec3(0.0f, 0.0f, 0.0f);
 
-        ArcballCamera _arcballcamera;
+        CSCI441::ArcballCam _arcballcamera;
         CSCI441::FixedCam _skycamera;
         CSCI441::FixedCam _fpcamera;
 
@@ -44,7 +43,9 @@ class Player final : public mcmodel::Drawable {
         bool _hidden = false;
         
     public:
-        Player(std::shared_ptr<World> world, const ShaderProgram& shader, const std::array<GLuint, 2> textures, bool thinArms = true, const std::optional<const std::array<GLuint, 2>> cape = std::nullopt) : _world(world), _arcballcamera({1.0f, 6.0f}), _skycamera(), _fpcamera() {
+        Player(std::shared_ptr<World> world, const ShaderProgram& shader, const std::array<GLuint, 2> textures, bool thinArms = true, const std::optional<const std::array<GLuint, 2>> cape = std::nullopt) : _world(world), _arcballcamera(1.0f, 6.0f), _skycamera(), _fpcamera() {
+            this->_arcballcamera.moveBackward(2.5f);
+            
             // Create player model
             this->_root = mcmodel::group({
                 this->_body = mcmodel::group({
@@ -90,7 +91,7 @@ class Player final : public mcmodel::Drawable {
         Player& operator=(const Player&) = delete;
     
         inline void setPosition(const glm::vec3 position, bool ignoreCollision = false) {
-            const glm::vec3 clamped = glm::clamp(position, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(World::WORLD_SIZE, World::WORLD_SIZE, World::WORLD_SIZE));
+            const glm::vec3 clamped = glm::clamp(position, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(4*Chunk::CHUNK_SIZE, 4*Chunk::CHUNK_SIZE, 4*Chunk::CHUNK_SIZE));
         
             // This is a very cheep hack for trivial collision
             // Effectively uses the space from not moving as far as possible but only to a position if result is clear
@@ -138,7 +139,7 @@ class Player final : public mcmodel::Drawable {
             return this->_rotation;
         }
 
-        inline ArcballCamera& getArcballCamera() {
+        inline CSCI441::ArcballCam& getArcballCamera() {
             return this->_arcballcamera;
         }
 

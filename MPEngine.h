@@ -24,7 +24,6 @@
 #include "Block.hpp"
 #include "World.hpp"
 #include "Skybox.hpp"
-#include "TerrainPatch.hpp"
 #include "md5camera.hpp"
 
 class MPEngine final : public CSCI441::OpenGLEngine {
@@ -98,7 +97,6 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         /*** Objects ***/
         std::shared_ptr<Skybox> _skybox;
         std::shared_ptr<mcmodel::Drawable> _grid;
-        std::shared_ptr<TerrainPatch> _terrain;
         std::shared_ptr<Block> _block_planks;
         std::shared_ptr<Block> _block_log;
         std::shared_ptr<Block> _block_leaves;
@@ -106,17 +104,10 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         std::shared_ptr<Block> _block_tall_grass;
         std::shared_ptr<Block> _block_amethyst;
         std::shared_ptr<Block> _block_torch;
-        std::shared_ptr<Block> _block_red_spotlight;
-        std::shared_ptr<Block> _block_blue_spotlight;
-        std::shared_ptr<Block> _block_green_spotlight;
+        std::shared_ptr<Block> _block_cube;
         std::shared_ptr<World> _world;
-        std::shared_ptr<Player> _player1;
-        std::shared_ptr<Player> _player2;
-        std::shared_ptr<Player> _player3;
-        Player* _player;
+        std::shared_ptr<Player> _player;
 
-
-        std::shared_ptr<Chunk> _TEST_CHUNK;
         std::unique_ptr<ShaderProgram> _TEST_SHADER;
 
 

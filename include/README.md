@@ -1,0 +1,1 @@
+These are assorted single-header libraries I've made over time, not specifically for this class.

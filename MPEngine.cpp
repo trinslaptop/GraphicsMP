@@ -7,8 +7,11 @@
 #include <cmath>
 #include <string>
 #include <iostream>
+#include <stdint.h>
 
 #include <glm/gtc/constants.hpp>
+
+#include "include/f8.hpp"
 
 static constexpr GLfloat GLM_PI = glm::pi<float>();
 static constexpr GLfloat GLM_2PI = glm::two_pi<float>();
@@ -51,20 +54,12 @@ MPEngine::MPEngine()
     _block_tall_grass(nullptr),
     _block_amethyst(nullptr),
     _block_torch(nullptr),
-    _block_red_spotlight(nullptr),
-    _block_green_spotlight(nullptr),
-    _block_blue_spotlight(nullptr),
+    _block_cube(nullptr),
     _player(nullptr),
-    _player1(nullptr),
-    _player2(nullptr),
-    _player3(nullptr),
     _world()
 {
     this->_tm = std::make_unique<glutils::TextureManager>();
     this->_im = std::make_unique<input::InputManager>();
-
-    // Initialize random
-    glutils::srandn(80801);
 
     // Initialize Input Bindings
     // ESC to exit
@@ -104,7 +99,7 @@ MPEngine::MPEngine()
     // Scroll changes arcball camera radius
     this->_im->on_axis(input::AxisType::Scroll, [this](const glm::vec2 offset) {
         if(this->_primaryCamera == 1) {
-            this->_player->getArcballCamera().moveBackward(offset.y/2.5f);
+            this->_player->getArcballCamera().moveForward(offset.y/2.5f);
         }
     });
 
@@ -140,7 +135,7 @@ MPEngine::MPEngine()
     this->_im->on_axis(input::AxisType::Cursor, [this](const glm::vec2 pos) {
         if(this->_im->is_down(input::mouse(GLFW_MOUSE_BUTTON_LEFT)) && (this->_im->is_down(input::key(GLFW_KEY_LEFT_SHIFT)) || this->_im->is_down(input::key(GLFW_KEY_RIGHT_SHIFT)))) {
             if(this->_primaryCamera == 1) {
-                this->_player->getArcballCamera().moveBackward((pos.y - this->_im->cursor().y)/12.0f);
+                this->_player->getArcballCamera().moveForward((pos.y - this->_im->cursor().y)/12.0f);
             }
         } else if(this->_im->is_down(input::mouse(GLFW_MOUSE_BUTTON_LEFT))) {
             const GLfloat dTheta = 0.005*(pos.x - this->_im->cursor().x);  // Update yaw
@@ -150,21 +145,6 @@ MPEngine::MPEngine()
             // rotate the camera by the distance the mouse moved
             this->getPrimaryCamera()->rotate(dTheta*scale.x, dPhi*scale.y);
         }
-    });
-
-    // 1 for Player 1
-    this->_im->on({input::key(GLFW_KEY_1)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
-        this->_player = this->_player1.get();
-    });
-
-    // 2 for Player 2
-    this->_im->on({input::key(GLFW_KEY_2)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
-        this->_player = this->_player2.get();
-    });
-
-    // 3 for Player 3
-    this->_im->on({input::key(GLFW_KEY_3)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
-        this->_player = this->_player3.get();
     });
 
     // P to play movie, enter file name into stdin when prompted
@@ -189,6 +169,12 @@ MPEngine::~MPEngine() {}
 void MPEngine::mSetupGLFW() {
     CSCI441::OpenGLEngine::mSetupGLFW();
 
+    // Request higher accuracy depth buffer
+    glfwWindowHint(GLFW_DEPTH_BITS, 32);
+
+    // Anti-aliasing
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
     // Set callbacks
     glfwSetKeyCallback(mpWindow, keyboard_callback);
     glfwSetMouseButtonCallback(mpWindow, mouse_button_callback);
@@ -204,6 +190,9 @@ void MPEngine::mSetupOpenGL() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	            // Use one minus blending equation
 
     glClearColor(0.4f, 0.4f, 0.4f, 1.0f);	// Clear the frame buffer to gray
+
+    // Anti-aliasing
+    glEnable(GL_MULTISAMPLE);
 }
 
 // Terrain shader and basic texture shader use some of the same uniforms
@@ -217,7 +206,7 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     shader.setProgramUniform("tint", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
     // Positional Light (Torch)
-    shader.setProgramUniform("torchPos", glm::vec3(20.5, 4.5, 20.5));
+    shader.setProgramUniform("torchPos", glm::vec3(17.5, 5.5, 17.5));
     shader.setProgramUniform("torchColor", glm::vec3(1.0f, 0.96f, 0.90f) /* Slight gold */);
 
     // Directional Light (Sun)
@@ -247,6 +236,11 @@ void MPEngine::mSetupShaders() {
 }
 
 void MPEngine::mSetupBuffers() {
+    // Initialize random
+    const unsigned int seed = 0x80801;
+    uint32_t state;
+    f8::srand(seed, state);
+
     // Make default.png texture handle 1, any textures that fail to load will fallback to this
     this->_tm->load("assets/textures/default.png");
 
@@ -266,128 +260,107 @@ void MPEngine::mSetupBuffers() {
         {this->_tm->load("assets/textures/grid.png"), this->_tm->load("assets/textures/dull.png")},
         {
             glm::vec3 {0.0f, 0.0f, 0.0f},
-            glm::vec3 {0.0f, 0.0f, World::WORLD_SIZE},
-            glm::vec3 {World::WORLD_SIZE, 0.0f, World::WORLD_SIZE},
-            glm::vec3 {World::WORLD_SIZE, 0.0f, 0.0f}
-        }, {0.0f, 0.0f}, {World::WORLD_SIZE, World::WORLD_SIZE}
+            glm::vec3 {0.0f, 0.0f, 4*Chunk::CHUNK_SIZE},
+            glm::vec3 {4*Chunk::CHUNK_SIZE, 0.0f, 4*Chunk::CHUNK_SIZE},
+            glm::vec3 {4*Chunk::CHUNK_SIZE, 0.0f, 0.0f}
+        }, {0.0f, 0.0f}, {4*Chunk::CHUNK_SIZE, 4*Chunk::CHUNK_SIZE}
     );
 
-    // Place terrain
-    this->_terrain = TerrainPatch::from(*this->_terrainShaderProgram, World::WORLD_SIZE, {this->_tm->load("assets/textures/grass.png"), this->_tm->load("assets/textures/dull.png")});
-
-    this->_TEST_CHUNK = Chunk::from(*this->_shaderProgram, *this->_TEST_SHADER, glm::ivec3(1, 0, 1), 0x80801, {this->_tm->load("assets/textures/grass.png"), this->_tm->load("assets/textures/dull.png")});
-
     // Register blocks
-    this->_block_planks = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/planks.png"), this->_tm->load("assets/textures/dull.png")}}));
+    this->_block_planks = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/planks.png"), this->_tm->load("assets/textures/dull.png")}}));
     this->_block_log = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 6> {
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/log_side.png"), this->_tm->load("assets/textures/dull.png")},
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/log_side.png"), this->_tm->load("assets/textures/dull.png")},
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/log_top.png"), this->_tm->load("assets/textures/dull.png")},
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/log_top.png"), this->_tm->load("assets/textures/dull.png")},
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/log_side.png"), this->_tm->load("assets/textures/dull.png")},
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/log_side.png"), this->_tm->load("assets/textures/dull.png")}
+        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
+        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
+        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_top.png"), this->_tm->load("assets/textures/dull.png")},
+        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_top.png"), this->_tm->load("assets/textures/dull.png")},
+        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
+        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")}
     }));
-    this->_block_leaves = Block::from(mcmodel::oscillate(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.5f), false);
-    this->_block_amethyst = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
+    this->_block_leaves = Block::from(mcmodel::oscillate(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.5f), false);
+    this->_block_amethyst = Block::from(mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
     this->_block_mushroom = Block::from(
-        mcmodel::animtex(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/mushroom_anim.png"), this->_tm->load("assets/textures/shiny.png")}), 4, 8.0f),
+        mcmodel::animtex(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/block/mushroom_anim.png"), this->_tm->load("assets/textures/shiny.png")}), 4, 8.0f),
     false);
     this->_block_tall_grass = Block::from(
-        mcmodel::group({mcmodel::tint(*this->_shaderProgram, mcmodel::oscillate(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/tall_grass.png"), this->_tm->load("assets/textures/dull.png")})), glm::vec4(0.19f, 0.5f, 0.0f, 1.0f))}, glm::vec3(0.0f, -0.0625f, 0.0f)),
+        mcmodel::group({mcmodel::tint(*this->_shaderProgram, mcmodel::oscillate(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/block/tall_grass.png"), this->_tm->load("assets/textures/dull.png")})), glm::vec4(0.19f, 0.5f, 0.0f, 1.0f))}, glm::vec3(0.0f, -0.0625f, 0.0f)),
     false);
-    this->_block_torch = Block::from(mcmodel::ignore_light(*this->_shaderProgram, mcmodel::group({mcmodel::wrapped_cube(*this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/torch.png"), this->_tm->load("assets/textures/dull.png")}, {0.125f, 0.5f, 0.125f})}, {0.5f, 0.25f, 0.5f})), false);
-    this->_block_red_spotlight = Block::from(
+    this->_block_torch = Block::from(mcmodel::ignore_light(*this->_shaderProgram, mcmodel::group({mcmodel::wrapped_cube(*this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/torch.png"), this->_tm->load("assets/textures/dull.png")}, {0.125f, 0.5f, 0.125f})}, {0.5f, 0.25f, 0.5f})), false);
+
+    // We do what we must because we can
+    this->_block_cube = Block::from(
         mcmodel::group({
-            mcmodel::tint(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight_overlay.png"), this->_tm->load("assets/textures/dull.png")}), glm::vec3(1.0f, 0.0f, 0.0f)),
-            mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight.png"), this->_tm->load("assets/textures/dull.png")}),
-        }),
-    false);
-    this->_block_green_spotlight = Block::from(
-        mcmodel::group({
-            mcmodel::tint(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight_overlay.png"), this->_tm->load("assets/textures/dull.png")}), glm::vec3(0.0f, 1.0f, 0.0f)),
-            mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight.png"), this->_tm->load("assets/textures/dull.png")}),
-        }),
-    false);
-    this->_block_blue_spotlight = Block::from(
-        mcmodel::group({
-            mcmodel::tint(*this->_shaderProgram, mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight_overlay.png"), this->_tm->load("assets/textures/dull.png")}), glm::vec3(0.0f, 0.0f, 1.0f)),
-            mcmodel::cross(*this->_shaderProgram, {this->_tm->load("assets/textures/spotlight.png"), this->_tm->load("assets/textures/dull.png")}),
-        }),
-    false);
+            mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/base.png"), this->_tm->load("assets/textures/block/cube/base_shiny.png")}}),
+            mcmodel::ignore_light(*this->_shaderProgram, mcmodel::tint(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/lines.png"), this->_tm->load("assets/textures/dull.png")}}), glm::vec3(1.0f, 0.28f, 1.0f))),
+            mcmodel::group({
+                mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/shell.png"), this->_tm->load("assets/textures/block/cube/shell_shiny.png")}}),
+                mcmodel::ignore_light(*this->_shaderProgram, mcmodel::tint(*this->_shaderProgram, mcmodel::cube(*this->_shaderProgram, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/cube/heart.png"), this->_tm->load("assets/textures/dull.png")}}), glm::vec3(1.0f, 0.28f, 1.0f))),
+            }, glm::vec3(-0.03125f), glm::vec3(0.0f), glm::vec3(1.0625f))
+        })
+    );
 
-    this->_world = std::make_shared<World>();
+    this->_world = std::make_shared<World>(seed, *this->_shaderProgram, *this->_TEST_SHADER, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/grass.png"), this->_tm->load("assets/textures/dull.png")});
 
-    this->_TEST_CHUNK->_blocks[glm::ivec3(0, 0, 0)] = this->_block_amethyst;
+    // Initialize chunks
+    for(size_t ckx = 0; ckx < 4; ckx++) {
+        for(size_t ckz = 0; ckz < 4; ckz++) {
+            this->_world->getChunk({ckx, 0, ckz});
+        }
+    }
 
-    // Place one of each block for testing
-    this->_world->setBlock(glm::ivec3(1, 0, 1), this->_block_planks);
-    this->_world->setBlock(glm::ivec3(1, 0, 3), this->_block_log);
-    this->_world->setBlock(glm::ivec3(1, 0, 5), this->_block_leaves);
-    this->_world->setBlock(glm::ivec3(1, 0, 7), this->_block_amethyst);
-    this->_world->setBlock(glm::ivec3(1, 0, 9), this->_block_mushroom);
-    this->_world->setBlock(glm::ivec3(1, 0, 11), this->_block_tall_grass);
-
-    this->_world->setBlock(glm::ivec3(20, 4, 20), this->_block_torch);
-    this->_world->setBlock(glm::ivec3(32, 5, 32), this->_block_red_spotlight);
-    this->_world->setBlock(glm::ivec3(30, 5, 32), this->_block_green_spotlight);
-    this->_world->setBlock(glm::ivec3(31, 5, 34), this->_block_blue_spotlight);
+    this->_world->setBlock(glm::ivec3(63, 0, 63), this->_block_cube);
 
     // Place some trees
-    this->_place_tree(this->_terrain->getTerrainPosition(10, 10));
-    this->_place_tree(this->_terrain->getTerrainPosition(12, 38), 7);
-    this->_place_tree(this->_terrain->getTerrainPosition(40, 30));
-    this->_place_tree(this->_terrain->getTerrainPosition(32, 50), 5);
-    this->_place_tree(this->_terrain->getTerrainPosition(10, 25), 8);
-    this->_place_tree(this->_terrain->getTerrainPosition(50, 8));
-    this->_place_tree(this->_terrain->getTerrainPosition(9, 56), 6);
-    this->_place_tree(this->_terrain->getTerrainPosition(46, 50));
+    this->_place_tree({10, this->_world->getTerrainHeight(10.5f, 10.5f) - 0.5, 10});
+    this->_place_tree({12, this->_world->getTerrainHeight(12.5f, 38.5f) - 0.5, 12}, 7);
+    this->_place_tree({40, this->_world->getTerrainHeight(40.5f, 30.5f) - 0.5, 40});
+    this->_place_tree({32, this->_world->getTerrainHeight(32.5f, 50.5f) - 0.5, 50}, 5);
+    this->_place_tree({10, this->_world->getTerrainHeight(10.5f, 25.5f) - 0.5, 25}, 8);
+    this->_place_tree({50, this->_world->getTerrainHeight(50.5f, 8.5f) - 0.5, 8});
+    this->_place_tree({9, this->_world->getTerrainHeight(9.5f, 56.5f) - 0.5, 56}, 6);
+    this->_place_tree({46, this->_world->getTerrainHeight(46.5f, 50.5f) - 0.5, 50});
 
     // Place amethyst pyramid
+    this->_world->setBlock(glm::ivec3(17, this->_world->getTerrainHeight(17.5, 17.5) + 3, 17), this->_block_torch);
     for(int dy = 0; dy < 3; dy++) {
         int r = 3 - dy - 1;
         for(int dx = -r; dx <= r; dx++) {
             for(int dz = -r; dz <= r; dz++) {
-                this->_world->setBlock(glm::ivec3(20, this->_terrain->getTerrainHeight(20.5, 20.5), 20) + glm::ivec3(dx, dy, dz), this->_block_amethyst);
+                this->_world->setBlock(glm::ivec3(17, this->_world->getTerrainHeight(17.5, 17.5), 17) + glm::ivec3(dx, dy, dz), this->_block_amethyst);
             }
         }
     }
 
-    // Place collision test
-    for(int dz = 0; dz < 9; dz++) {
-        if(dz < 3 || dz > 5) {
-            this->_world->setBlock(this->_terrain->getTerrainPosition(34.0f, 5.0f) + glm::vec3(0.0f, 0.0f, dz), this->_block_planks);
-        }
-        this->_world->setBlock(this->_terrain->getTerrainPosition(34.0f, 5.0f) + glm::vec3(0.0f, 1.0f, dz), this->_block_planks);
-    }
+    // // Place collision test
+    // for(int dz = 0; dz < 9; dz++) {
+    //     if(dz < 3 || dz > 5) {
+    //         this->_world->setBlock(glm::vec3(34.0f, this->_world->getTerrainHeight(34.0f, 5.0f), 5.0f + dz), this->_block_planks);
+    //     }
+    //     this->_world->setBlock(glm::vec3(34.0f, this->_world->getTerrainHeight(34.0f, 5.0f) + 1.0f, 5.0f + dz), this->_block_planks);
+    // }
 
     // Scatter mushrooms
-    for(size_t i = 0; i < 75; i++) {
-        const glm::ivec3 pos = this->_terrain->getTerrainPosition(glutils::randi(0, World::WORLD_SIZE), glutils::randi(0, World::WORLD_SIZE));
+    for(size_t i = 0; i < 150; i++) {
+        const int x = f8::randi(0, 4*Chunk::CHUNK_SIZE, state), z = f8::randi(0, 4*Chunk::CHUNK_SIZE, state);
+        const glm::vec3 pos = glm::vec3(x, this->_world->getTerrainHeight(x + 0.5f, z + 0.5f), z);
         // Check if ground mostly flat and empty
-        if(this->_terrain->getTerrainHeight(pos.x, pos.z) - pos.y < 0.125 && !this->_world->getBlock(pos)) {
+        if(this->_world->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.125 && !this->_world->getBlock(pos)) {
             this->_world->setBlock(pos, this->_block_mushroom);
         }
     }
 
     // Scatter tall grass
-    for(size_t i = 0; i < 100; i++) {
-        const glm::ivec3 pos = this->_terrain->getTerrainPosition(glutils::randi(0, World::WORLD_SIZE), glutils::randi(0, World::WORLD_SIZE));
+    for(size_t i = 0; i < 350; i++) {
+        const int x = f8::randi(0, 4*Chunk::CHUNK_SIZE, state), z = f8::randi(0, 4*Chunk::CHUNK_SIZE, state);
+        const glm::vec3 pos = glm::vec3(x, this->_world->getTerrainHeight(x + 0.5f, z + 0.5f), z);
         // Check if ground mostly flat and empty
-        if(this->_terrain->getTerrainHeight(pos.x, pos.z) - pos.y < 0.1875 && !this->_world->getBlock(pos)) {
+        if(this->_world->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.1875 && !this->_world->getBlock(pos)) {
             this->_world->setBlock(pos, this->_block_tall_grass);
         }
     }
 
     // Setup players
-    this->_player1 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
-    this->_player1->setPosition(this->_terrain->getTerrainPosition(32.0f, 32.0f));
-    this->_player = this->_player1.get();
-
-    this->_player2 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/fuyuzetsu.png"), this->_tm->load("assets/textures/fuyuzetsu_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape2.png"), this->_tm->load("assets/textures/cape2_specular.png")});
-    this->_player2->setPosition(this->_terrain->getTerrainPosition(35.0f, 32.0f));
-
-    this->_player3 = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/jonsnow.png"), this->_tm->load("assets/textures/jonsnow_specular.png")}, true);
-    this->_player3->setPosition(this->_terrain->getTerrainPosition(35.0f, 35.0f));
+    this->_player = std::make_shared<Player>(this->_world, *this->_shaderProgram, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
+    this->_player->setPosition({32.0f, this->_world->getTerrainHeight(32.0f, 32.0f), 32.0f});
 }
 
 /// Generates a tree at pos with variable log height
@@ -448,17 +421,10 @@ void MPEngine::mCleanupBuffers() {
     this->_block_tall_grass = nullptr;
     this->_block_amethyst = nullptr;
     this->_block_torch = nullptr;
-    this->_block_red_spotlight = nullptr;
-    this->_block_green_spotlight = nullptr;
-    this->_block_blue_spotlight = nullptr;
+    this->_block_cube = nullptr;
     this->_grid = nullptr;
     this->_skybox = nullptr;
     this->_player = nullptr;
-    this->_player1 = nullptr;
-    this->_player2 = nullptr;
-    this->_player3 = nullptr;
-    this->_terrain = nullptr;
-    this->_TEST_CHUNK= nullptr;
 }
 
 void MPEngine::mCleanupTextures() {
@@ -513,8 +479,6 @@ CSCI441::Camera* MPEngine::getSecondaryCamera() const {
 void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
 
-    this->_TEST_CHUNK->draw(ctx);
-
     // this->_terrain->draw(ctx);
 
     this->_shaderProgram->useProgram();
@@ -523,9 +487,7 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_grid->draw(ctx);
     this->_world->draw(ctx);
 
-    this->_player1->draw(ctx);
-    this->_player2->draw(ctx);
-    this->_player3->draw(ctx);
+    this->_player->draw(ctx);
 }
 
 void MPEngine::_updateScene() {
@@ -539,16 +501,15 @@ void MPEngine::_updateScene() {
     this->_im->poll(this->mpWindow, deltaTime);
 
     // Update players
-    this->_player1->update(deltaTime);
-    this->_player2->update(deltaTime);
-    this->_player3->update(deltaTime);
+    this->_player->update(deltaTime);
 
     // Move with terrain
-    this->_player->setPosition(this->_terrain->getTerrainPosition(this->_player->getPosition().x, this->_player->getPosition().z));
+    // this->_player->setPosition(this->_terrain->getTerrainPosition(this->_player->getPosition().x, this->_player->getPosition().z));
 
+    // Disabled, I visually don't like it and it makes jump + AABB harder
     // This isn't quite right, but it looks fine... so it's good enough
-    const glm::vec3 terrainRotation = glm::eulerAngles(glm::rotation(glm::vec3(0.0, -1.0, 0.0), this->_terrain->getTerrainNormal(this->_player->getPosition().x, this->_player->getPosition().z)));
-    this->_player->setRotation({this->_player->getRotation().x , terrainRotation.y*cos(this->_player->getRotation().x), terrainRotation.z*cos(this->_player->getRotation().x)});
+    // const glm::vec3 terrainRotation = glm::eulerAngles(glm::rotation(glm::vec3(0.0, -1.0, 0.0), this->_terrain->getTerrainNormal(this->_player->getPosition().x, this->_player->getPosition().z)));
+    // this->_player->setRotation({this->_player->getRotation().x , terrainRotation.y*cos(this->_player->getRotation().x), terrainRotation.z*cos(this->_player->getRotation().x)});
 
     // Play movie
     if(!this->_movie.empty()) {

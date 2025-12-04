@@ -39,28 +39,6 @@
 
 namespace glutils {
     inline static constexpr GLfloat PI = glm::pi<float>();
-
-    /// Get a random integer in [min, max)
-    inline int randi(const int min, const int max) {
-        return std::rand() % (max - min) + min;
-    }
-
-    /// Get a random float in [0.0, 1.0)
-    inline float randf() {
-        return (float)(std::rand()) / (float)(RAND_MAX + 1.0f);
-    }
-
-    /// Sets the RNG seed to the given value or one plus the last one if argument is absent and returns
-    /// the new seed, also cycles the generator a few times
-    inline unsigned int srandn(const unsigned int value = 0) {
-        static unsigned int seed = time(NULL);
-        seed = value ? value : seed + 1;
-        std::srand(seed);
-        
-        for(size_t i = 0; i < 16; i++) std::rand();
-        
-        return seed;
-    }
     
     /// Loads, stores, and releases textures automatically
     /// Repeatedly calling `load()` with the same path (same literally, not logically, "./a.png" != "a.png") returns cached result

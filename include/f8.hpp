@@ -51,14 +51,14 @@ namespace f8 {
     }
 
     /// Sets the vector RNG seed to the given value or the current time if argument is absent (or 0)
-    inline const glm::vec2 vsrand(const unsigned int seed = 0, glm::vec2& vecseed = _vstate) {
+    inline const glm::vec2 srandv(const unsigned int seed = 0, glm::vec2& vecseed = _vstate) {
         uint32_t t = seed ? seed : time(NULL);
         const float a = randf(t), b = randf(t);
         return vecseed = glm::vec2(a, b);
     }
 
     /// Get a random float in [0.0f, 1.0f] from a vector state
-    inline float vrandf(const glm::vec2& v, const glm::vec2& state = _vstate) {
+    inline float randfv(const glm::vec2& v, const glm::vec2& state = _vstate) {
         return glm::fract(glm::sin(glm::dot(v + state, glm::vec2(12.9898f,78.233f)))*43758.5453123f);
     }
 
@@ -68,10 +68,10 @@ namespace f8 {
         const glm::vec2 f = glm::fract(v);
 
         // Four corners in 2D of a tile
-        const float a = vrandf(i, state);
-        const float b = vrandf(i + glm::vec2(1.0f, 0.0f), state);
-        const float c = vrandf(i + glm::vec2(0.0f, 1.0f), state);
-        const float d = vrandf(i + glm::vec2(1.0f, 1.0f), state);
+        const float a = randfv(i, state);
+        const float b = randfv(i + glm::vec2(1.0f, 0.0f), state);
+        const float c = randfv(i + glm::vec2(0.0f, 1.0f), state);
+        const float d = randfv(i + glm::vec2(1.0f, 1.0f), state);
 
         const glm::vec2 u = f*f*(3.0f - 2.0f*f);
 

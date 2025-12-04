@@ -105,9 +105,6 @@ void main() {
         fColorOut = 
             sunIntensity*directional_light(sunDirection, sunColor)
             + point_light(torchPos, torchColor, vec3(0.0, 0.005, 0.01))
-            + spot_light(redSpotlightPos, vec3(0.0, -1.0, 0.0), radians(45), vec3(1.0, 0.0, 0.0), vec3(0.0, 0.1, 0.25))
-            + spot_light(greenSpotlightPos, vec3(0.0, -1.0, 0.0), radians(45), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.35, 0.25))
-            + spot_light(blueSpotlightPos, vec3(0.0, -1.0, 0.0), radians(45), vec3(0.0, 0.0, 1.0), vec3(0.0, 0.1, 0.25))
         ;
     } else {
         fColorOut = diffuseTexel;
