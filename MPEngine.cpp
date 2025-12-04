@@ -69,15 +69,15 @@ MPEngine::MPEngine()
         this->setWindowShouldClose();
     });
 
-    // C to switch between arcball and freecam in primary viewport
-    // Note: can't manually select move camera
-    this->_im->on({input::key(GLFW_KEY_C)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+    // F5 to switch between arcball and freecam in primary viewport
+    // Note: can't manually select movie camera
+    this->_im->on({input::key(GLFW_KEY_F5)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         if(!this->_movie.empty()) return;
         this->_primaryCamera = (this->_primaryCamera + 1) % 2;
     });
 
-    // V to switch between first person, sky, and none in secondary viewport
-    this->_im->on({input::key(GLFW_KEY_V)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+    // F4 to switch between first person, sky, and none in secondary viewport
+    this->_im->on({input::key(GLFW_KEY_F4)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         if(!this->_movie.empty()) return;
         this->_secondaryCamera = (this->_secondaryCamera + 1) % 3;
     });
