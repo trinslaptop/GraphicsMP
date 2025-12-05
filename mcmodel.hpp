@@ -24,8 +24,8 @@ namespace mcmodel {
     /// Basic interface for something that can be drawn
     class Drawable {
         public:
-            Drawable() = default;
-            virtual ~Drawable() = default;
+            inline Drawable() = default;
+            virtual inline ~Drawable() = default;
             virtual void draw(glutils::RenderContext& ctx) const = 0;
     };
 

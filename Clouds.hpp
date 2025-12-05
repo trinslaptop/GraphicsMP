@@ -16,9 +16,9 @@ class Clouds final : public mcmodel::Drawable, NonCopyable {
         const GLuint _buffers[2];
 
     public:
-        Clouds(const ShaderProgram& shader, const GLuint texture, const GLuint vao, const std::array<GLuint, 2> buffers) : _shader(shader), _texture(texture), _vao(vao), _buffers {buffers[0], buffers[1]} {}
+        inline Clouds(const ShaderProgram& shader, const GLuint texture, const GLuint vao, const std::array<GLuint, 2> buffers) : _shader(shader), _texture(texture), _vao(vao), _buffers {buffers[0], buffers[1]} {}
 
-        virtual ~Clouds() override {
+        inline virtual ~Clouds() override {
             glDeleteTextures(1, &this->_texture);
             glDeleteVertexArrays(1, &this->_vao);
             glDeleteBuffers(2, this->_buffers);

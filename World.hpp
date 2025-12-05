@@ -248,7 +248,7 @@ class World final : public mcmodel::Drawable, NonCopyable {
             _chunks()
             {}
 
-        inline virtual ~World() = default;
+        virtual inline ~World() = default;
 
         /// Gets a chunk at a chunk pos or initializes a new one
         inline std::shared_ptr<Chunk> getChunk(const glm::ivec3& chunk_pos) {

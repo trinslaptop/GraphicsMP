@@ -71,7 +71,7 @@ class Skybox final : public mcmodel::Drawable, NonCopyable {
 
     public:
         /// Pass textures +-xyz (NOTE: different order from mcmodel::cube functions)
-        Skybox(const ShaderProgram& shader, const std::array<std::string, 6>& textures) : _shader(shader), _texture(0), _vao(0), _vbo(0), _vploc(shader.getUniformLocation("vpMatrix")) {
+        inline Skybox(const ShaderProgram& shader, const std::array<std::string, 6>& textures) : _shader(shader), _texture(0), _vao(0), _vbo(0), _vploc(shader.getUniformLocation("vpMatrix")) {
             // Load textures
             glGenTextures(1, &this->_texture);
             glBindTexture(GL_TEXTURE_CUBE_MAP, this->_texture);
@@ -111,7 +111,7 @@ class Skybox final : public mcmodel::Drawable, NonCopyable {
             glVertexAttribPointer(attrloc, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*) 0);
         }
 
-        virtual ~Skybox() override {
+        inline virtual ~Skybox() override {
             glDeleteTextures(1, &this->_texture);
             glDeleteVertexArrays(1, &this->_vao);
             glDeleteBuffers(1, &this->_vbo);
