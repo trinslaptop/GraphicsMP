@@ -226,7 +226,7 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
 
 /// Represents the blocks in the world and terrain
 /// The world is made up of chunk regions
-class World final : public mcmodel::Drawable {
+class World final : public mcmodel::Drawable, NonCopyable {
     private:
         // This world is very sparse, so store as a map
         std::unordered_map<glm::ivec3, std::shared_ptr<Chunk>, std::hash<glm::ivec3>> _chunks;
@@ -249,10 +249,6 @@ class World final : public mcmodel::Drawable {
             {}
 
         inline virtual ~World() = default;
-
-        // Non-Copyable
-        World(const World&) = delete;
-        World& operator=(const World&) = delete;
 
         /// Gets a chunk at a chunk pos or initializes a new one
         inline std::shared_ptr<Chunk> getChunk(const glm::ivec3& chunk_pos) {

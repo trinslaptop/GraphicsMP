@@ -16,8 +16,10 @@
 
 #include "mcmodel.hpp"
 #include "ShaderProgram.hpp"
+#include "NonCopyable.hpp"
 
-class Skybox final : mcmodel::Drawable {
+
+class Skybox final : public mcmodel::Drawable, NonCopyable {
     private:
         const ShaderProgram& _shader;
         GLuint _texture;
@@ -114,10 +116,6 @@ class Skybox final : mcmodel::Drawable {
             glDeleteVertexArrays(1, &this->_vao);
             glDeleteBuffers(1, &this->_vbo);
         }
-
-        // Non-Copyable
-        Skybox(const Skybox&) = delete;
-        Skybox& operator=(const Skybox&) = delete;
 
         inline virtual void draw(glutils::RenderContext& ctx) const override {
             GLint depthFunc;

@@ -24,6 +24,7 @@
 #include "Block.hpp"
 #include "World.hpp"
 #include "Skybox.hpp"
+#include "Clouds.hpp"
 #include "md5camera.hpp"
 
 class MPEngine final : public CSCI441::OpenGLEngine {
@@ -91,6 +92,8 @@ class MPEngine final : public CSCI441::OpenGLEngine {
             std::unique_ptr<ShaderProgram> primary;
             /// Cubemap shader
             std::unique_ptr<ShaderProgram> skybox;
+            /// Cloud shader
+            std::unique_ptr<ShaderProgram> clouds;
             /// Terrain Patch Shader
             std::unique_ptr<ShaderProgram> terrain;
         } _shaders;
@@ -101,6 +104,7 @@ class MPEngine final : public CSCI441::OpenGLEngine {
 
         /*** Objects ***/
         std::shared_ptr<Skybox> _skybox;
+        std::shared_ptr<Clouds> _clouds;
         std::shared_ptr<mcmodel::Drawable> _grid;
 
         std::shared_ptr<World> _world;

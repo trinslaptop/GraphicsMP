@@ -45,6 +45,7 @@ MPEngine::MPEngine()
     _tm(nullptr),
     _grid(nullptr),
     _skybox(nullptr),
+    _clouds(nullptr),
     _player(nullptr),
     _blocks(),
     _world()
@@ -214,6 +215,9 @@ void MPEngine::mSetupShaders() {
     this->_shaders.skybox = std::make_unique<ShaderProgram>("shaders/skybox/skybox.v.glsl", "shaders/skybox/skybox.f.glsl");
     this->_shaders.skybox->setProgramUniform("skybox", 0);
 
+    this->_shaders.clouds = std::make_unique<ShaderProgram>("shaders/clouds/clouds.v.glsl", "shaders/clouds/clouds.f.glsl");
+    this->_shaders.clouds->setProgramUniform("clouds", 0);
+
     this->_shaders.terrain = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_shaders.terrain);
 }
@@ -236,6 +240,8 @@ void MPEngine::mSetupBuffers() {
         "assets/textures/skybox/posz.jpg",
         "assets/textures/skybox/negz.jpg"
     });
+
+    this->_clouds = Clouds::from(*this->_shaders.clouds, this->_tm->load("assets/textures/clouds.png"));
 
     // Place ground grid
     this->_grid = mcmodel::TexturedFace::from(
@@ -394,6 +400,7 @@ void MPEngine::mCleanupShaders() {
     fprintf( stdout, "[INFO]: ...deleting Shaders.\n" );
     this->_shaders.primary = nullptr;
     this->_shaders.skybox = nullptr;
+    this->_shaders.clouds = nullptr;
     this->_shaders.terrain = nullptr;
 }
 
@@ -402,6 +409,7 @@ void MPEngine::mCleanupBuffers() {
     this->_world = nullptr;
     this->_grid = nullptr;
     this->_skybox = nullptr;
+    this->_clouds = nullptr;
     this->_player = nullptr;
     this->_blocks.clear();
 }
@@ -451,21 +459,6 @@ CSCI441::Camera* MPEngine::getSecondaryCamera() const {
         default:
             return nullptr;
     }
-}
-
-/*** Rendering/Drawing Functions ***/
-
-void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
-    this->_skybox->draw(ctx);
-
-    this->_shaders.primary->useProgram();
-    ctx.bind(*this->_shaders.primary);
-
-    this->_grid->draw(ctx);
-    this->_player->draw(ctx);
-
-    this->_world->draw(ctx);
-
 }
 
 /// Reads a line of text from stdin without blocking, returns empty string if no input
@@ -530,12 +523,28 @@ void MPEngine::_handleConsoleInput() {
 }
 
 
+/*** Rendering/Drawing Functions ***/
+
+void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
+    this->_skybox->draw(ctx);
+    this->_clouds->draw(ctx);
+
+    this->_shaders.primary->useProgram();
+    ctx.bind(*this->_shaders.primary);
+
+    this->_grid->draw(ctx);
+    this->_player->draw(ctx);
+
+    this->_world->draw(ctx);
+}
+
 void MPEngine::_updateScene() {
     GLfloat currTime = (GLfloat)glfwGetTime();
     GLfloat deltaTime = currTime - _lastTime;
     this->_lastTime = currTime;
 
     this->_shaders.primary->setProgramUniform("time", currTime);
+    this->_shaders.clouds->setProgramUniform("time", currTime);
 
     // Update keybinds
     this->_im->poll(this->mpWindow, deltaTime);
