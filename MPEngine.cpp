@@ -13,6 +13,8 @@
 
 #include "include/f8.hpp"
 
+#include "get_player.hpp"
+
 static constexpr GLfloat GLM_PI = glm::pi<float>();
 static constexpr GLfloat GLM_2PI = glm::two_pi<float>();
 
@@ -352,7 +354,7 @@ void MPEngine::mSetupBuffers() {
     }
 
     // Setup players
-    this->_player = std::make_shared<Player>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
+    this->_player = get_player(this->_world, *this->_shaders.primary, *this->_tm, "TobinOakenshield");//std::make_shared<Player>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
     this->_player->setPosition({32.0f, this->_world->getTerrainHeight(32.0f, 32.0f), 32.0f});
 }
 

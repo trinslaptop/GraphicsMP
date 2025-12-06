@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
-project(mp)
+project(mc)
 set(CMAKE_CXX_STANDARD 17)
-set(SOURCE_FILES main.cpp MPEngine.cpp MPEngine.h input.cpp input.hpp ArcballCamera.cpp ArcballCamera.hpp)
+set(SOURCE_FILES main.cpp MPEngine.cpp MPEngine.h input.cpp input.hpp)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 # Windows with MinGW Installations
@@ -26,4 +26,13 @@ elseif( UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
     # update the lib directory location
     target_link_directories(${PROJECT_NAME} PUBLIC "/usr/local/lib")
     target_link_libraries(${PROJECT_NAME} GL glfw3 glad)
+
+    # Use -DUSE_CURL=True to enable fetching player skins from online
+    # May compile without but requires HTTPS capable curl to work (e.g. libcurl4-openssl-dev on Ubuntu)
+    if( USE_CURL )
+        target_link_libraries(${PROJECT_NAME} curl)
+        add_definitions(-DUSE_CURL)
+    endif()
+    unset(USE_CURL CACHE)
+
 endif()

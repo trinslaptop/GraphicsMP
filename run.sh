@@ -1,5 +1,20 @@
 #!/bin/bash
 set -e
-cmake -S . -B build
+
+build=()
+run=()
+t=false
+
+for arg in "$@"; do
+    if $t; then
+        run+=("$arg")
+    elif [[ "$arg" = '--' ]]; then
+        t=true
+    else 
+        build+=("$arg")
+    fi
+done
+
+cmake ${build[@]} -S . -B build
 (cd build && make)
-"./build/mp" "$@" < /dev/stdin
+"./build/mc" ${run[@]} < /dev/stdin

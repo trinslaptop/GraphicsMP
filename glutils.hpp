@@ -59,8 +59,51 @@ namespace glutils {
             TextureManager(const TextureManager&) = delete;
             TextureManager& operator=(const TextureManager&) = delete;
 
-            // Retrieves texture from cache or loads it
-            inline GLuint load(const std::string path) {
+            // Retrieves texture from cache or loads it from a bytes
+            inline GLuint load(const std::string& name, const std::vector<unsigned char>& bytes) {
+                // Try find existing
+                std::map<std::string, GLuint>::iterator iter = this->_textures.find(name);
+                if(iter != this->_textures.end()) {
+                    return iter->second;
+                }
+                
+                // Load image from bytes
+                GLuint handle = 0;
+                GLint width, height, channels;
+                GLubyte* data;
+                
+                // Flip image to match gl coords
+                stbi_set_flip_vertically_on_load(true);
+
+                if((data = stbi_load_from_memory(bytes.data(), bytes.size(), &width, &height, &channels, 0))) {
+                    const GLint STORAGE_TYPE = (channels == 4 ? GL_RGBA : GL_RGB);
+
+                    glGenTextures(1, &handle);
+                    glBindTexture(GL_TEXTURE_2D, handle);
+
+                    // Set texture parameters
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+                    // Transfer image data to the GPU
+                    glTexImage2D(GL_TEXTURE_2D, 0, STORAGE_TYPE, width, height, 0, STORAGE_TYPE, GL_UNSIGNED_BYTE, data);
+
+                    // Release image memory from CPU - it now lives on the GPU
+                    stbi_image_free(data);
+                } else {
+                    // Load failed
+                    fprintf(stderr, "[ERROR]: Could not load texture map \"%s\"\n", name.c_str());
+                    return 1;
+                }
+                
+                this->_textures[name] = handle;
+                return handle;
+            }
+
+            // Retrieves texture from cache or loads it from a file
+            inline GLuint load(const std::string& path) {
                 // Try find existing
                 std::map<std::string, GLuint>::iterator iter = this->_textures.find(path);
                 if(iter != this->_textures.end()) {
@@ -68,11 +111,11 @@ namespace glutils {
                 }
                 
                 // Load image from file
-                // Flip image to match gl coords
                 GLuint handle = 0;
                 GLint width, height, channels;
                 GLubyte* data;
                 
+                // Flip image to match gl coords
                 stbi_set_flip_vertically_on_load(true);
 
                 if((data = stbi_load(path.c_str(), &width, &height, &channels, 0))) {
