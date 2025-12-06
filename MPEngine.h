@@ -17,6 +17,7 @@
 #include <unordered_map>
 
 #include "ShaderProgram.hpp"
+#include "PrimitiveRenderer.hpp"
 #include "input.hpp"
 #include "mcmodel.hpp"
 #include "glutils.hpp"
@@ -96,11 +97,21 @@ class MPEngine final : public CSCI441::OpenGLEngine {
             std::unique_ptr<ShaderProgram> clouds;
             /// Terrain Patch Shader
             std::unique_ptr<ShaderProgram> terrain;
+
+            /// Simple cube outline shader
+            std::unique_ptr<ShaderProgram> cube;
+
+            /// Simple point shader
+            std::unique_ptr<ShaderProgram> point;
+
+            /// Textured sprite shader
+            std::unique_ptr<ShaderProgram> sprite;
         } _shaders;
 
         /*** Helper Classes ***/
         std::unique_ptr<input::InputManager> _im;
         std::unique_ptr<glutils::TextureManager> _tm;
+        std::unique_ptr<PrimitiveRenderer> _pr;
 
         /*** Objects ***/
         std::shared_ptr<Skybox> _skybox;

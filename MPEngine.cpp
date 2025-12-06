@@ -46,6 +46,7 @@ MPEngine::MPEngine(const std::string& player_name)
     // Most objects have to be initialized later on once OpenGL is ready
     _im(nullptr),
     _tm(nullptr),
+    _pr(nullptr),
     _grid(nullptr),
     _skybox(nullptr),
     _clouds(nullptr),
@@ -221,6 +222,8 @@ void MPEngine::mSetupShaders() {
     this->_shaders.clouds = std::make_unique<ShaderProgram>("shaders/clouds/clouds.v.glsl", "shaders/clouds/clouds.f.glsl");
     this->_shaders.clouds->setProgramUniform("clouds", 0);
 
+    this->_shaders.point = std::make_unique<ShaderProgram>("shaders/point/point.v.glsl", "shaders/point/point.f.glsl");
+
     this->_shaders.terrain = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_shaders.terrain);
 }
@@ -233,6 +236,9 @@ void MPEngine::mSetupBuffers() {
 
     // Make default.png texture handle 1, any textures that fail to load will fallback to this
     this->_tm->load("assets/textures/default.png");
+
+    this->_pr = std::make_unique<PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.point, this->_tm->load("assets/textures/sprites.png"));
+
 
     // Create skybox
     this->_skybox = std::make_shared<Skybox>(*this->_shaders.skybox, std::array<std::string, 6> {
@@ -405,6 +411,9 @@ void MPEngine::mCleanupShaders() {
     this->_shaders.skybox = nullptr;
     this->_shaders.clouds = nullptr;
     this->_shaders.terrain = nullptr;
+    this->_shaders.cube = nullptr;
+    this->_shaders.point = nullptr;
+    this->_shaders.sprite = nullptr;
 }
 
 void MPEngine::mCleanupBuffers() {
@@ -415,6 +424,7 @@ void MPEngine::mCleanupBuffers() {
     this->_clouds = nullptr;
     this->_player = nullptr;
     this->_blocks.clear();
+    this->_pr = nullptr;
 }
 
 void MPEngine::mCleanupTextures() {
@@ -539,6 +549,9 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_player->draw(ctx);
 
     this->_world->draw(ctx);
+
+
+    this->_pr->point(ctx);
 }
 
 void MPEngine::_updateScene() {
