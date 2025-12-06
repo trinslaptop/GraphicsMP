@@ -35,8 +35,9 @@ inline char const* get_gl_error_message(GLenum const err) noexcept {
 
 /*** Engine Interface ***/
 
-MPEngine::MPEngine()
+MPEngine::MPEngine(const std::string& player_name)
     : CSCI441::OpenGLEngine(4, 1, 720, 720, "MP: Moria"),
+    _player_name(player_name),
     _freecam(nullptr),
     _fixedcam(nullptr),
     _primaryCamera(1),
@@ -354,7 +355,7 @@ void MPEngine::mSetupBuffers() {
     }
 
     // Setup players
-    this->_player = get_player(this->_world, *this->_shaders.primary, *this->_tm, "TobinOakenshield");//std::make_shared<Player>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/idril.png"), this->_tm->load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {this->_tm->load("assets/textures/cape.png"), this->_tm->load("assets/textures/cape_specular.png")});
+    this->_player = get_player(this->_world, *this->_shaders.primary, *this->_tm, this->_player_name);
     this->_player->setPosition({32.0f, this->_world->getTerrainHeight(32.0f, 32.0f), 32.0f});
 }
 

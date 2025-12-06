@@ -30,7 +30,7 @@
 class MPEngine final : public CSCI441::OpenGLEngine {
     public:
         /*** Engine Interface ***/
-        MPEngine();
+        MPEngine(const std::string& player_name = "Idril");
         ~MPEngine() override;
 
         void run() override;
@@ -108,7 +108,10 @@ class MPEngine final : public CSCI441::OpenGLEngine {
         std::shared_ptr<mcmodel::Drawable> _grid;
 
         std::shared_ptr<World> _world;
+
+        const std::string _player_name;
         std::shared_ptr<Player> _player;
+
 
         std::unordered_map<std::string, std::shared_ptr<Block>> _blocks;
 
