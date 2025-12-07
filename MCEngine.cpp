@@ -147,6 +147,11 @@ MCEngine::MCEngine(const std::string& player_name)
     this->_im->on({input::key(GLFW_KEY_F2)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         this->saveScreenshot(NULL);
     });
+
+    // F3 for debug info
+    this->_im->on({input::key(GLFW_KEY_F3)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        this->_debug = !this->_debug;
+    });
 }
 
 MCEngine::~MCEngine() {}
@@ -217,7 +222,8 @@ void MCEngine::mSetupShaders() {
     // Load shaders
     this->_shaders.primary = std::make_unique<ShaderProgram>("shaders/texshader.v.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_shaders.primary);
-    
+    this->_shader_globals->bindShaderBlock(*this->_shaders.primary, "Globals");
+
     this->_shaders.skybox = std::make_unique<ShaderProgram>("shaders/skybox/skybox.v.glsl", "shaders/skybox/skybox.f.glsl");
     this->_shader_globals->bindShaderBlock(*this->_shaders.skybox, "Globals");
     this->_shaders.skybox->setProgramUniform("skybox", 0);
@@ -235,10 +241,14 @@ void MCEngine::mSetupShaders() {
     this->_shaders.point = std::make_unique<ShaderProgram>("shaders/primitives/point.v.glsl", "shaders/solidcolor.f.glsl");
     this->_shader_globals->bindShaderBlock(*this->_shaders.point, "Globals");
 
-    this->_shaders.sprite = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/sprite.g.glsl", "shaders/solidcolor.f.glsl");
+    this->_shaders.sprite = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/sprite.g.glsl", "shaders/texshader.f.glsl");
+    this->_shader_globals->bindShaderBlock(*this->_shaders.sprite, "Globals");
+    initCommonFragmentShaderUniforms(*this->_shaders.primary);
 
     this->_shaders.terrain = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_shaders.terrain);
+    this->_shader_globals->bindShaderBlock(*this->_shaders.terrain, "Globals");
+
 }
 
 void MCEngine::mSetupBuffers() {
@@ -420,7 +430,7 @@ void MCEngine::mSetupScene() {
 
 /*** Engine Cleanup ***/
 void MCEngine::mCleanupShaders() {
-    fprintf( stdout, "[INFO]: ...deleting Shaders.\n" );
+    fprintf(stdout, "[INFO]: ...deleting Shaders.\n");
     this->_shaders.primary = nullptr;
     this->_shaders.skybox = nullptr;
     this->_shaders.clouds = nullptr;
@@ -433,7 +443,7 @@ void MCEngine::mCleanupShaders() {
 }
 
 void MCEngine::mCleanupBuffers() {
-    fprintf( stdout, "[INFO]: ...deleting VAOs....\n" );
+    fprintf(stdout, "[INFO]: ...deleting VAOs....\n");
     this->_world = nullptr;
     this->_grid = nullptr;
     this->_skybox = nullptr;
@@ -444,12 +454,12 @@ void MCEngine::mCleanupBuffers() {
 }
 
 void MCEngine::mCleanupTextures() {
-    fprintf( stdout, "[INFO]: ...deleting textures\n" );
+    fprintf(stdout, "[INFO]: ...deleting textures\n");
     this->_tm = nullptr;
 }
 
 void MCEngine::mCleanupScene() {
-    fprintf( stdout, "[INFO]: ...deleting scene...\n" );
+    fprintf(stdout, "[INFO]: ...deleting scene...\n");
     this->_freecam = nullptr;
     this->_fixedcam = nullptr;
 }
@@ -566,7 +576,16 @@ void MCEngine::_renderScene(glutils::RenderContext& ctx) const {
 
     this->_world->draw(ctx);
 
-    this->_pr->sprite(ctx, 'A', {0,0,0});
+}
+
+void MCEngine::_renderHUD(glutils::RenderContext& ctx) const {
+    const float size = 1.0f/32.0f;
+    const glm::vec3 black = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    if(this->_debug) {
+        this->_pr->sprite(std::string("XYZ:") + std::to_string(this->_player->getPosition().x) + "," + std::to_string(this->_player->getPosition().y) + "," + std::to_string(this->_player->getPosition().z) + ",", {0,0,0}, black, size);
+    }
+
 }
 
 void MCEngine::_updateScene() {
@@ -633,6 +652,7 @@ void MCEngine::run() {
         this->_shader_globals->setUniform("view", ctx.getViewMatrix());
         this->_shader_globals->setUniform("eyePos", ctx.getEyePos());
         _renderScene(ctx);
+        _renderHUD(ctx);
 
         // Optional secondary cameras
         if(this->getSecondaryCamera() != nullptr) {

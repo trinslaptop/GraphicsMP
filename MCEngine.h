@@ -58,11 +58,16 @@ class MCEngine final : public CSCI441::OpenGLEngine {
         /*** Engine Rendering & Updating ***/
         /// Draws everything to the scene from a particular point of view
         void _renderScene(glutils::RenderContext& ctx) const;
+        /// Draws HUD elements
+        void _renderHUD(glutils::RenderContext& ctx) const;
         /// Handles animations and updating camera
         void _updateScene();
         
         /// Read debug commands from terminal
         void _handleConsoleInput();
+
+        /// If debug info should be drawn, separate from debug logging
+        bool _debug = false;
 
         /// Time last frame was rendered
         GLfloat _lastTime;

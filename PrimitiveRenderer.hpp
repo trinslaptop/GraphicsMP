@@ -1,6 +1,8 @@
 #ifndef PRIMITIVERENDERER_HPP
 #define PRIMITIVERENDERER_HPP
 
+#include <string>
+
 #include "NonCopyable.hpp"
 #include "ShaderProgram.hpp"
 #include "glutils.hpp"
@@ -34,7 +36,7 @@ class PrimitiveRenderer final : NonCopyable {
         };
 
         /// Renders a pixel point, intended for debugging only
-        inline void point(glutils::RenderContext& ctx, const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f) {
+        inline void point(const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f) {
             this->_shaders.point.useProgram();
             
             this->_shaders.point.setProgramUniform("pos", pos);
@@ -46,7 +48,7 @@ class PrimitiveRenderer final : NonCopyable {
         }
 
         /// Renders a line between two points, intended for debugging only
-        inline void line(glutils::RenderContext& ctx, const glm::vec3 pos1 = glm::vec3(0.0f), const glm::vec3 pos2 = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f)) {
+        inline void line(const glm::vec3 pos1 = glm::vec3(0.0f), const glm::vec3 pos2 = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f)) {
             this->_shaders.line.useProgram();
             
             this->_shaders.line.setProgramUniform("pos1", pos1);
@@ -58,7 +60,7 @@ class PrimitiveRenderer final : NonCopyable {
         }
 
         /// Renders a cube outline, intended for debugging only
-        inline void cube(glutils::RenderContext& ctx, const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 size = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f), const glm::bvec3 centered = glm::bvec3(false, false, false)) {
+        inline void cube(const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 size = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f), const glm::bvec3 centered = glm::bvec3(false, false, false)) {
             this->_shaders.cube.useProgram();
             
             this->_shaders.cube.setProgramUniform("pos", pos - glm::vec3(centered)*size/2.0f);
@@ -69,14 +71,44 @@ class PrimitiveRenderer final : NonCopyable {
             glDrawArrays(GL_POINTS, 0, 1);
         }
 
-        inline void sprite(glutils::RenderContext& ctx, const char sprite, const glm::vec3 pos, const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f, const bool flat = true) {
-            ctx.bind(this->_shaders.sprite);
+        enum SpriteMode {
+            #include "shaders/primitives/SpriteMode.glsl"
+        };
 
-            this->_shaders.cube.setProgramUniform("sprite", sprite);
+        inline void sprite(const std::string& sprites, const glm::vec3 pos, const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f, const SpriteMode mode = SpriteMode::UI_ANCHOR_CORNER) {
+            this->_shaders.sprite.useProgram();
 
+            glm::vec2 offset = glm::vec2(0.0, 0.0);
+
+            this->_shaders.sprite.setProgramUniform("size", 2*size);
+            this->_shaders.sprite.setProgramUniform("mode", mode);
+            
+            this->_shaders.sprite.setProgramUniform("tint", glm::vec4(color, 1.0f));
+            this->_shaders.sprite.setProgramUniform("lit", false);
+            this->_shaders.sprite.setProgramUniform("frameCount", (GLuint) 1);
+            this->_shaders.sprite.setProgramUniform("frameTime", 1.0f);
 
             glBindVertexArray(this->_vao);
-            glDrawArrays(GL_POINTS, 0, 1);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, this->_sprite_texture);
+
+            for(const char c : sprites) {
+                switch(c) {
+                    case '\t':
+                        offset.x += 8*size;
+                        break;
+                    case '\n':
+                        offset.y -= 2*size;
+                        offset.x = 0;
+                        break;
+                    default:
+                        this->_shaders.sprite.setProgramUniform("sprite", c);
+                        this->_shaders.sprite.setProgramUniform("pos", pos + glm::vec3(offset, 0.0));
+                        glDrawArrays(GL_POINTS, 0, 1);
+                        offset.x += 2*size;
+                        break;
+                }
+            }
         }
 };
 

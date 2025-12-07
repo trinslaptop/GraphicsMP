@@ -2,8 +2,9 @@
 
 layout(quads, equal_spacing, ccw) in;
 
+#include "../globals.glsl"
+
 uniform mat4 modelMatrix;
-uniform mat4 vpMatrix;
 
 out vec2 fTexCoord;
 out vec3 fNormal;
@@ -60,5 +61,5 @@ void main() {
     fPos = vec3(modelMatrix*p);
     fTexCoord = p.xz;
 
-    gl_Position = vpMatrix*modelMatrix*p;
+    gl_Position = projection*view*modelMatrix*p;
 }

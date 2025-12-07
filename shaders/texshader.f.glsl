@@ -1,8 +1,9 @@
 #version 410 core
 
+#include "globals.glsl"
+
 uniform sampler2D diffuseTexture;
 uniform sampler2D specularTexture;
-uniform vec3 eyePos;
 
 // Point light
 uniform vec3 torchColor;
@@ -23,7 +24,6 @@ in vec3 fPos;
 
 out vec4 fColorOut;
 
-uniform float time;
 uniform float frameTime;
 uniform uint frameCount;
 
