@@ -1,6 +1,6 @@
 #version 410 core
 
-uniform mat4 vpMatrix;
+#include "../globals.glsl"
 
 in vec3 vPos;
 
@@ -8,5 +8,7 @@ out vec3 fTexCoord;
 
 void main() {
     fTexCoord = vPos;
-    gl_Position = (vpMatrix*vec4(vPos, 1.0)).xyww;
+    
+    // Remove translation from view matrix
+    gl_Position = (projection*mat4(mat3(view))*vec4(vPos, 1.0)).xyww;
 }

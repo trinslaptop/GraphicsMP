@@ -24,7 +24,6 @@ class Skybox final : public mcmodel::Drawable, NonCopyable {
         const ShaderProgram& _shader;
         GLuint _texture;
         GLuint _vao, _vbo;
-        const GLuint _vploc;
         static constexpr std::array<GLfloat, 36*3> _POS = {
             -1.0f,  1.0f, -1.0f,
             -1.0f, -1.0f, -1.0f,
@@ -71,14 +70,13 @@ class Skybox final : public mcmodel::Drawable, NonCopyable {
 
     public:
         /// Pass textures +-xyz (NOTE: different order from mcmodel::cube functions)
-        inline Skybox(const ShaderProgram& shader, const std::array<std::string, 6>& textures) : _shader(shader), _texture(0), _vao(0), _vbo(0), _vploc(shader.getUniformLocation("vpMatrix")) {
+        inline Skybox(const ShaderProgram& shader, const std::array<std::string, 6>& textures) : _shader(shader), _texture(0), _vao(0), _vbo(0) {
             // Load textures
             glGenTextures(1, &this->_texture);
             glBindTexture(GL_TEXTURE_CUBE_MAP, this->_texture);
             GLint width, height, channels;
             GLubyte* data;
-
-
+            
             // Load images from file
             // For cube map, DON'T flip images to match gl coords
             stbi_set_flip_vertically_on_load(false);
@@ -126,9 +124,6 @@ class Skybox final : public mcmodel::Drawable, NonCopyable {
             glDepthMask(GL_FALSE);
 
             this->_shader.useProgram();
-
-            // Remove view rotation
-            this->_shader.setProgramUniform(this->_vploc, ctx.getProjectionMatrix()*glm::mat4(glm::mat3(ctx.getViewMatrix())));
 
             // Draw
             glBindVertexArray(this->_vao);

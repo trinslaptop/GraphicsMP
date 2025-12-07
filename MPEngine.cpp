@@ -219,9 +219,11 @@ void MPEngine::mSetupShaders() {
     initCommonFragmentShaderUniforms(*this->_shaders.primary);
     
     this->_shaders.skybox = std::make_unique<ShaderProgram>("shaders/skybox/skybox.v.glsl", "shaders/skybox/skybox.f.glsl");
+    this->_shader_globals->bindShaderBlock(*this->_shaders.skybox, "Globals");
     this->_shaders.skybox->setProgramUniform("skybox", 0);
 
     this->_shaders.clouds = std::make_unique<ShaderProgram>("shaders/clouds/clouds.v.glsl", "shaders/clouds/clouds.f.glsl");
+    this->_shader_globals->bindShaderBlock(*this->_shaders.clouds, "Globals");
     this->_shaders.clouds->setProgramUniform("clouds", 0);
 
     this->_shaders.cube = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/cube.g.glsl", "shaders/solidcolor.f.glsl");

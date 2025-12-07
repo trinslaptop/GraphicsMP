@@ -25,7 +25,7 @@ class Clouds final : public mcmodel::Drawable, NonCopyable {
         }
 
     inline virtual void draw(glutils::RenderContext& ctx) const override {
-        ctx.bind(this->_shader);
+        this->_shader.useProgram();
         glBindVertexArray(this->_vao);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->_texture);
