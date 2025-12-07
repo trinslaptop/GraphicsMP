@@ -11,6 +11,9 @@
  *
  */
 
+// Need to include this first for the shim to work!
+#include "ShaderProgram.hpp"
+
 #define CSCI441_SCREENSHOT_IMPLEMENTATION
 #include "MPEngine.h"
 
