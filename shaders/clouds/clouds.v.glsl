@@ -1,7 +1,6 @@
 #version 410 core
 
-uniform mat4 vpMatrix;
-uniform vec3 eyePos;
+#include "../globals.glsl"
 
 uniform float height = 62.0;
 uniform float scale = 512.0;
@@ -17,5 +16,5 @@ void main() {
     fTexCoord = vPos.xz + eyePos.xz/scale;
     fPos = pos;
 
-    gl_Position = vpMatrix*vec4(pos, 1.0f);
+    gl_Position = projection*view*vec4(pos, 1.0f);
 }

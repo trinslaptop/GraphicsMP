@@ -1,16 +1,14 @@
 #version 410 core
 
-out vec4 fColorOut;
+#include "../globals.glsl"
 
 uniform sampler2D clouds;
+uniform float scale = 512.0;
+
 in vec2 fTexCoord;
 in vec3 fPos;
 
-uniform float time;
-
-uniform vec3 eyePos;
-
-uniform float scale = 512.0;
+out vec4 fColorOut;
 
 void main() {
     vec4 texel = texture(clouds, fTexCoord + mod(vec2(time), vec2(1440.0, 1200.0))/vec2(1440.0, 1200.0));

@@ -572,12 +572,12 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
 }
 
 void MPEngine::_updateScene() {
-    GLfloat currTime = (GLfloat)glfwGetTime();
+    GLfloat currTime = (GLfloat) glfwGetTime();
     GLfloat deltaTime = currTime - _lastTime;
     this->_lastTime = currTime;
 
+    this->_shader_globals->setUniform("time", currTime);
     this->_shaders.primary->setProgramUniform("time", currTime);
-    this->_shaders.clouds->setProgramUniform("time", currTime);
 
     // Update keybinds
     this->_im->poll(this->mpWindow, deltaTime);
