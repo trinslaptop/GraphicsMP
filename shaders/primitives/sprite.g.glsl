@@ -21,18 +21,32 @@ out vec2 fTexCoord;
 out vec3 fNormal;
 out vec3 fPos;
 
+void vertex(vec2 offset, vec2 texOffset) {
+    gl_Position = projection*(view*vec4(pos, 1.0) + vec4(offset/2.0, 0.0, 0.0));
+    fTexCoord = vec2(sprite % 16, 15.0 - floor(sprite/16.0))/16.0 + texOffset;
+    EmitVertex();
+}
+
 void uivertex(vec2 offset, vec2 texOffset) {
     gl_Position = vec4(2.0*vec2(pos) - vec2(1.0, 1.0) + offset, 0.0, 1.0);
-    fTexCoord = vec2(sprite % 16, 15 - sprite/16)/16.0 + texOffset;
+    fTexCoord = vec2(sprite % 16, 15.0 - floor(sprite/16.0))/16.0 + texOffset;
     EmitVertex();
 }
 
 void main() {
     float texSpan = 1.0/16.0;
-    vec2 texCoord = vec2(0);
 
     switch(mode) {
         case PARTICLE:
+            fPos = pos;
+            fNormal = vec3(0.0, 0.0, 1.0);
+
+            vertex(vec2(-size, -size), vec2(0.0, 0.0));
+            vertex(vec2(-size, size), vec2(0.0, texSpan));
+            vertex(vec2(size, -size), vec2(texSpan, 0.0));
+            vertex(vec2(size, size), vec2(texSpan, texSpan));
+            EndPrimitive();
+
             break;
 
         case UI_ANCHOR_CORNER:
