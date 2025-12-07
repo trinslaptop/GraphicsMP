@@ -13,7 +13,7 @@ class PrimitiveRenderer final : NonCopyable {
             const ShaderProgram& cube;
             const ShaderProgram& line;
             const ShaderProgram& point;
-            // const ShaderProgram& sprite;
+            const ShaderProgram& sprite;
         } _shaders;
 
         const GLuint _sprite_texture;
@@ -21,9 +21,10 @@ class PrimitiveRenderer final : NonCopyable {
         GLuint _vao;
 
     public:
-        inline PrimitiveRenderer(const ShaderProgram& cube_shader, const ShaderProgram& line_shader, const ShaderProgram& point_shader, const GLuint sprite_texture) : _shaders {cube_shader, line_shader, point_shader}, _sprite_texture(sprite_texture) {
+        inline PrimitiveRenderer(const ShaderProgram& cube_shader, const ShaderProgram& line_shader, const ShaderProgram& point_shader, const ShaderProgram& sprite_shader, const GLuint sprite_texture) : _shaders {cube_shader, line_shader, point_shader, sprite_shader}, _sprite_texture(sprite_texture) {
             // Enable gl_PointSize in shaders
             glEnable(GL_PROGRAM_POINT_SIZE);
+
             // Make an empty VAO
             glGenVertexArrays(1, &this->_vao);
         }
@@ -48,21 +49,31 @@ class PrimitiveRenderer final : NonCopyable {
         inline void line(glutils::RenderContext& ctx, const glm::vec3 pos1 = glm::vec3(0.0f), const glm::vec3 pos2 = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f)) {
             ctx.bind(this->_shaders.line);
             
-            this->_shaders.point.setProgramUniform("pos1", pos1);
-            this->_shaders.point.setProgramUniform("pos2", pos2);
-            this->_shaders.point.setProgramUniform("color", color);
+            this->_shaders.line.setProgramUniform("pos1", pos1);
+            this->_shaders.line.setProgramUniform("pos2", pos2);
+            this->_shaders.line.setProgramUniform("color", color);
 
             glBindVertexArray(this->_vao);
             glDrawArrays(GL_POINTS, 0, 1);
         }
 
         /// Renders a cube outline, intended for debugging only
-        inline void cube(glutils::RenderContext& ctx, const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 size = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f)) {
+        inline void cube(glutils::RenderContext& ctx, const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 size = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f), const glm::bvec3 centered = glm::bvec3(false, false, false)) {
             ctx.bind(this->_shaders.cube);
             
-            this->_shaders.point.setProgramUniform("pos", pos);
-            this->_shaders.point.setProgramUniform("color", color);
-            this->_shaders.point.setProgramUniform("size", size);
+            this->_shaders.cube.setProgramUniform("pos", pos - glm::vec3(centered)*size/2.0f);
+            this->_shaders.cube.setProgramUniform("color", color);
+            this->_shaders.cube.setProgramUniform("size", size);
+
+            glBindVertexArray(this->_vao);
+            glDrawArrays(GL_POINTS, 0, 1);
+        }
+
+        inline void sprite(glutils::RenderContext& ctx, const char sprite, const glm::vec3 pos, const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f, const bool flat = true) {
+            ctx.bind(this->_shaders.sprite);
+
+            this->_shaders.cube.setProgramUniform("sprite", sprite);
+
 
             glBindVertexArray(this->_vao);
             glDrawArrays(GL_POINTS, 0, 1);

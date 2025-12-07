@@ -226,6 +226,8 @@ void MPEngine::mSetupShaders() {
     this->_shaders.line = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/line.g.glsl", "shaders/solidcolor.f.glsl");
     this->_shaders.point = std::make_unique<ShaderProgram>("shaders/primitives/point.v.glsl", "shaders/solidcolor.f.glsl");
 
+    this->_shaders.sprite = std::make_unique<ShaderProgram>("shaders/nop.v.glsl", "shaders/primitives/sprite.g.glsl", "shaders/solidcolor.f.glsl");
+
     this->_shaders.terrain = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_shaders.terrain);
 }
@@ -238,8 +240,10 @@ void MPEngine::mSetupBuffers() {
 
     // Make default.png texture handle 1, any textures that fail to load will fallback to this
     this->_tm->load("assets/textures/default.png");
+    this->_tm->load("assets/textures/dull.png");
+    this->_tm->load("assets/textures/shiny.png");
 
-    this->_pr = std::make_unique<PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, this->_tm->load("assets/textures/sprites.png"));
+    this->_pr = std::make_unique<PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, *this->_shaders.sprite, this->_tm->load("assets/textures/sprites.png"));
 
     // Create skybox
     this->_skybox = std::make_shared<Skybox>(*this->_shaders.skybox, std::array<std::string, 6> {
@@ -553,9 +557,7 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_world->draw(ctx);
 
 
-    this->_pr->point(ctx, {1,1,1}, {1,0,0});
-    this->_pr->cube(ctx);
-    this->_pr->line(ctx);
+    this->_pr->sprite(ctx, 'A', {0,0,0});
 }
 
 void MPEngine::_updateScene() {
