@@ -2,6 +2,7 @@
 #define SHADERPROGRAM_HPP
 
 #include "include/mcpre.hpp"
+#include <string>
 
 /*
  * ShaderProgram.hpp
@@ -29,7 +30,7 @@ namespace CSCI441_INTERNAL::ShaderUtils {
         std::string shaderString;
 
         // Read in and preprocess text file
-        if(!(shaderString = mcpre::preprocess(filename)).empty()) {
+        if(!(shaderString = mcpre::preprocess(filename, {}, {"include", "pragma"})).empty()) {
             // Generate a shader handle for the corresponding shader type
             const GLuint shaderHandle = glCreateShader(shaderType);
 

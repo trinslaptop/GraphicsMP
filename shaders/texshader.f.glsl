@@ -13,11 +13,6 @@ uniform vec3 sunColor;
 uniform vec3 sunDirection;
 uniform float sunIntensity;
 
-// Spot lights
-uniform vec3 redSpotlightPos;
-uniform vec3 greenSpotlightPos;
-uniform vec3 blueSpotlightPos;
-
 uniform bool lit;
 
 uniform vec4 tint;
