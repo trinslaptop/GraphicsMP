@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <ctime>
+#include <cstddef>
+#include <string>
 
 #include <glm/glm.hpp>
 
@@ -38,6 +40,32 @@ namespace f8 {
     inline float randf(uint32_t& state = _state) {
         return rand(state) / glm::pow(2, 32);
     }
+
+    /// Generates a random version 4 UUID
+    inline std::string uuid4(uint32_t& state = _state) {
+        const char ALPHABET[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+        std::string t = "xxxxxxxx-xxxx-4xxx-Nxxx-xxxxxxxxxxxx";
+
+        for(size_t i = 0; i < t.length(); i++) {
+            if(t[i] == 'x') t[i] = ALPHABET[rand(state) % 16];
+            else if(t[i] == 'N') t[i] = ALPHABET[0b1000 | (rand(state) % 4)];
+        }
+
+        return t;
+    }
+
+    /// A simple hash function, not cryptographically secure
+	inline size_t cyrb(const std::string& text, size_t seed = 0) {
+		size_t h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+		for (size_t i = 0; i < text.length(); i++) {
+			char ch = text.at(i);
+			h1 = (h1 ^ ch)*2654435761;
+			h2 = (h2 ^ ch)*1597334677;
+		}
+		h1 = ((h1 ^ (h1>>16))*2246822507) ^ ((h2 ^ (h2>>13))*3266489909);
+		h2 = ((h2 ^ (h2>>16))*2246822507) ^ ((h1 ^ (h1>>13))*3266489909);
+		return (h2 << 16) | h1;
+	}
 
     /// Sets the RNG seed to the given value or the current time if argument is absent (or 0)
     /// and returns the new seed, also cycles the generator a few times
