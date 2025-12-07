@@ -15,7 +15,7 @@
 #include "ShaderProgram.hpp"
 
 #define CSCI441_SCREENSHOT_IMPLEMENTATION
-#include "MPEngine.h"
+#include "MCEngine.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -26,7 +26,7 @@
 int main(int argc, char* argv[]) {
     const std::string player = argc > 1 ? argv[1] : "Idril";
 
-    const auto engine = new MPEngine(player);
+    const auto engine = new MCEngine(player);
     engine->initialize();
     if (engine->getError() == CSCI441::OpenGLEngine::OPENGL_ENGINE_ERROR_NO_ERROR) {
         engine->run();

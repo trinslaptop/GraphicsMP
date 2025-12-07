@@ -1,4 +1,4 @@
-#include "MPEngine.h"
+#include "MCEngine.h"
 
 #include <CSCI441/FixedCam.hpp>
 #include <CSCI441/FreeCam.hpp>
@@ -35,7 +35,7 @@ inline char const* get_gl_error_message(GLenum const err) noexcept {
 
 /*** Engine Interface ***/
 
-MPEngine::MPEngine(const std::string& player_name)
+MCEngine::MCEngine(const std::string& player_name)
     : CSCI441::OpenGLEngine(4, 1, 720, 720, "Minceraft"),
     _player_name(player_name),
     _freecam(nullptr),
@@ -149,11 +149,11 @@ MPEngine::MPEngine(const std::string& player_name)
     });
 }
 
-MPEngine::~MPEngine() {}
+MCEngine::~MCEngine() {}
 
 /*** Engine Setup ***/
 
-void MPEngine::initialize() {
+void MCEngine::initialize() {
     CSCI441::OpenGLEngine::initialize();
 
     // Needed for readasync()
@@ -162,7 +162,7 @@ void MPEngine::initialize() {
     fflush(stdout);
 }
 
-void MPEngine::mSetupGLFW() {
+void MCEngine::mSetupGLFW() {
     CSCI441::OpenGLEngine::mSetupGLFW();
 
     // Request higher accuracy depth buffer
@@ -178,7 +178,7 @@ void MPEngine::mSetupGLFW() {
     glfwSetScrollCallback(mpWindow, scroll_callback);
 }
 
-void MPEngine::mSetupOpenGL() {
+void MCEngine::mSetupOpenGL() {
     glEnable(GL_DEPTH_TEST);					                    // Enable depth testing
     glDepthFunc(GL_LESS);							                // Use less than depth test
 
@@ -211,7 +211,7 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     shader.setProgramUniform("sunIntensity", 0.85f);
 }
 
-void MPEngine::mSetupShaders() {
+void MCEngine::mSetupShaders() {
     this->_shader_globals = std::make_shared<UniformBufferObject>(0);
 
     // Load shaders
@@ -241,7 +241,7 @@ void MPEngine::mSetupShaders() {
     initCommonFragmentShaderUniforms(*this->_shaders.terrain);
 }
 
-void MPEngine::mSetupBuffers() {
+void MCEngine::mSetupBuffers() {
     // Initialize random
     const unsigned int seed = 0x80801;
     uint32_t state;
@@ -380,7 +380,7 @@ void MPEngine::mSetupBuffers() {
 }
 
 /// Generates a tree at pos with variable log height
-void MPEngine::_place_tree(const glm::ivec3 pos, const size_t height) {
+void MCEngine::_place_tree(const glm::ivec3 pos, const size_t height) {
     for(int dy = 0; dy <= height; dy++) {
         this->_world->setBlock(pos + glm::ivec3(0, dy, 0), dy == height ? this->_blocks["leaves"] : this->_blocks["log"]);
         
@@ -404,7 +404,7 @@ void MPEngine::_place_tree(const glm::ivec3 pos, const size_t height) {
     }
 }
 
-void MPEngine::mSetupScene() {
+void MCEngine::mSetupScene() {
     this->_freecam = std::make_shared<CSCI441::FreeCam>((GLfloat)mWindowWidth / (GLfloat)mWindowHeight, 45.0f, 0.001f, 1000.0f);
     this->_freecam->setPosition(glm::vec3(-4.0f, 4.0f, -4.0f));
     this->_freecam->setTheta(-1.25f*M_PI);
@@ -419,7 +419,7 @@ void MPEngine::mSetupScene() {
 }
 
 /*** Engine Cleanup ***/
-void MPEngine::mCleanupShaders() {
+void MCEngine::mCleanupShaders() {
     fprintf( stdout, "[INFO]: ...deleting Shaders.\n" );
     this->_shaders.primary = nullptr;
     this->_shaders.skybox = nullptr;
@@ -432,7 +432,7 @@ void MPEngine::mCleanupShaders() {
     this->_shader_globals = nullptr;
 }
 
-void MPEngine::mCleanupBuffers() {
+void MCEngine::mCleanupBuffers() {
     fprintf( stdout, "[INFO]: ...deleting VAOs....\n" );
     this->_world = nullptr;
     this->_grid = nullptr;
@@ -443,12 +443,12 @@ void MPEngine::mCleanupBuffers() {
     this->_pr = nullptr;
 }
 
-void MPEngine::mCleanupTextures() {
+void MCEngine::mCleanupTextures() {
     fprintf( stdout, "[INFO]: ...deleting textures\n" );
     this->_tm = nullptr;
 }
 
-void MPEngine::mCleanupScene() {
+void MCEngine::mCleanupScene() {
     fprintf( stdout, "[INFO]: ...deleting scene...\n" );
     this->_freecam = nullptr;
     this->_fixedcam = nullptr;
@@ -456,7 +456,7 @@ void MPEngine::mCleanupScene() {
 
 /*** Camera Utility ***/
 
-CSCI441::Camera* MPEngine::getPrimaryCamera() const {
+CSCI441::Camera* MCEngine::getPrimaryCamera() const {
     switch(this->_primaryCamera) {
         case 2:
             return this->_fixedcam.get();
@@ -468,7 +468,7 @@ CSCI441::Camera* MPEngine::getPrimaryCamera() const {
     }
 }
 
-glm::vec2 MPEngine::getPrimaryCameraRotationScale() const {
+glm::vec2 MCEngine::getPrimaryCameraRotationScale() const {
     switch(this->_primaryCamera) {
         case 1:
             return glm::vec2(1.0f, -1.0f);
@@ -478,7 +478,7 @@ glm::vec2 MPEngine::getPrimaryCameraRotationScale() const {
     }
 }
 
-CSCI441::Camera* MPEngine::getSecondaryCamera() const {
+CSCI441::Camera* MCEngine::getSecondaryCamera() const {
     switch(this->_secondaryCamera) {
         case 1:
             return &this->_player->getFirstPersonCamera();
@@ -506,7 +506,7 @@ std::string readasync() {
 }
 
 /// Read debug commands from terminal
-void MPEngine::_handleConsoleInput() {
+void MCEngine::_handleConsoleInput() {
     std::string line = readasync();
     std::istringstream stream(line);
     std::string cmd;
@@ -554,7 +554,7 @@ void MPEngine::_handleConsoleInput() {
 
 /*** Rendering/Drawing Functions ***/
 
-void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
+void MCEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
     this->_clouds->draw(ctx);
 
@@ -566,14 +566,10 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
 
     this->_world->draw(ctx);
 
-
-    // this->_pr->sprite(ctx, 'A', {0,0,0});
-    this->_pr->cube(ctx);
-    this->_pr->line(ctx);
-    this->_pr->point(ctx, {1,1,1},{1,0,0});
+    this->_pr->sprite(ctx, 'A', {0,0,0});
 }
 
-void MPEngine::_updateScene() {
+void MCEngine::_updateScene() {
     GLfloat currTime = (GLfloat) glfwGetTime();
     GLfloat deltaTime = currTime - _lastTime;
     this->_lastTime = currTime;
@@ -610,7 +606,7 @@ void MPEngine::_updateScene() {
     }
 }
 
-void MPEngine::run() {
+void MCEngine::run() {
     //  This is our draw loop - all rendering is done here.  We use a loop to keep the window open
     //	until the user decides to close the window and quit the program.  Without a loop, the
     //	window will display once and then the program exits.
@@ -670,13 +666,13 @@ void MPEngine::run() {
 }
 
 // Need to expose to callbacks
-input::InputManager& MPEngine::getInputManager() {
+input::InputManager& MCEngine::getInputManager() {
     return *this->_im;
 }
 
 /*** Callbacks (forward to input manager) ***/
 void keyboard_callback(GLFWwindow *window, const int key, const int scancode, const int action, const int mods) {
-    auto engine = static_cast<MPEngine*>(glfwGetWindowUserPointer(window));
+    auto engine = static_cast<MCEngine*>(glfwGetWindowUserPointer(window));
     if(key != GLFW_KEY_UNKNOWN) {
         if(action == GLFW_PRESS) {
             engine->getInputManager().dispatch(window, input::key(key), input::State::Press);
@@ -687,12 +683,12 @@ void keyboard_callback(GLFWwindow *window, const int key, const int scancode, co
 }
 
 void cursor_callback(GLFWwindow *window, const double x, const double y) {
-    auto engine = static_cast<MPEngine*>(glfwGetWindowUserPointer(window));
+    auto engine = static_cast<MCEngine*>(glfwGetWindowUserPointer(window));
     engine->getInputManager().cursor(glm::vec2(x, engine->getWindowHeight() - y));
 }
 
 void mouse_button_callback(GLFWwindow *window, const int button, const int action, const int mods) {
-    auto engine = static_cast<MPEngine*>(glfwGetWindowUserPointer(window));
+    auto engine = static_cast<MCEngine*>(glfwGetWindowUserPointer(window));
     if(action == GLFW_PRESS) {
         engine->getInputManager().dispatch(window, input::mouse(button), input::State::Press);
     } else if(action == GLFW_RELEASE) {
@@ -701,6 +697,6 @@ void mouse_button_callback(GLFWwindow *window, const int button, const int actio
 }
 
 void scroll_callback(GLFWwindow *window, const double xOffset, const double yOffset) {
-    const auto engine = static_cast<MPEngine*>(glfwGetWindowUserPointer(window));
+    const auto engine = static_cast<MCEngine*>(glfwGetWindowUserPointer(window));
     engine->getInputManager().scroll(glm::vec2(xOffset, yOffset));
 }

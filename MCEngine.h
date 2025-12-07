@@ -1,8 +1,8 @@
-#ifndef MPEngine_H
-#define MPEngine_H
+#ifndef MCEngine_H
+#define MCEngine_H
 
 /*
- * MPEngine.hpp
+ * MCEngine.hpp
  * Trin Wasinger - Fall 2025
  *
  * The core of this project, manages world, input, updating scene, rendering, most object lifetimes, etc...
@@ -29,11 +29,11 @@
 #include "md5camera.hpp"
 #include "UniformBufferObject.hpp"
 
-class MPEngine final : public CSCI441::OpenGLEngine {
+class MCEngine final : public CSCI441::OpenGLEngine {
     public:
         /*** Engine Interface ***/
-        MPEngine(const std::string& player_name = "Idril");
-        ~MPEngine() override;
+        MCEngine(const std::string& player_name = "Idril");
+        ~MCEngine() override;
 
         void run() override;
 
@@ -143,4 +143,4 @@ void cursor_callback(GLFWwindow *window, double x, double y);
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
 void scroll_callback(GLFWwindow *window, double xOffset, double yOffset);
 
-#endif // MPEngine_H
+#endif // MCEngine_H
