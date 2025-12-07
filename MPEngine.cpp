@@ -222,7 +222,9 @@ void MPEngine::mSetupShaders() {
     this->_shaders.clouds = std::make_unique<ShaderProgram>("shaders/clouds/clouds.v.glsl", "shaders/clouds/clouds.f.glsl");
     this->_shaders.clouds->setProgramUniform("clouds", 0);
 
-    this->_shaders.point = std::make_unique<ShaderProgram>("shaders/point/point.v.glsl", "shaders/point/point.f.glsl");
+    this->_shaders.cube = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/cube.g.glsl", "shaders/solidcolor.f.glsl");
+    this->_shaders.line = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/line.g.glsl", "shaders/solidcolor.f.glsl");
+    this->_shaders.point = std::make_unique<ShaderProgram>("shaders/primitives/point.v.glsl", "shaders/solidcolor.f.glsl");
 
     this->_shaders.terrain = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_shaders.terrain);
@@ -237,8 +239,7 @@ void MPEngine::mSetupBuffers() {
     // Make default.png texture handle 1, any textures that fail to load will fallback to this
     this->_tm->load("assets/textures/default.png");
 
-    this->_pr = std::make_unique<PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.point, this->_tm->load("assets/textures/sprites.png"));
-
+    this->_pr = std::make_unique<PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, this->_tm->load("assets/textures/sprites.png"));
 
     // Create skybox
     this->_skybox = std::make_shared<Skybox>(*this->_shaders.skybox, std::array<std::string, 6> {
@@ -412,6 +413,7 @@ void MPEngine::mCleanupShaders() {
     this->_shaders.clouds = nullptr;
     this->_shaders.terrain = nullptr;
     this->_shaders.cube = nullptr;
+    this->_shaders.line = nullptr;
     this->_shaders.point = nullptr;
     this->_shaders.sprite = nullptr;
 }
@@ -551,7 +553,9 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_world->draw(ctx);
 
 
-    this->_pr->point(ctx);
+    this->_pr->point(ctx, {1,1,1}, {1,0,0});
+    this->_pr->cube(ctx);
+    this->_pr->line(ctx);
 }
 
 void MPEngine::_updateScene() {

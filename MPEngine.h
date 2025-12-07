@@ -101,6 +101,9 @@ class MPEngine final : public CSCI441::OpenGLEngine {
             /// Simple cube outline shader
             std::unique_ptr<ShaderProgram> cube;
 
+            /// Simple line shader
+            std::unique_ptr<ShaderProgram> line;
+
             /// Simple point shader
             std::unique_ptr<ShaderProgram> point;
 
