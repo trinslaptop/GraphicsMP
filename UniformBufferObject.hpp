@@ -79,15 +79,15 @@ class UniformBufferObject final {
         }
 
         [[maybe_unused]] inline void setUniform(const char* name, const GLfloat value) {
-            this->_setUniform(name, 0, &value);
+            this->_setUniform(name, sizeof(GLfloat), &value);
         }
 
         [[maybe_unused]] inline void setUniform(const char* name, const GLint value) {
-            this->_setUniform(name, 0, &value);
+            this->_setUniform(name, sizeof(GLint), &value);
         }
 
         [[maybe_unused]] inline void setUniform(const char* name, const GLuint value) {
-            this->_setUniform(name, 0, &value);
+            this->_setUniform(name, sizeof(GLuint), &value);
         }
 
         template<typename T> [[maybe_unused]] inline void setUniform(const char* name, const T value) {
