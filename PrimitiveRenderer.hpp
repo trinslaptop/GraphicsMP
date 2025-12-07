@@ -35,7 +35,7 @@ class PrimitiveRenderer final : NonCopyable {
 
         /// Renders a pixel point, intended for debugging only
         inline void point(glutils::RenderContext& ctx, const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f) {
-            ctx.bind(this->_shaders.point);
+            this->_shaders.point.useProgram();
             
             this->_shaders.point.setProgramUniform("pos", pos);
             this->_shaders.point.setProgramUniform("color", color);
@@ -47,7 +47,7 @@ class PrimitiveRenderer final : NonCopyable {
 
         /// Renders a line between two points, intended for debugging only
         inline void line(glutils::RenderContext& ctx, const glm::vec3 pos1 = glm::vec3(0.0f), const glm::vec3 pos2 = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f)) {
-            ctx.bind(this->_shaders.line);
+            this->_shaders.line.useProgram();
             
             this->_shaders.line.setProgramUniform("pos1", pos1);
             this->_shaders.line.setProgramUniform("pos2", pos2);
@@ -59,7 +59,7 @@ class PrimitiveRenderer final : NonCopyable {
 
         /// Renders a cube outline, intended for debugging only
         inline void cube(glutils::RenderContext& ctx, const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 size = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f), const glm::bvec3 centered = glm::bvec3(false, false, false)) {
-            ctx.bind(this->_shaders.cube);
+            this->_shaders.cube.useProgram();
             
             this->_shaders.cube.setProgramUniform("pos", pos - glm::vec3(centered)*size/2.0f);
             this->_shaders.cube.setProgramUniform("color", color);

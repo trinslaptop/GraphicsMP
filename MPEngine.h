@@ -27,6 +27,7 @@
 #include "Skybox.hpp"
 #include "Clouds.hpp"
 #include "md5camera.hpp"
+#include "UniformBufferObject.hpp"
 
 class MPEngine final : public CSCI441::OpenGLEngine {
     public:
@@ -110,6 +111,8 @@ class MPEngine final : public CSCI441::OpenGLEngine {
             /// Textured sprite shader
             std::unique_ptr<ShaderProgram> sprite;
         } _shaders;
+
+        std::shared_ptr<UniformBufferObject> _shader_globals;
 
         /*** Helper Classes ***/
         std::unique_ptr<input::InputManager> _im;

@@ -1,15 +1,15 @@
 #version 410 core
 
+#include "../globals.glsl"
+
 layout(points) in;
 layout(line_strip, max_vertices = 16) out;
 
 uniform vec3 pos = vec3(0.0);
 uniform vec3 size = vec3(1.0);
 
-uniform mat4 vpMatrix;
-
 void vertex(vec3 vPos) {
-    gl_Position = vpMatrix*vec4(vPos, 1.0);
+    gl_Position = projection*view*vec4(vPos, 1.0);
     EmitVertex();
 }
 

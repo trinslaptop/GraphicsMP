@@ -212,6 +212,8 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
 }
 
 void MPEngine::mSetupShaders() {
+    this->_shader_globals = std::make_shared<UniformBufferObject>(0);
+
     // Load shaders
     this->_shaders.primary = std::make_unique<ShaderProgram>("shaders/texshader.v.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_shaders.primary);
@@ -223,8 +225,13 @@ void MPEngine::mSetupShaders() {
     this->_shaders.clouds->setProgramUniform("clouds", 0);
 
     this->_shaders.cube = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/cube.g.glsl", "shaders/solidcolor.f.glsl");
+    this->_shader_globals->bindShaderBlock(*this->_shaders.cube, "Globals");
+    
     this->_shaders.line = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/line.g.glsl", "shaders/solidcolor.f.glsl");
+    this->_shader_globals->bindShaderBlock(*this->_shaders.line, "Globals");
+
     this->_shaders.point = std::make_unique<ShaderProgram>("shaders/primitives/point.v.glsl", "shaders/solidcolor.f.glsl");
+    this->_shader_globals->bindShaderBlock(*this->_shaders.point, "Globals");
 
     this->_shaders.sprite = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/sprite.g.glsl", "shaders/solidcolor.f.glsl");
 
@@ -420,6 +427,7 @@ void MPEngine::mCleanupShaders() {
     this->_shaders.line = nullptr;
     this->_shaders.point = nullptr;
     this->_shaders.sprite = nullptr;
+    this->_shader_globals = nullptr;
 }
 
 void MPEngine::mCleanupBuffers() {
@@ -557,7 +565,10 @@ void MPEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_world->draw(ctx);
 
 
-    this->_pr->sprite(ctx, 'A', {0,0,0});
+    // this->_pr->sprite(ctx, 'A', {0,0,0});
+    this->_pr->cube(ctx);
+    this->_pr->line(ctx);
+    this->_pr->point(ctx, {1,1,1},{1,0,0});
 }
 
 void MPEngine::_updateScene() {
@@ -620,6 +631,9 @@ void MPEngine::run() {
         // Draw primary camera to the whole window
         glViewport(0, 0, framebufferWidth, framebufferHeight);
         glutils::RenderContext ctx(*this->getPrimaryCamera());
+        this->_shader_globals->setUniform("projection", ctx.getProjectionMatrix());
+        this->_shader_globals->setUniform("view", ctx.getViewMatrix());
+        this->_shader_globals->setUniform("eyePos", ctx.getEyePos());
         _renderScene(ctx);
 
         // Optional secondary cameras
@@ -634,6 +648,9 @@ void MPEngine::run() {
             // Draw secondary camera
             glViewport(framebufferWidth*0.75, framebufferHeight*0.75, framebufferWidth*0.25, framebufferHeight*0.25);
             glutils::RenderContext ctx(*this->getSecondaryCamera());
+            this->_shader_globals->setUniform("projection", ctx.getProjectionMatrix());
+            this->_shader_globals->setUniform("view", ctx.getViewMatrix());
+            this->_shader_globals->setUniform("eyePos", ctx.getEyePos());
             
             if(this->getSecondaryCamera() == &this->_player->getFirstPersonCamera()) {
                 this->_player->setHidden(true); // Hide in first person view
