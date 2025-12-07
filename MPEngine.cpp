@@ -36,7 +36,7 @@ inline char const* get_gl_error_message(GLenum const err) noexcept {
 /*** Engine Interface ***/
 
 MPEngine::MPEngine(const std::string& player_name)
-    : CSCI441::OpenGLEngine(4, 1, 720, 720, "MP: Moria"),
+    : CSCI441::OpenGLEngine(4, 1, 720, 720, "Minceraft"),
     _player_name(player_name),
     _freecam(nullptr),
     _fixedcam(nullptr),
@@ -226,7 +226,7 @@ void MPEngine::mSetupShaders() {
     this->_shaders.line = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/line.g.glsl", "shaders/solidcolor.f.glsl");
     this->_shaders.point = std::make_unique<ShaderProgram>("shaders/primitives/point.v.glsl", "shaders/solidcolor.f.glsl");
 
-    this->_shaders.sprite = std::make_unique<ShaderProgram>("shaders/nop.v.glsl", "shaders/primitives/sprite.g.glsl", "shaders/solidcolor.f.glsl");
+    this->_shaders.sprite = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/sprite.g.glsl", "shaders/solidcolor.f.glsl");
 
     this->_shaders.terrain = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_shaders.terrain);
