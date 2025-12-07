@@ -17,7 +17,6 @@
 #include <unordered_map>
 
 #include "ShaderProgram.hpp"
-#include "PrimitiveRenderer.hpp"
 #include "input.hpp"
 #include "mcmodel.hpp"
 #include "glutils.hpp"
@@ -125,7 +124,7 @@ class MCEngine final : public CSCI441::OpenGLEngine {
         /*** Helper Classes ***/
         std::unique_ptr<input::InputManager> _im;
         std::unique_ptr<glutils::TextureManager> _tm;
-        std::unique_ptr<PrimitiveRenderer> _pr;
+        std::unique_ptr<glutils::PrimitiveRenderer> _pr;
 
         /*** Objects ***/
         std::shared_ptr<Skybox> _skybox;

@@ -264,7 +264,7 @@ void MCEngine::mSetupBuffers() {
     this->_tm->load("assets/textures/dull.png");
     this->_tm->load("assets/textures/shiny.png");
 
-    this->_pr = std::make_unique<PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, *this->_shaders.rect, *this->_shaders.sprite, this->_tm->load("assets/textures/sprites.png"));
+    this->_pr = std::make_unique<glutils::PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, *this->_shaders.rect, *this->_shaders.sprite, this->_tm->load("assets/textures/sprites.png"));
 
     // Create skybox
     this->_skybox = std::make_shared<Skybox>(*this->_shaders.skybox, std::array<std::string, 6> {
@@ -650,10 +650,10 @@ void MCEngine::run() {
 
         // Draw primary camera to the whole window
         glViewport(0, 0, framebufferWidth, framebufferHeight);
-        glutils::RenderContext ctx(*this->getPrimaryCamera());
-        this->_shader_globals->setUniform("projection", ctx.getProjectionMatrix());
-        this->_shader_globals->setUniform("view", ctx.getViewMatrix());
-        this->_shader_globals->setUniform("eyePos", ctx.getEyePos());
+        glutils::RenderContext ctx(*this->_pr);
+        this->_shader_globals->setUniform("projection", this->getPrimaryCamera()->getProjectionMatrix());
+        this->_shader_globals->setUniform("view", this->getPrimaryCamera()->getViewMatrix());
+        this->_shader_globals->setUniform("eyePos", this->getPrimaryCamera()->getPosition());
         _renderScene(ctx);
         _renderHUD(ctx);
 
@@ -669,10 +669,10 @@ void MCEngine::run() {
             
             // Draw secondary camera
             glViewport(framebufferWidth*0.75, framebufferHeight*0.75, framebufferWidth*0.25, framebufferHeight*0.25);
-            glutils::RenderContext ctx(*this->getSecondaryCamera());
-            this->_shader_globals->setUniform("projection", ctx.getProjectionMatrix());
-            this->_shader_globals->setUniform("view", ctx.getViewMatrix());
-            this->_shader_globals->setUniform("eyePos", ctx.getEyePos());
+            glutils::RenderContext ctx(*this->_pr);
+            this->_shader_globals->setUniform("projection", this->getSecondaryCamera()->getProjectionMatrix());
+            this->_shader_globals->setUniform("view", this->getSecondaryCamera()->getViewMatrix());
+            this->_shader_globals->setUniform("eyePos", this->getSecondaryCamera()->getPosition());
             
             if(this->getSecondaryCamera() == &this->_player->getFirstPersonCamera()) {
                 this->_player->setHidden(true); // Hide in first person view
