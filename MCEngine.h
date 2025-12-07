@@ -17,6 +17,7 @@
 #include <unordered_map>
 
 #include "ShaderProgram.hpp"
+#include "Particle.hpp"
 #include "input.hpp"
 #include "mcmodel.hpp"
 #include "glutils.hpp"
@@ -58,7 +59,7 @@ class MCEngine final : public CSCI441::OpenGLEngine {
         /// Draws everything to the scene from a particular point of view
         void _renderScene(glutils::RenderContext& ctx) const;
         /// Draws HUD elements
-        void _renderHUD(glutils::RenderContext& ctx) const;
+        void _renderUI(glutils::RenderContext& ctx) const;
         /// Handles animations and updating camera
         void _updateScene();
         
@@ -93,7 +94,7 @@ class MCEngine final : public CSCI441::OpenGLEngine {
         md5camera::MD5Movie _movie;
 
         /*** Shader Program Information ***/
-        struct {
+        struct Shaders {
             /// Shader program that performs texturing and Phong shading
             std::unique_ptr<ShaderProgram> primary;
             /// Cubemap shader
@@ -135,9 +136,11 @@ class MCEngine final : public CSCI441::OpenGLEngine {
 
         const std::string _player_name;
         std::shared_ptr<Player> _player;
+        int _score = 0;
 
 
         std::unordered_map<std::string, std::shared_ptr<Block>> _blocks;
+        std::unordered_map<std::string, std::shared_ptr<Particle>> _particles;
 
         /// Generates a tree at pos with variable log height
         void _place_tree(const glm::ivec3 pos, const size_t height = 5);

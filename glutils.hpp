@@ -21,6 +21,7 @@
 #include <functional>
 
 #include <cstdlib>
+#include <cstdint>
 #include <ctime>
 
 
@@ -67,19 +68,17 @@ namespace glutils {
 
 		return buffer;
 	}
-	
-	/// A simple hash function, not cryptographically secure
-	inline size_t cyrb(const std::string& text, size_t seed = 0) {
-		size_t h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
-		for (size_t i = 0; i < text.length(); i++) {
-			char ch = text.at(i);
-			h1 = (h1 ^ ch)*2654435761;
-			h2 = (h2 ^ ch)*1597334677;
-		}
-		h1 = ((h1 ^ (h1>>16))*2246822507) ^ ((h2 ^ (h2>>13))*3266489909);
-		h2 = ((h2 ^ (h2>>16))*2246822507) ^ ((h1 ^ (h1>>13))*3266489909);
-		return (h2 << 16) | h1;
-	}
+
+
+    // Gets a RGB color vector from hex
+    inline glm::vec3 hex3(const uint32_t color) {
+        return glm::vec3((color >> 16) & 255, (color >> 8) & 255, color & 255)/255.0f;
+    }
+
+    // Gets a RGBA color vector from hex
+    inline glm::vec4 hex4(const uint32_t color) {
+        return glm::vec4((color >> 24) & 255, (color >> 16) & 255, (color >> 8) & 255, color & 255)/255.0f;
+    }
     
     /// Loads, stores, and releases textures automatically
     /// Repeatedly calling `load()` with the same path (same literally, not logically, "./a.png" != "a.png") returns cached result
@@ -183,6 +182,15 @@ namespace glutils {
             }
     };
 
+    /// Gets the handle for the currently bound shader or 0 if none
+    inline GLint get_shader() {
+        GLint shader;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &shader);
+        return shader;
+    }
+
+    /// A utility for rendering common shapes (points, lines, cubes, 2D rectangles, and textured sprites)
+    /// Most work is done by geometry shaders
     class PrimitiveRenderer final : NonCopyable {
         private:
             const struct {
@@ -211,7 +219,8 @@ namespace glutils {
             };
 
             /// Renders a pixel point, intended for debugging only
-            inline void point(const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f) {
+            inline void point(const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f) const {
+                const GLint shader = get_shader();
                 this->_shaders.point.useProgram();
                 
                 this->_shaders.point.setProgramUniform("pos", pos);
@@ -220,10 +229,13 @@ namespace glutils {
 
                 glBindVertexArray(this->_vao);
                 glDrawArrays(GL_POINTS, 0, 1);
+
+                glUseProgram(shader);
             }
 
             /// Renders a line between two points, intended for debugging only
-            inline void line(const glm::vec3 pos1 = glm::vec3(0.0f), const glm::vec3 pos2 = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f)) {
+            inline void line(const glm::vec3 pos1 = glm::vec3(0.0f), const glm::vec3 pos2 = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f)) const {
+                const GLint shader = get_shader();
                 this->_shaders.line.useProgram();
                 
                 this->_shaders.line.setProgramUniform("pos1", pos1);
@@ -232,10 +244,12 @@ namespace glutils {
 
                 glBindVertexArray(this->_vao);
                 glDrawArrays(GL_POINTS, 0, 1);
+                glUseProgram(shader);
             }
 
             /// Renders a cube outline, intended for debugging only
-            inline void cube(const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 size = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f), const glm::bvec3 centered = glm::bvec3(false, false, false)) {
+            inline void cube(const glm::vec3 pos = glm::vec3(0.0f), const glm::vec3 size = glm::vec3(1.0f), const glm::vec3 color = glm::vec3(1.0f), const glm::bvec3 centered = glm::bvec3(false, false, false)) const {
+                const GLint shader = get_shader();
                 this->_shaders.cube.useProgram();
                 
                 this->_shaders.cube.setProgramUniform("pos", pos - glm::vec3(centered)*size/2.0f);
@@ -244,9 +258,11 @@ namespace glutils {
 
                 glBindVertexArray(this->_vao);
                 glDrawArrays(GL_POINTS, 0, 1);
+                glUseProgram(shader);
             }
 
-            inline void rect(const glm::vec2 pos = glm::vec2(0.0f), const glm::vec2 size = glm::vec2(1.0f), const glm::vec4 color = glm::vec4(1.0f), const glm::bvec2 centered = glm::bvec2(false, false)) {
+            inline void rect(const glm::vec2 pos = glm::vec2(0.0f), const glm::vec2 size = glm::vec2(1.0f), const glm::vec4 color = glm::vec4(1.0f), const glm::bvec2 centered = glm::bvec2(false, false)) const {
+                const GLint shader = get_shader();
                 this->_shaders.rect.useProgram();
 
                 this->_shaders.rect.setProgramUniform("pos", pos - glm::vec2(centered)*size);
@@ -255,6 +271,7 @@ namespace glutils {
 
                 glBindVertexArray(this->_vao);
                 glDrawArrays(GL_POINTS, 0, 1);
+                glUseProgram(shader);
             }
 
             enum SpriteMode {
@@ -262,7 +279,8 @@ namespace glutils {
             };
 
             /// Returns the area covered by the sprites, useful for using rect() to fill below text
-            inline glm::vec2 sprite(const std::string& sprites, const glm::vec3 pos, const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f, const SpriteMode mode = SpriteMode::UI_ANCHOR_CORNER) {
+            inline glm::vec2 sprite(const std::string& sprites, const glm::vec3 pos, const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f, const SpriteMode mode = SpriteMode::UI_ANCHOR_CORNER) const {
+                const GLint shader = get_shader();
                 this->_shaders.sprite.useProgram();
 
                 glm::vec2 offset = glm::vec2(0.0, 0.0);
@@ -271,7 +289,7 @@ namespace glutils {
                 this->_shaders.sprite.setProgramUniform("mode", mode);
                 
                 this->_shaders.sprite.setProgramUniform("tint", glm::vec4(color, 1.0f));
-                this->_shaders.sprite.setProgramUniform("lit", false);
+                this->_shaders.sprite.setProgramUniform("lit", false); // TODO: enable for mode == SpriteMode::PARTICLE?
                 this->_shaders.sprite.setProgramUniform("frameCount", (GLuint) 1);
                 this->_shaders.sprite.setProgramUniform("frameTime", 1.0f);
 
@@ -297,6 +315,7 @@ namespace glutils {
                     }
                 }
 
+                glUseProgram(shader);
                 return offset + size;
             }
     };
@@ -305,6 +324,8 @@ namespace glutils {
     /// NOTE: VP matrices have been moved to a UBO
     class RenderContext final : NonCopyable {
         private:
+            const PrimitiveRenderer& _pr;
+            const bool _debug;
             std::vector<glm::mat4> _transformationStack;
             glm::mat4 _modelMatrix;
             GLuint _shader;
@@ -318,9 +339,7 @@ namespace glutils {
             }
 
         public:
-            const PrimitiveRenderer& pr;
-
-            inline RenderContext(const PrimitiveRenderer& pr) : _transformationStack {glm::mat4(1.0)}, _modelMatrix(1.0), _shader(0), _modelMatrixLocation(0), _normalMatrixLocation(0), pr(pr) {}
+            inline RenderContext(const PrimitiveRenderer& pr, const bool debug) : _transformationStack {glm::mat4(1.0)}, _modelMatrix(1.0), _shader(0), _modelMatrixLocation(0), _normalMatrixLocation(0), _pr(pr), _debug(debug) {}
                         
             /// Set which shader this context should update
             inline void bind(const ShaderProgram& shader, const char* modelMatrixUniformName = "modelMatrix", const char* normalMatrixUniformName = "normalMatrix") {
@@ -359,6 +378,14 @@ namespace glutils {
 
             inline ~RenderContext() {
                 this->resetTransformation();
+            }
+
+            inline const PrimitiveRenderer& getPrimitiveRenderer() const {
+                return this->_pr;
+            }
+
+            inline bool debug() const {
+                return this->_debug;
             }
     };
 }

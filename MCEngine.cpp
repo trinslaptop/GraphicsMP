@@ -14,6 +14,7 @@
 #include "include/f8.hpp"
 
 #include "get_player.hpp"
+#include "Zombie.hpp"
 
 static constexpr GLfloat GLM_PI = glm::pi<float>();
 static constexpr GLfloat GLM_2PI = glm::two_pi<float>();
@@ -52,6 +53,7 @@ MCEngine::MCEngine(const std::string& player_name)
     _clouds(nullptr),
     _player(nullptr),
     _blocks(),
+    _particles(),
     _world()
 {
     this->_tm = std::make_unique<glutils::TextureManager>();
@@ -389,6 +391,10 @@ void MCEngine::mSetupBuffers() {
     // Setup players
     this->_player = get_player(this->_world, *this->_shaders.primary, *this->_tm, this->_player_name);
     this->_player->setPosition({32.0f, this->_world->getTerrainHeight(32.0f, 32.0f), 32.0f});
+
+    const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
+    zombie->setTarget(this->_player);
+    this->_particles[zombie->getUUID()] = zombie;
 }
 
 /// Generates a tree at pos with variable log height
@@ -433,15 +439,7 @@ void MCEngine::mSetupScene() {
 /*** Engine Cleanup ***/
 void MCEngine::mCleanupShaders() {
     fprintf(stdout, "[INFO]: ...deleting Shaders.\n");
-    this->_shaders.primary = nullptr;
-    this->_shaders.skybox = nullptr;
-    this->_shaders.clouds = nullptr;
-    this->_shaders.terrain = nullptr;
-    this->_shaders.cube = nullptr;
-    this->_shaders.line = nullptr;
-    this->_shaders.point = nullptr;
-    this->_shaders.rect = nullptr;
-    this->_shaders.sprite = nullptr;
+    this->_shaders = Shaders {};
     this->_shader_globals = nullptr;
 }
 
@@ -453,6 +451,7 @@ void MCEngine::mCleanupBuffers() {
     this->_clouds = nullptr;
     this->_player = nullptr;
     this->_blocks.clear();
+    this->_particles.clear();
     this->_pr = nullptr;
 }
 
@@ -571,18 +570,25 @@ void MCEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
     this->_clouds->draw(ctx);
 
-    this->_shaders.primary->useProgram();
     ctx.bind(*this->_shaders.primary);
-
     this->_grid->draw(ctx);
+
+    for(const auto& entry : this->_particles) {
+        entry.second->draw(ctx);
+    }
+
     this->_player->draw(ctx);
 
     this->_world->draw(ctx);
-
 }
 
-void MCEngine::_renderHUD(glutils::RenderContext& ctx) const {
+void MCEngine::_renderUI(glutils::RenderContext& ctx) const {
     const float size = 1.0f/32.0f;
+
+    // Render score
+    this->_pr->sprite("\x89", {0.0, 2.0*size, 0.0}, glutils::hex3(0x00a3f4), 2.0f*size);
+    this->_pr->sprite("x", {2.0f*size, 2.0*size, 0.0}, glutils::hex3(0x0), 2.0f*size);
+    this->_pr->sprite(this->_score == -1 ? "\x9a" : std::to_string(this->_score), {4.0f*size, 2.0*size, 0.0}, glutils::hex3(0x0), 2.0f*size);
 
     if(this->_debug) {
         // Because of z buffer, draw front to back
@@ -597,14 +603,17 @@ void MCEngine::_updateScene() {
     this->_lastTime = currTime;
 
     this->_shader_globals->setUniform("time", currTime);
-    this->_shaders.primary->setProgramUniform("time", currTime);
 
     // Update keybinds
     this->_im->poll(this->mpWindow, deltaTime);
-
+    
     // Update players
     this->_player->update(deltaTime);
-
+    
+    // Update particles and entities
+    for(auto& entry : this->_particles) {
+        entry.second->update(deltaTime);
+    }
     // Move with terrain
     // this->_player->setPosition(this->_terrain->getTerrainPosition(this->_player->getPosition().x, this->_player->getPosition().z));
 
@@ -650,12 +659,12 @@ void MCEngine::run() {
 
         // Draw primary camera to the whole window
         glViewport(0, 0, framebufferWidth, framebufferHeight);
-        glutils::RenderContext ctx(*this->_pr);
+        glutils::RenderContext ctx(*this->_pr, this->_debug);
         this->_shader_globals->setUniform("projection", this->getPrimaryCamera()->getProjectionMatrix());
         this->_shader_globals->setUniform("view", this->getPrimaryCamera()->getViewMatrix());
         this->_shader_globals->setUniform("eyePos", this->getPrimaryCamera()->getPosition());
         _renderScene(ctx);
-        _renderHUD(ctx);
+        _renderUI(ctx);
 
         // Optional secondary cameras
         if(this->getSecondaryCamera() != nullptr) {
@@ -669,7 +678,7 @@ void MCEngine::run() {
             
             // Draw secondary camera
             glViewport(framebufferWidth*0.75, framebufferHeight*0.75, framebufferWidth*0.25, framebufferHeight*0.25);
-            glutils::RenderContext ctx(*this->_pr);
+            glutils::RenderContext ctx(*this->_pr, this->_debug);
             this->_shader_globals->setUniform("projection", this->getSecondaryCamera()->getProjectionMatrix());
             this->_shader_globals->setUniform("view", this->getSecondaryCamera()->getViewMatrix());
             this->_shader_globals->setUniform("eyePos", this->getSecondaryCamera()->getPosition());
