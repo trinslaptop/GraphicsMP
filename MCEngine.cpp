@@ -241,6 +241,8 @@ void MCEngine::mSetupShaders() {
     this->_shaders.point = std::make_unique<ShaderProgram>("shaders/primitives/point.v.glsl", "shaders/solidcolor.f.glsl");
     this->_shader_globals->bindShaderBlock(*this->_shaders.point, "Globals");
 
+    this->_shaders.rect = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/rect.g.glsl", "shaders/alphacolor.f.glsl");
+
     this->_shaders.sprite = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/sprite.g.glsl", "shaders/texshader.f.glsl");
     this->_shader_globals->bindShaderBlock(*this->_shaders.sprite, "Globals");
     initCommonFragmentShaderUniforms(*this->_shaders.primary);
@@ -262,7 +264,7 @@ void MCEngine::mSetupBuffers() {
     this->_tm->load("assets/textures/dull.png");
     this->_tm->load("assets/textures/shiny.png");
 
-    this->_pr = std::make_unique<PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, *this->_shaders.sprite, this->_tm->load("assets/textures/sprites.png"));
+    this->_pr = std::make_unique<PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, *this->_shaders.rect, *this->_shaders.sprite, this->_tm->load("assets/textures/sprites.png"));
 
     // Create skybox
     this->_skybox = std::make_shared<Skybox>(*this->_shaders.skybox, std::array<std::string, 6> {
@@ -438,6 +440,7 @@ void MCEngine::mCleanupShaders() {
     this->_shaders.cube = nullptr;
     this->_shaders.line = nullptr;
     this->_shaders.point = nullptr;
+    this->_shaders.rect = nullptr;
     this->_shaders.sprite = nullptr;
     this->_shader_globals = nullptr;
 }
@@ -580,12 +583,12 @@ void MCEngine::_renderScene(glutils::RenderContext& ctx) const {
 
 void MCEngine::_renderHUD(glutils::RenderContext& ctx) const {
     const float size = 1.0f/32.0f;
-    const glm::vec3 black = glm::vec3(0.0f, 0.0f, 0.0f);
 
     if(this->_debug) {
-        this->_pr->sprite(std::string("XYZ:") + std::to_string(this->_player->getPosition().x) + "," + std::to_string(this->_player->getPosition().y) + "," + std::to_string(this->_player->getPosition().z) + ",", {0,0,0}, black, size);
+        // Because of z buffer, draw front to back
+        glm::vec2 area = this->_pr->sprite(glutils::format("XYZ:%.1f,%.1f,%.1f", this->_player->getPosition().x, this->_player->getPosition().y, this->_player->getPosition().z), {0, 1.0f - size, 0}, glm::vec3(1.0f, 1.0f, 1.0f), size);
+        this->_pr->rect({0.0f, 1.0f - size}, area, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
     }
-
 }
 
 void MCEngine::_updateScene() {
@@ -656,7 +659,8 @@ void MCEngine::run() {
 
         // Optional secondary cameras
         if(this->getSecondaryCamera() != nullptr) {
-            
+            this->_pr->rect({0.745f, 0.745}, {0.255f, 0.255f}, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+
             // Clear just the region of the mini-viewport
             glEnable(GL_SCISSOR_TEST);
             glScissor(framebufferWidth*0.75, framebufferHeight*0.75, framebufferWidth*0.25, framebufferHeight*0.25);

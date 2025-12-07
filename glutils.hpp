@@ -39,6 +39,45 @@
 
 namespace glutils {
     inline static constexpr GLfloat PI = glm::pi<float>();
+
+    namespace {
+        /// With %s, snprintf expects a const char* not a std::string, so remap it
+        template<typename T> inline auto format_value(T&& t) {
+            if constexpr(std::is_same<std::decay_t<T>, std::string>::value) {
+                return std::forward<T>(t).c_str();
+            } else {
+                return std::forward<T>(t);
+            }
+        }
+    }
+
+	/// Format a string using standard printf modifiers like %s and %d
+	template<typename... Args> [[gnu::format(printf, 1, 0)]] inline std::string format(const char* format, Args&&... args) {
+		const int n = std::snprintf(nullptr, 0, format, format_value(std::forward<Args>(args))...) + 1;
+		
+		if(n <= 0) {
+			throw std::runtime_error("Bad format string");
+		}
+
+		std::string buffer(n, '\0');
+		std::snprintf(buffer.data(), buffer.size(), format, format_value(std::forward<Args>(args))...);
+		buffer.resize(buffer.size() - 1);
+
+		return buffer;
+	}
+	
+	/// A simple hash function, not cryptographically secure
+	inline size_t cyrb(const std::string& text, size_t seed = 0) {
+		size_t h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+		for (size_t i = 0; i < text.length(); i++) {
+			char ch = text.at(i);
+			h1 = (h1 ^ ch)*2654435761;
+			h2 = (h2 ^ ch)*1597334677;
+		}
+		h1 = ((h1 ^ (h1>>16))*2246822507) ^ ((h2 ^ (h2>>13))*3266489909);
+		h2 = ((h2 ^ (h2>>16))*2246822507) ^ ((h1 ^ (h1>>13))*3266489909);
+		return (h2 << 16) | h1;
+	}
     
     /// Loads, stores, and releases textures automatically
     /// Repeatedly calling `load()` with the same path (same literally, not logically, "./a.png" != "a.png") returns cached result

@@ -113,6 +113,9 @@ class MCEngine final : public CSCI441::OpenGLEngine {
             /// Simple point shader
             std::unique_ptr<ShaderProgram> point;
 
+            /// Simple ui rectangle shader with alpha
+            std::unique_ptr<ShaderProgram> rect;
+
             /// Textured sprite shader
             std::unique_ptr<ShaderProgram> sprite;
         } _shaders;

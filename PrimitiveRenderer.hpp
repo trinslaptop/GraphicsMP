@@ -15,6 +15,7 @@ class PrimitiveRenderer final : NonCopyable {
             const ShaderProgram& cube;
             const ShaderProgram& line;
             const ShaderProgram& point;
+            const ShaderProgram& rect;
             const ShaderProgram& sprite;
         } _shaders;
 
@@ -23,7 +24,7 @@ class PrimitiveRenderer final : NonCopyable {
         GLuint _vao;
 
     public:
-        inline PrimitiveRenderer(const ShaderProgram& cube_shader, const ShaderProgram& line_shader, const ShaderProgram& point_shader, const ShaderProgram& sprite_shader, const GLuint sprite_texture) : _shaders {cube_shader, line_shader, point_shader, sprite_shader}, _sprite_texture(sprite_texture) {
+        inline PrimitiveRenderer(const ShaderProgram& cube_shader, const ShaderProgram& line_shader, const ShaderProgram& point_shader, const ShaderProgram& rect_shader, const ShaderProgram& sprite_shader, const GLuint sprite_texture) : _shaders {cube_shader, line_shader, point_shader, rect_shader, sprite_shader}, _sprite_texture(sprite_texture) {
             // Enable gl_PointSize in shaders
             glEnable(GL_PROGRAM_POINT_SIZE);
 
@@ -71,16 +72,28 @@ class PrimitiveRenderer final : NonCopyable {
             glDrawArrays(GL_POINTS, 0, 1);
         }
 
+        inline void rect(const glm::vec2 pos = glm::vec2(0.0f), const glm::vec2 size = glm::vec2(1.0f), const glm::vec4 color = glm::vec4(1.0f), const glm::bvec2 centered = glm::bvec2(false, false)) {
+            this->_shaders.rect.useProgram();
+
+            this->_shaders.rect.setProgramUniform("pos", pos - glm::vec2(centered)*size);
+            this->_shaders.rect.setProgramUniform("color", color);
+            this->_shaders.rect.setProgramUniform("size", size);
+
+            glBindVertexArray(this->_vao);
+            glDrawArrays(GL_POINTS, 0, 1);
+        }
+
         enum SpriteMode {
             #include "shaders/primitives/SpriteMode.glsl"
         };
 
-        inline void sprite(const std::string& sprites, const glm::vec3 pos, const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f, const SpriteMode mode = SpriteMode::UI_ANCHOR_CORNER) {
+        /// Returns the area covered by the sprites, useful for using rect() to fill below text
+        inline glm::vec2 sprite(const std::string& sprites, const glm::vec3 pos, const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f, const SpriteMode mode = SpriteMode::UI_ANCHOR_CORNER) {
             this->_shaders.sprite.useProgram();
 
             glm::vec2 offset = glm::vec2(0.0, 0.0);
 
-            this->_shaders.sprite.setProgramUniform("size", 2*size);
+            this->_shaders.sprite.setProgramUniform("size", size);
             this->_shaders.sprite.setProgramUniform("mode", mode);
             
             this->_shaders.sprite.setProgramUniform("tint", glm::vec4(color, 1.0f));
@@ -95,20 +108,22 @@ class PrimitiveRenderer final : NonCopyable {
             for(const char c : sprites) {
                 switch(c) {
                     case '\t':
-                        offset.x += 8*size;
+                        offset.x += 4*size;
                         break;
                     case '\n':
-                        offset.y -= 2*size;
+                        offset.y -= size;
                         offset.x = 0;
                         break;
                     default:
                         this->_shaders.sprite.setProgramUniform("sprite", c);
                         this->_shaders.sprite.setProgramUniform("pos", pos + glm::vec3(offset, 0.0));
                         glDrawArrays(GL_POINTS, 0, 1);
-                        offset.x += 2*size;
+                        offset.x += size;
                         break;
                 }
             }
+
+            return offset + size;
         }
 };
 
