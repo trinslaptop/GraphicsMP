@@ -7,6 +7,7 @@
 
 /// A small library for Base64 encoding and decoding
 /// (c) Trin Wasinger 2025
+//
 /// https://en.wikipedia.org/wiki/Base64
 namespace base64 {
 	namespace {

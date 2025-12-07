@@ -6,9 +6,10 @@
 
 #include <glm/glm.hpp>
 
-/// F8 (c) Trin Wasinger 2025
+/// F8 ("Fate")
+/// (c) Trin Wasinger 2025
 ///
-/// F8 ("Fate") is a machine independent PRNG library with support for stateful
+/// F8 is a machine independent PRNG library with support for stateful
 /// random numbers via xorshift32 and positional random numbers with FBM.
 ///
 /// Partially based on https://thebookofshaders.com/13/
