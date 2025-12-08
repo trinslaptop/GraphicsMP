@@ -185,6 +185,7 @@ class Entity : public Particle {
             return this->_world;
         }
 
+        /// Draws debug info, make sure to call this if overriding
         inline virtual void draw(glutils::RenderContext& ctx) const override {
             if(ctx.debug()) {
                 ctx.getPrimitiveRenderer().sprite(std::to_string(this->getHealth()), this->getPosition() + glm::vec3(0.0f, this->getHeight() + 0.25, 0.0f), {1.0f, 0.0f, 0.0f}, 0.5, glutils::PrimitiveRenderer::SpriteMode::PARTICLE);
@@ -205,6 +206,7 @@ class Entity : public Particle {
             }
         }
 
+        /// Handles base entity logic, make sure to call this if overriding
         inline virtual void update(const float deltaTime) override {
             this->_lifetime += deltaTime;
             this->_hurttime = glm::max(0.0f, this->_hurttime - deltaTime);
@@ -214,8 +216,6 @@ class Entity : public Particle {
             if(this->getPosition().y < 0.0f) {
                 this->damage(this->getMaxHealth());
             }
-            
-            // TODO collide
         }
 
 };
