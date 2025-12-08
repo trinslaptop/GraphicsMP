@@ -10,4 +10,5 @@ UI_ANCHOR_CORNER = 1,
 /// Renders a billboarded sprite in the 3D world 
 PARTICLE = 2,
 
+/// Computes size without actually drawing sprite
 HIDDEN = 3

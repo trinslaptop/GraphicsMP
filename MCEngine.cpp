@@ -53,7 +53,6 @@ MCEngine::MCEngine(const std::string& player_name)
     _clouds(nullptr),
     _player(nullptr),
     _blocks(),
-    _particles(),
     _world()
 {
     this->_tm = std::make_unique<glutils::TextureManager>();
@@ -395,7 +394,7 @@ void MCEngine::mSetupBuffers() {
     const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
     zombie->setTarget(this->_player);
     zombie->setHealth(9999);
-    this->_particles[zombie->getUUID()] = zombie;
+    this->_world->add(zombie);
 }
 
 /// Generates a tree at pos with variable log height
@@ -452,7 +451,6 @@ void MCEngine::mCleanupBuffers() {
     this->_clouds = nullptr;
     this->_player = nullptr;
     this->_blocks.clear();
-    this->_particles.clear();
     this->_pr = nullptr;
 }
 
@@ -574,10 +572,6 @@ void MCEngine::_renderScene(glutils::RenderContext& ctx) const {
     ctx.bind(*this->_shaders.primary);
     this->_grid->draw(ctx);
 
-    for(const auto& entry : this->_particles) {
-        entry.second->draw(ctx);
-    }
-
     this->_player->draw(ctx);
 
     this->_world->draw(ctx);
@@ -619,19 +613,10 @@ void MCEngine::_updateScene() {
     this->_im->poll(this->mpWindow, deltaTime);
     
     // Update players
+    // Despite being an entity, the player is handled seperatly from the rest stored in the world
     this->_player->update(deltaTime);
     
-    // Update particles and entities
-    for(auto& entry : this->_particles) {
-        entry.second->update(deltaTime);
-    }
-    // Move with terrain
-    // this->_player->setPosition(this->_terrain->getTerrainPosition(this->_player->getPosition().x, this->_player->getPosition().z));
-
-    // Disabled, I visually don't like it and it makes jump + AABB harder
-    // This isn't quite right, but it looks fine... so it's good enough
-    // const glm::vec3 terrainRotation = glm::eulerAngles(glm::rotation(glm::vec3(0.0, -1.0, 0.0), this->_terrain->getTerrainNormal(this->_player->getPosition().x, this->_player->getPosition().z)));
-    // this->_player->setRotation({this->_player->getRotation().x , terrainRotation.y*cos(this->_player->getRotation().x), terrainRotation.z*cos(this->_player->getRotation().x)});
+    this->_world->update(deltaTime);
 
     // Play movie
     if(!this->_movie.empty()) {

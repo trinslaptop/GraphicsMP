@@ -138,9 +138,7 @@ class MCEngine final : public CSCI441::OpenGLEngine {
         std::shared_ptr<Player> _player;
         int _score = 0, _deaths = 0;
 
-
         std::unordered_map<std::string, std::shared_ptr<Block>> _blocks;
-        std::unordered_map<std::string, std::shared_ptr<Particle>> _particles;
 
         /// Generates a tree at pos with variable log height
         void _place_tree(const glm::ivec3 pos, const size_t height = 5);

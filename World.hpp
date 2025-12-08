@@ -15,8 +15,8 @@
 
 #include "mcmodel.hpp"
 #include "Block.hpp"
-
 #include "NonCopyable.hpp"
+#include "Particle.hpp"
 
 #include "include/f8.hpp"
 
@@ -231,6 +231,8 @@ class World final : public mcmodel::Drawable, NonCopyable {
         // This world is very sparse, so store as a map
         std::unordered_map<glm::ivec3, std::shared_ptr<Chunk>, std::hash<glm::ivec3>> _chunks;
 
+        std::unordered_map<std::string, std::shared_ptr<Particle>> _particles;
+
         const unsigned int _seed;
 
         const std::array<GLuint, 2> _terrain_textures;
@@ -293,6 +295,29 @@ class World final : public mcmodel::Drawable, NonCopyable {
                     entry.second->draw(ctx);
                 }
             }
+
+            for(const auto& entry : this->_particles) {
+                entry.second->draw(ctx);
+            }
+        }
+
+        inline void update(GLfloat deltaTime) {
+            // Update particles and entities
+            for(auto& entry : this->_particles) {
+                entry.second->update(deltaTime);
+            }
+        }
+
+        inline void add(std::shared_ptr<Particle> particle) {
+            this->_particles[particle->getUUID()] = particle;
+        }
+
+        inline void remove(std::shared_ptr<Particle> particle) {
+            this->_particles.erase(particle->getUUID());
+        }
+
+        inline void remove(const Particle& particle) {
+            this->_particles.erase(particle.getUUID());
         }
 };
 

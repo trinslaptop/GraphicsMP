@@ -132,7 +132,7 @@ class Entity : public Particle {
         }
 
         inline virtual void remove() const {
-            this->getWorld(); // TODO
+            this->getWorld()->remove(*this);
         }
 
         inline virtual const glm::vec3 getOverlap(const AABB& other) const final {
