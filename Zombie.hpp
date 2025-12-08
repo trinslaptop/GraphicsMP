@@ -9,6 +9,7 @@
 #include "Player.hpp"
 #include "World.hpp"
 #include "mcmodel.hpp"
+#include "glutils.hpp"
 #include "include/f8.hpp"
 
 class Zombie final : public Entity {
@@ -61,7 +62,7 @@ class Zombie final : public Entity {
                 // Track target
                 const glm::vec3 v = this->getTarget()->getPosition() - this->getPosition();
                 this->setRotation({glm::mix(this->getRotation().x, -glm::atan2(v.z, v.x), 0.9f), this->getRotation().y, this->getRotation().z});
-
+                
                 if(this->isTouching(this->getTarget()) && f8::randb(0.2f)) {
                     this->getTarget()->damage();
                 }
@@ -69,13 +70,13 @@ class Zombie final : public Entity {
 
             // Animate
             std::dynamic_pointer_cast<mcmodel::Group>(this->_head)->rotation.x = 0.125f*std::cos(this->getLifetime() + 0.50f);
-            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_arm)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_arm)->rotation.z = 0.25f*std::cos(this->getLifetime()));
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_arm)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_arm)->rotation.z = 0.25f*std::cos(this->getLifetime()) + glutils::PI/2) + glutils::PI;
             std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glutils::PI/8.0f * glm::sin(3.0f*glm::length(this->getPosition())));
 
             if(this->getHealth() <= 0.0f) {
                 this->remove();
             }
-        };
+        }
 
         inline virtual float getHeight() const override {
             return 2.0f;
