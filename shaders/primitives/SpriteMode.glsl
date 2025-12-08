@@ -8,4 +8,6 @@ UI_ANCHOR_CENTER = 0,
 UI_ANCHOR_CORNER = 1,
 
 /// Renders a billboarded sprite in the 3D world 
-PARTICLE = 2
+PARTICLE = 2,
+
+HIDDEN = 3

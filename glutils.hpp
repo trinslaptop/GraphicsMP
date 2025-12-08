@@ -307,9 +307,11 @@ namespace glutils {
                             offset.x = 0;
                             break;
                         default:
-                            this->_shaders.sprite.setProgramUniform("sprite", c);
-                            this->_shaders.sprite.setProgramUniform("pos", pos + glm::vec3(offset, 0.0));
-                            glDrawArrays(GL_POINTS, 0, 1);
+                            if(mode != SpriteMode::HIDDEN) {
+                                this->_shaders.sprite.setProgramUniform("sprite", c);
+                                this->_shaders.sprite.setProgramUniform("pos", pos + glm::vec3(offset, 0.0));
+                                glDrawArrays(GL_POINTS, 0, 1);
+                            }
                             offset.x += size;
                             break;
                     }

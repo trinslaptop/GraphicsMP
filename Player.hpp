@@ -43,6 +43,15 @@ class Player final : public mcmodel::Drawable {
         bool _hidden = false;
         
     public:
+
+            inline virtual float getHeight() const {
+                return 2.0f;
+            }
+
+            inline virtual float getRadius() const {
+                return 0.5f;
+            }
+
         Player(std::shared_ptr<World> world, const ShaderProgram& shader, const std::array<GLuint, 2> textures, bool thinArms = true, const std::optional<const std::array<GLuint, 2>> cape = std::nullopt) : _world(world), _arcballcamera(1.0f, 6.0f), _skycamera(), _fpcamera() {
             this->_arcballcamera.moveBackward(2.5f);
             
@@ -198,6 +207,10 @@ class Player final : public mcmodel::Drawable {
                         this->_root->draw(ctx);
                 ctx.popTransformation();
             }
+        }
+
+        inline virtual int getHealth() const {
+            return 5;
         }
 };
 #endif

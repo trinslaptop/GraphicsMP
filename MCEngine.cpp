@@ -394,6 +394,7 @@ void MCEngine::mSetupBuffers() {
 
     const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
     zombie->setTarget(this->_player);
+    zombie->setHealth(9999);
     this->_particles[zombie->getUUID()] = zombie;
 }
 
@@ -583,17 +584,27 @@ void MCEngine::_renderScene(glutils::RenderContext& ctx) const {
 }
 
 void MCEngine::_renderUI(glutils::RenderContext& ctx) const {
-    const float size = 1.0f/32.0f;
+    const float em = 1.0f/32.0f;
+
+    // Render deaths
+    this->_pr->sprite("\x82", {0.0f, 4.0f*em, 0.0f}, glutils::hex3(0xffffff), 2.0f*em);
+    this->_pr->sprite("x", {2.0f*em, 4.0f*em, 0.0f}, glutils::hex3(0x0), 2.0f*em);
+    this->_pr->sprite(std::to_string(this->_deaths), {4.0f*em, 4.0f*em, 0.0f*em}, glutils::hex3(0x0), 2.0f*em);
 
     // Render score
-    this->_pr->sprite("\x89", {0.0, 2.0*size, 0.0}, glutils::hex3(0x00a3f4), 2.0f*size);
-    this->_pr->sprite("x", {2.0f*size, 2.0*size, 0.0}, glutils::hex3(0x0), 2.0f*size);
-    this->_pr->sprite(this->_score == -1 ? "\x9a" : std::to_string(this->_score), {4.0f*size, 2.0*size, 0.0}, glutils::hex3(0x0), 2.0f*size);
+    this->_pr->sprite("\x89", {0.0f, 2.0f*em, 0.0f}, glutils::hex3(0x00a3f4), 2.0f*em);
+    this->_pr->sprite("x", {2.0f*em, 2.0f*em, 0.0f}, glutils::hex3(0x0), 2.0f*em);
+    this->_pr->sprite(this->_score == -1 ? "\x9a" : std::to_string(this->_score), {4.0f*em, 2.0f*em, 0.0f}, glutils::hex3(0x0), 2.0f*em);
+
+    // Render health
+    for(int i = 0; i < this->_player->getHealth(); i++) {
+        this->_pr->sprite("\xc0", {2.0f*em*i + em/4.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, 2.0f*em);
+    }
 
     if(this->_debug) {
         // Because of z buffer, draw front to back
-        glm::vec2 area = this->_pr->sprite(glutils::format("XYZ:%.1f,%.1f,%.1f", this->_player->getPosition().x, this->_player->getPosition().y, this->_player->getPosition().z), {0, 1.0f - size, 0}, glm::vec3(1.0f, 1.0f, 1.0f), size);
-        this->_pr->rect({0.0f, 1.0f - size}, area, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+        glm::vec2 area = this->_pr->sprite(glutils::format("XYZ:%.1f,%.1f,%.1f", this->_player->getPosition().x, this->_player->getPosition().y, this->_player->getPosition().z), {0.0f, 1.0f - em, 0.0f}, glm::vec3(1.0f, 1.0f, 1.0f), em);
+        this->_pr->rect({0.0f, 1.0f - em}, area, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
     }
 }
 

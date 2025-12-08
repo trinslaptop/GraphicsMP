@@ -9,7 +9,6 @@
 class Zombie final : public Entity {
     private:
         std::shared_ptr<mcmodel::Drawable> _head, _body, _right_arm, _left_arm, _right_leg, _left_leg, _root;
-        GLfloat _acctime = 0.0f;
 
         std::shared_ptr<Player> _target = nullptr;
 
@@ -42,9 +41,10 @@ class Zombie final : public Entity {
             }, glm::vec3(0.0f, 0.75f, 0.0f));
         }
 
+
+
         inline virtual void draw(glutils::RenderContext& ctx) const override {
             Entity::draw(ctx);
-            ctx.getPrimitiveRenderer().point(this->getPosition(), {1,0,0});
             if(!this->isHidden()) {
                 ctx.pushTransformation(glm::translate(glm::mat4(1.0f), this->getPosition())*glm::yawPitchRoll(this->getRotation().x, this->getRotation().y, this->getRotation().z));
                     this->_root->draw(ctx);
@@ -52,8 +52,27 @@ class Zombie final : public Entity {
             }
         };
 
-        inline virtual void update(const float deltaTime) {
-            // fprintf(stderr, "Touching: %d", this->isTouching(this->_target));
+        inline virtual void update(const float deltaTime) override {
+            Entity::update(deltaTime);
+
+            if(this->getTarget()) {
+                // Track target
+                const glm::vec3 v = this->getTarget()->getPosition() - this->getPosition();
+                this->setRotation({glm::mix(this->getRotation().x, -glm::atan2(v.z, v.x), 0.9f), this->getRotation().y, this->getRotation().z});
+
+                // if(this->isTouching(this->getTarget())) {
+
+                // }
+            }
+
+            // Animate
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_head)->rotation.x = 0.125f*std::cos(this->getLifetime() + 0.50f);
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_arm)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_arm)->rotation.z = 0.25f*std::cos(this->getLifetime()));
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glutils::PI/8.0f * glm::sin(3.0f*glm::length(this->getPosition())));
+
+            if(this->getHealth() <= 0.0f) {
+                this->remove();
+            }
         };
 
         inline virtual float getHeight() const override {
@@ -61,11 +80,15 @@ class Zombie final : public Entity {
         }
 
         inline virtual float getEyeHeight() const override {
-            return 1.5f;
+            return 1.75f;
         }
 
         inline virtual float getRadius() const override {
             return 0.25f;
+        }
+
+        inline virtual int getMaxHealth() const override {
+            return 5;
         }
 
         inline void setTarget(std::shared_ptr<Player> target = nullptr) {
@@ -74,6 +97,10 @@ class Zombie final : public Entity {
 
         inline std::shared_ptr<Player> getTarget() const {
             return this->_target;
+        }
+
+        inline virtual const glm::vec3 getVelocity() const {
+            return this->getTarget() ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 0.0f, 0.0f);
         }
 };
 

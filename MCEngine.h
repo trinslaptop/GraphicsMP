@@ -136,7 +136,7 @@ class MCEngine final : public CSCI441::OpenGLEngine {
 
         const std::string _player_name;
         std::shared_ptr<Player> _player;
-        int _score = 0;
+        int _score = 0, _deaths = 0;
 
 
         std::unordered_map<std::string, std::shared_ptr<Block>> _blocks;

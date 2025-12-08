@@ -4,62 +4,169 @@
 #include "Particle.hpp"
 #include "NonCopyable.hpp"
 #include "World.hpp"
+#include "Block.hpp"
 
 #include <glm/glm.hpp>
 
-class Entity : public Particle, NonCopyable {
+#include <vector>
+#include <memory>
+
+struct AABB {
+    const glm::vec3 min, max;
+
+    inline static const glm::vec3 getCenter(const AABB& a) {
+        return (a.min + a.max)/2.0f;
+    }
+
+    inline static const glm::vec3 getSize(const AABB& a) {
+        return a.max - a.min;
+    }
+
+    /// Gets the amount of overlap along each axis, directionless
+    inline static const glm::vec3 getOverlap(const AABB& a, const AABB& b) {
+        return glm::min(a.max, b.max) - glm::max(a.min, b.min);
+    }
+
+    /// Gets the minumum translation vector needed to rectify collision
+    inline static const glm::vec3 getMTV(const AABB&a, const AABB& b) {
+        const glm::vec3 overlap = AABB::getOverlap(a, b), ca = AABB::getCenter(a), cb = AABB::getCenter(b);
+        const glm::vec3 translation = (1.0f - 2.0f*glm::vec3(glm::lessThan(AABB::getCenter(a), AABB::getCenter(b))))*overlap;
+
+        // Find minimum axis, prefer y
+        if(overlap.y <= overlap.x && overlap.y <= overlap.z) {
+            return glm::vec3(0.0f, translation.y, 0.0f);
+        } else if (overlap.x <= overlap.z) {
+            return glm::vec3(translation.x, 0.0f, 0.0f);
+        } else {
+            return glm::vec3(0.0f, 0.0f, translation.z);
+        }
+    }
+};
+
+class Entity : public Particle {
     private:
         bool _hidden = false;
         glm::vec3 _position = {0.0f, 0.0f, 0.0f};
         glm::vec3 _rotation = {0.0f, 0.0f, 0.0f};
-    protected:
+        double _lifetime = 0.0f;
+        int _health = 0;
+        float _hurttime = 0;
+
         const std::shared_ptr<World> _world;
     public:
-
-        inline explicit Entity(const std::shared_ptr<World> world) : _world(world) {
-            
-        }
+        inline explicit Entity(const std::shared_ptr<World> world) : _world(world) {}
 
         inline virtual ~Entity() = default;
 
-        inline virtual void setPosition(const glm::vec3 position, const bool ignoreCollision = false) {
+        inline virtual int getMaxHealth() const = 0;
+        inline virtual float getHeight() const = 0;
+        inline virtual float getEyeHeight() const = 0;
+        inline virtual float getRadius() const = 0;
+        inline virtual const glm::vec3 getVelocity() const = 0;
 
+        inline virtual float getGravity() const {
+            return -9.8;
+        }
+
+        inline virtual void setPosition(const glm::vec3 position) final {
+            // Clamp to terrain if in valid chunk
+            this->_position = glm::vec3(position.x, glm::max(position.y, this->getWorld()->getTerrainHeight(position.x, position.z)), position.z);
+        
+            // Fix block collision
+            const glm::ivec3 imin = glm::floor(this->getAABB().min), imax = glm::ceil(this->getAABB().max);
+            for(int x = imin.x; x < imax.x; x++) {
+                for(int y = imin.y; y < imax.y; y++) {
+                    for(int z = imin.z; z < imax.z; z++) {
+                        const std::shared_ptr<Block> block = this->getWorld()->getBlock(glm::ivec3(x, y, z));
+                        if(block && block->isSolid()) {
+                            this->_position += this->getMTV(AABB {
+                                .min = glm::vec3(x,y,z),
+                                .max = glm::vec3(x + 1.0f, y + 1.0f, z + 1.0f)
+                            });
+                        }
+                    }
+                }
+            }
         }
 
         inline virtual const glm::vec3 getPosition() const final {
             return this->_position;
         }
 
-        inline virtual void setVelocity(const glm::vec3 position) {
-
+        inline virtual void setRotation(const glm::vec3 rotation) final {
+            this->_rotation = glm::mod(rotation, 2.0f*glutils::PI);
         }
 
-        inline virtual const glm::vec3 getVelocity() const {
-
+        inline virtual int getHealth() const final {
+            return this->_health;
         }
 
-        inline virtual bool isTouching(const std::shared_ptr<Entity> other) const {
-
+        inline virtual float getHurtTime() const final {
+            return this->_hurttime;
         }
 
-        inline virtual float getHeight() const = 0;
-        inline virtual float getEyeHeight() const = 0;
-        inline virtual float getRadius() const = 0;
+        inline virtual void setHealth(const int health) final {
+            this->_health = glm::clamp(health, 0, this->getMaxHealth());
+        }
 
-        inline virtual void setRotation(const glm::vec3 rotation) {
-
+        inline virtual void damage(const int amount) final {
+            if(this->_hurttime == 0.0f) {
+                this->setHealth(this->getHealth() - amount);
+                this->_hurttime = 3.0f;
+            }
         }
 
         inline virtual const glm::vec3 getRotation() const final {
             return this->_rotation;
         }
 
-        inline virtual glm::vec3 getForwardVector() const final {
+        // inline virtual void setVelocity(const glm::vec3 position) {
 
+        // }
+
+        inline virtual const AABB getAABB() const final {
+            return AABB {
+                .min = this->getPosition() - glm::vec3(this->getRadius(), 0.0f, this->getRadius()),
+                .max = this->getPosition() + glm::vec3(this->getRadius(), this->getHeight(), this->getRadius())
+            };
+        }
+
+        inline virtual void remove() const {
+            this->getWorld(); // TODO
+        }
+
+        inline virtual const glm::vec3 getOverlap(const AABB& other) const final {
+            return AABB::getOverlap(this->getAABB(), other);
+        }
+
+        inline virtual const glm::vec3 getOverlap(const std::shared_ptr<Entity> other) const final {
+            return AABB::getOverlap(this->getAABB(), other->getAABB());
+        }
+
+        inline virtual const glm::vec3 getMTV(const AABB& other) const final {
+            return AABB::getMTV(this->getAABB(), other);
+        }
+
+        inline virtual const glm::vec3 getMTV(const std::shared_ptr<Entity> other) const final {
+            return AABB::getMTV(this->getAABB(), other->getAABB());
+        }
+
+
+        inline virtual bool isTouching(const std::shared_ptr<Entity> other) const final {
+            return glm::all(glm::greaterThan(this->getOverlap(other), glm::vec3(0.0f, 0.0f, 0.0f)));
+        }
+
+        /// Gets the horizontal forward vector (not look vector)
+        inline virtual glm::vec3 getForwardVector() const final {
+            return glm::vec3(glm::yawPitchRoll(this->getRotation().x, this->getRotation().y, this->getRotation().z)*glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
         }
 
         inline virtual glm::vec3 getUpVector() const final {
+            return glm::vec3(glm::yawPitchRoll(this->getRotation().x, this->getRotation().y, this->getRotation().z)*glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+        }
 
+        inline virtual glm::vec3 getEyePosition() const final {
+            return this->getPosition() + glm::vec3(0.0f, this->getEyeHeight(), 0.0f);
         }
 
         inline virtual void setHidden(const bool hidden = true) final {
@@ -70,11 +177,47 @@ class Entity : public Particle, NonCopyable {
             return this->_hidden;
         }
 
+        inline virtual double getLifetime() const final {
+            return this->_lifetime;
+        }
+
+        inline std::shared_ptr<World> getWorld() const {
+            return this->_world;
+        }
+
         inline virtual void draw(glutils::RenderContext& ctx) const override {
-            if(ctx.debug() || true) {
-                ctx.getPrimitiveRenderer().cube(this->getPosition(), {2.0f*this->getRadius(), this->getHeight(), 2.0f*this->getRadius()}, {1.0f, 1.0f, 1.0f}, {true, false, true});
+            if(ctx.debug()) {
+                ctx.getPrimitiveRenderer().sprite(std::to_string(this->getHealth()), this->getPosition() + glm::vec3(0.0f, this->getHeight() + 0.25, 0.0f), {1.0f, 0.0f, 0.0f}, 0.5, glutils::PrimitiveRenderer::SpriteMode::PARTICLE);
+                ctx.getPrimitiveRenderer().line(this->getEyePosition(), this->getEyePosition() + this->getForwardVector(), {0.0f, 0.0f, 1.0f});
+                
+                // Render collision info
+                const AABB aabb = this->getAABB();
+                ctx.getPrimitiveRenderer().cube(aabb.min, AABB::getSize(aabb), {1.0f, 1.0f, 1.0f});
+                const glm::ivec3 imin = glm::floor(aabb.min), imax = glm::ceil(aabb.max);
+                for(int x = imin.x; x < imax.x; x++) {
+                    for(int y = imin.y; y < imax.y; y++) {
+                        for(int z = imin.z; z < imax.z; z++) {
+                            const std::shared_ptr<Block> block = this->getWorld()->getBlock(glm::ivec3(x, y, z));
+                            ctx.getPrimitiveRenderer().cube({x,y,z}, {1,1,1}, block && block->isSolid() ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f));
+                        }
+                    }
+                }
             }
-        };
+        }
+
+        inline virtual void update(const float deltaTime) override {
+            this->_lifetime += deltaTime;
+            this->_hurttime = glm::max(0.0f, this->_hurttime - deltaTime);
+
+            this->setPosition(this->getPosition() + deltaTime*glm::vec3(glm::vec4(this->getVelocity(), 0.0f)*glm::rotate(glm::mat4(1.0f), -this->getRotation().x, this->getUpVector()))); // TODO: gravity  - 0.0f*glm::vec3(0.0f, this->getGravity(), 0.0f)
+            
+            if(this->getPosition().y < 0.0f) {
+                this->damage(this->getMaxHealth());
+            }
+            
+            // TODO collide
+        }
+
 };
 
 #endif
