@@ -3,13 +3,17 @@
 
 #include <memory>
 
+#include <glm/glm.hpp>
+
 #include "Entity.hpp"
 #include "Player.hpp"
+#include "World.hpp"
+#include "mcmodel.hpp"
+#include "include/f8.hpp"
 
 class Zombie final : public Entity {
     private:
         std::shared_ptr<mcmodel::Drawable> _head, _body, _right_arm, _left_arm, _right_leg, _left_leg, _root;
-
         std::shared_ptr<Player> _target = nullptr;
 
     public:
@@ -41,8 +45,6 @@ class Zombie final : public Entity {
             }, glm::vec3(0.0f, 0.75f, 0.0f));
         }
 
-
-
         inline virtual void draw(glutils::RenderContext& ctx) const override {
             Entity::draw(ctx);
             if(!this->isHidden()) {
@@ -60,9 +62,9 @@ class Zombie final : public Entity {
                 const glm::vec3 v = this->getTarget()->getPosition() - this->getPosition();
                 this->setRotation({glm::mix(this->getRotation().x, -glm::atan2(v.z, v.x), 0.9f), this->getRotation().y, this->getRotation().z});
 
-                // if(this->isTouching(this->getTarget())) {
-
-                // }
+                if(this->isTouching(this->getTarget()) && f8::randb(0.2f)) {
+                    this->getTarget()->damage();
+                }
             }
 
             // Animate
@@ -95,11 +97,12 @@ class Zombie final : public Entity {
             this->_target = target;
         }
 
+        /// Gets targeted player, could be nullptr!
         inline std::shared_ptr<Player> getTarget() const {
             return this->_target;
         }
 
-        inline virtual const glm::vec3 getVelocity() const {
+        inline virtual const glm::vec3 getVelocity() const override {
             return this->getTarget() ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 0.0f, 0.0f);
         }
 };

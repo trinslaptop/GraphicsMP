@@ -54,6 +54,9 @@ class Entity : public Particle {
 
         const std::shared_ptr<World> _world;
     public:
+        /// During this timeframe after taking damage, entities are temporarily immune to additional damage
+        static constexpr float HURT_DURATION = 2.0f;
+
         inline explicit Entity(const std::shared_ptr<World> world) : _world(world) {}
 
         inline virtual ~Entity() = default;
@@ -109,20 +112,16 @@ class Entity : public Particle {
             this->_health = glm::clamp(health, 0, this->getMaxHealth());
         }
 
-        inline virtual void damage(const int amount) final {
-            if(this->_hurttime == 0.0f) {
+        inline virtual void damage(const int amount = 1) final {
+            if(this->_hurttime == 0.0f && this->getHealth() > 0) {
                 this->setHealth(this->getHealth() - amount);
-                this->_hurttime = 3.0f;
+                this->_hurttime = Entity::HURT_DURATION;
             }
         }
 
         inline virtual const glm::vec3 getRotation() const final {
             return this->_rotation;
         }
-
-        // inline virtual void setVelocity(const glm::vec3 position) {
-
-        // }
 
         inline virtual const AABB getAABB() const final {
             return AABB {

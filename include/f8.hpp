@@ -41,6 +41,11 @@ namespace f8 {
         return rand(state) / glm::pow(2, 32);
     }
 
+    /// Get a random boolean with an optional probability
+    inline bool randb(const float probability = 0.5f, uint32_t& state = _state) {
+        return rand(state) < probability*((double) glm::pow(2, 32) + 1.0);
+    }
+
     /// Generates a random version 4 UUID
     inline std::string uuid4(uint32_t& state = _state) {
         const char ALPHABET[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};

@@ -13,6 +13,7 @@
 #include "World.hpp"
 #include "mcmodel.hpp"
 #include "glutils.hpp"
+#include "Entity.hpp"
 
 /*
  * Player.hpp
@@ -24,35 +25,33 @@
  * Texture should be a minecraft player skin, cape can optionally be a minecraft cape texture
  */
 
-class Player final : public mcmodel::Drawable {
+class Player final : public Entity {
     private:
         std::shared_ptr<mcmodel::Drawable> _head, _body, _right_arm, _left_arm, _right_leg, _left_leg, _cape, _root;
         
-        // Time accumulator
-        GLfloat _acctime = 0.0f;
-
-        glm::vec3 _position = glm::vec3(0.0f, 0.0f, 0.0f);
-        glm::vec3 _rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+        const ShaderProgram& _shader;
 
         CSCI441::ArcballCam _arcballcamera;
         CSCI441::FixedCam _skycamera;
         CSCI441::FixedCam _fpcamera;
 
-        std::shared_ptr<World> _world;
+        inline void _updateCameras() {
+            this->_arcballcamera.setLookAtPoint(this->getEyePosition());
+            this->_arcballcamera.recomputeOrientation();
 
-        bool _hidden = false;
-        
+            this->_skycamera.setPosition(this->getPosition() + glm::vec3(0.0f, 12.0f, 0.0f));
+            this->_skycamera.setLookAtPoint(this->getPosition());
+            this->_skycamera.setUpVector(this->getForwardVector());
+            this->_skycamera.computeViewMatrix();
+
+            this->_fpcamera.setPosition(this->getEyePosition());
+            this->_fpcamera.setLookAtPoint(this->getEyePosition() + 2.0f*this->getForwardVector());
+            this->_fpcamera.setUpVector(this->getUpVector());
+            this->_fpcamera.computeViewMatrix();
+        }
+
     public:
-
-            inline virtual float getHeight() const {
-                return 2.0f;
-            }
-
-            inline virtual float getRadius() const {
-                return 0.5f;
-            }
-
-        Player(std::shared_ptr<World> world, const ShaderProgram& shader, const std::array<GLuint, 2> textures, bool thinArms = true, const std::optional<const std::array<GLuint, 2>> cape = std::nullopt) : _world(world), _arcballcamera(1.0f, 6.0f), _skycamera(), _fpcamera() {
+        Player(std::shared_ptr<World> world, const ShaderProgram& shader, const std::array<GLuint, 2> textures, bool thinArms = true, const std::optional<const std::array<GLuint, 2>> cape = std::nullopt) : Entity(world), _arcballcamera(1.0f, 6.0f), _skycamera(), _fpcamera(), _shader(shader) {
             this->_arcballcamera.moveBackward(2.5f);
             
             // Create player model
@@ -93,61 +92,6 @@ class Player final : public mcmodel::Drawable {
             }, glm::vec3(0.0f, 0.75f, 0.0f));
         }
 
-        inline virtual ~Player() = default;
-
-        // Non-Copyable
-        Player(const Player&) = delete;
-        Player& operator=(const Player&) = delete;
-    
-        inline void setPosition(const glm::vec3 position, bool ignoreCollision = false) {
-            const glm::vec3 clamped = glm::clamp(position, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(4*Chunk::CHUNK_SIZE, 4*Chunk::CHUNK_SIZE, 4*Chunk::CHUNK_SIZE));
-        
-            // This is a very cheep hack for trivial collision
-            // Effectively uses the space from not moving as far as possible but only to a position if result is clear
-            // as the collision radius/box for the player (only works well for low speeds!) 
-            std::shared_ptr<Block> block;
-            if(ignoreCollision || (((block = this->_world->getBlock(glm::ivec3(clamped))) == nullptr || !block->isSolid()) && ((block = this->_world->getBlock(glm::ivec3(clamped + glm::vec3(0.0f, 1.0f, 0.0f)))) == nullptr || !block->isSolid()))) {
-                this->_position = clamped;
-                
-                // Update cameras
-                this->_arcballcamera.setLookAtPoint(this->_position + glm::vec3(0.0f, 1.75f, 0.0f));
-                this->_arcballcamera.recomputeOrientation();
-
-                this->_skycamera.setPosition(this->_position + glm::vec3(0.0f, 12.0f, 0.0f));
-                this->_skycamera.setLookAtPoint(this->_position);
-                this->_skycamera.setUpVector(this->getHorizontalForwardVector());
-                this->_skycamera.computeViewMatrix();
-
-                this->_fpcamera.setPosition(this->_position + 0.5f*this->getForwardVector() + glm::vec3(0.0f, 1.75f, 0.0f));
-                this->_fpcamera.setLookAtPoint(this->_position + 2.0f*this->getForwardVector() + glm::vec3(0.0f, 1.75f, 0.0f));
-                this->_fpcamera.setUpVector(this->getUpVector());
-                this->_fpcamera.computeViewMatrix();
-            }
-        }
-
-        inline glm::vec3 getPosition() const {
-            return this->_position;
-        }
-
-        inline void setRotation(const glm::vec3 rotation) {
-            this->_rotation = glm::mod(rotation, 2*glutils::PI);
-
-            // Update cameras
-            this->_skycamera.setPosition(this->_position + glm::vec3(0.0f, 12.0f, 0.0f));
-            this->_skycamera.setLookAtPoint(this->_position);
-            this->_skycamera.setUpVector(this->getHorizontalForwardVector());
-            this->_skycamera.computeViewMatrix();
-
-            this->_fpcamera.setPosition(this->_position + glm::vec3(0.0f, 1.75f, 0.0f));
-            this->_fpcamera.setLookAtPoint(this->_position + 2.0f*this->getForwardVector() + glm::vec3(0.0f, 1.75f, 0.0f));
-            this->_fpcamera.setUpVector(this->getUpVector());
-            this->_fpcamera.computeViewMatrix();
-        }
-
-        inline glm::vec3 getRotation() const {
-            return this->_rotation;
-        }
-
         inline CSCI441::ArcballCam& getArcballCamera() {
             return this->_arcballcamera;
         }
@@ -160,57 +104,53 @@ class Player final : public mcmodel::Drawable {
             return this->_skycamera;
         }
 
-        // An xz aligned vector representing direction of player
-        inline glm::vec3 getHorizontalForwardVector() const {
-            return glm::vec3(glm::cos(this->_rotation.x), 0.0f, -glm::sin(this->_rotation.x));
-        }
-
-        inline glm::vec3 getForwardVector() const {
-            return glm::vec3(glm::yawPitchRoll(this->_rotation.x, this->_rotation.y, this->_rotation.z)*glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
-        }
-
-        inline glm::vec3 getUpVector() const {
-            return glm::vec3(glm::yawPitchRoll(this->_rotation.x, this->_rotation.y, this->_rotation.z)*glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-        }
-
-        inline void update(GLfloat deltaTime) {
-            // Update and wrap time accumulator
-            this->_acctime += deltaTime;
-            if(this->_acctime > 2.0f*glutils::PI) {
-                this->_acctime -= 2.0f*glutils::PI;
-            }
+        inline virtual void update(const GLfloat deltaTime) override {
+            Entity::update(deltaTime);
 
             // Animate cape
-            std::dynamic_pointer_cast<mcmodel::Group>(this->_cape)->rotation.z = glutils::PI/8.0f + 0.25f*std::cos(this->_acctime + 0.25f);
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_cape)->rotation.z = glutils::PI/8.0f + 0.25f*std::cos(this->getLifetime() + 0.25f);
 
             // Animate head
-            std::dynamic_pointer_cast<mcmodel::Group>(this->_head)->rotation.x = 0.125f*std::cos(this->_acctime + 0.50f);
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_head)->rotation.x = 0.125f*std::cos(this->getLifetime() + 0.50f);
 
             // Animate arms
-            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_arm)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_arm)->rotation.z = 0.25f*std::cos(this->_acctime));
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_arm)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_arm)->rotation.z = 0.25f*std::cos(this->getLifetime()));
             
             // Animate legs
-            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glutils::PI/8.0f * glm::sin(3.0f*glm::length(this->_position)));
-        }
-
-        inline void setHidden(const bool hidden) {
-            this->_hidden = hidden;
-        }
-
-        inline bool isHidden() const {
-            return this->_hidden;
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glutils::PI/8.0f * glm::sin(3.0f*glm::length(this->getPosition())));
+        
+            this->_updateCameras();
         }
 
         inline virtual void draw(glutils::RenderContext& ctx) const override {
-            if(!this->_hidden) {
-                ctx.pushTransformation(glm::translate(glm::mat4(1.0f), this->_position)*glm::yawPitchRoll(this->_rotation.x, this->_rotation.y, this->_rotation.z));
+            Entity::draw(ctx);
+            if(!this->isHidden()) {
+                this->_shader.setProgramUniform("tint", glm::vec4(glm::mix(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 0.33f, 0.33f), glm::cos(glutils::PI*(this->getHurtTime() - Entity::HURT_DURATION/2.0f)/Entity::HURT_DURATION)), 1.0f));
+
+                ctx.pushTransformation(glm::translate(glm::mat4(1.0f), this->getPosition())*glm::yawPitchRoll(this->getRotation().x, this->getRotation().y, this->getRotation().z));
                         this->_root->draw(ctx);
                 ctx.popTransformation();
             }
         }
 
-        inline virtual int getHealth() const {
+        inline virtual float getHeight() const override {
+            return 2.0f;
+        }
+
+        inline virtual float getEyeHeight() const override {
+            return 1.75f;
+        }
+
+        inline virtual float getRadius() const override {
+            return 0.25f;
+        }
+
+        inline virtual int getMaxHealth() const override {
             return 5;
+        }
+
+        inline virtual const glm::vec3 getVelocity() const override {
+            return glm::vec3(0.0f, 0.0f, 0.0f);//TODO:
         }
 };
 #endif

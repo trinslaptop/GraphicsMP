@@ -105,7 +105,7 @@ MCEngine::MCEngine(const std::string& player_name)
         if(this->_primaryCamera == 0) {
             this->_freecam->moveForward(20.0f*deltaTime);
         } else {
-            this->_player->setPosition(this->_player->getPosition() + this->_player->getHorizontalForwardVector()*5.0f*deltaTime);
+            this->_player->setPosition(this->_player->getPosition() + this->_player->getForwardVector()*5.0f*deltaTime);//FIXME:
         }
     }, input::Event::Hold);
 
@@ -114,7 +114,7 @@ MCEngine::MCEngine(const std::string& player_name)
         if(this->_primaryCamera == 0) {
             this->_freecam->moveBackward(20.0f*deltaTime);
         } else {
-            this->_player->setPosition(this->_player->getPosition() - this->_player->getHorizontalForwardVector()*5.0f*deltaTime);
+            this->_player->setPosition(this->_player->getPosition() - this->_player->getForwardVector()*5.0f*deltaTime); //FIXME:
         }
     }, input::Event::Hold);
 
@@ -390,7 +390,9 @@ void MCEngine::mSetupBuffers() {
     // Setup players
     this->_player = get_player(this->_world, *this->_shaders.primary, *this->_tm, this->_player_name);
     this->_player->setPosition({32.0f, this->_world->getTerrainHeight(32.0f, 32.0f), 32.0f});
+    this->_player->setHealth(9999);
 
+    // Summon a zombie
     const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
     zombie->setTarget(this->_player);
     zombie->setHealth(9999);
@@ -534,7 +536,7 @@ void MCEngine::_handleConsoleInput() {
         if(std::cin.fail()) {
             fprintf(stderr, "[ERROR]: Invalid position\n");
         } else {
-            this->_player->setPosition(glm::vec3(x, y, z), true);
+            this->_player->setPosition(glm::vec3(x, y, z));
         }
     } else if(cmd == "setblock") {
         float x, y, z;
