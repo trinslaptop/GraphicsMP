@@ -140,7 +140,7 @@ class Entity : public Particle {
             };
         }
 
-        inline virtual void remove() const {
+        inline virtual void remove() const final {
             this->getWorld().remove(*this);
         }
 
@@ -190,9 +190,14 @@ class Entity : public Particle {
             return this->_lifetime;
         }
 
-        inline World& getWorld() const {
+        inline virtual World& getWorld() const final {
             return this->_world;
         }
+
+        inline virtual bool isInAir() const final {
+            const std::shared_ptr<Block> block = this->getWorld().getBlock(this->getPosition() - glm::vec3(0.0f, 1.0f, 0.0f));
+            return (!block || !block->isSolid()) && this->getPosition().y != this->getWorld().getTerrainHeight(this->getPosition().x, this->getPosition().z);
+        } 
 
         /// Draws debug info, make sure to call this if overriding
         inline virtual void draw(glutils::RenderContext& ctx) const override {
@@ -200,6 +205,8 @@ class Entity : public Particle {
                 ctx.getPrimitiveRenderer().sprite(std::to_string(this->getHealth()), this->getPosition() + glm::vec3(0.0f, this->getHeight() + 0.25, 0.0f), {1.0f, 0.0f, 0.0f}, 0.5, glutils::PrimitiveRenderer::SpriteMode::PARTICLE);
                 ctx.getPrimitiveRenderer().line(this->getEyePosition(), this->getEyePosition() + this->getForwardVector(), {0.0f, 0.0f, 1.0f});
                 
+                ctx.getPrimitiveRenderer().cube(glm::ivec3(this->getPosition() - glm::vec3(0.0f, 1.0f, 0.0f)), glm::ivec3(1, 1, 1), this->isInAir() ? glm::vec3(0.0f, 1.0f, 1.0f) : glm::vec3(1.0f, 0.0f, 1.0f));
+
                 // Render collision info
                 const AABB aabb = this->getAABB();
                 ctx.getPrimitiveRenderer().cube(aabb.min, AABB::getSize(aabb), {1.0f, 1.0f, 1.0f});
