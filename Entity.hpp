@@ -70,7 +70,7 @@ class Entity : public Particle {
         };
 
         inline virtual float getGravity() const {
-            return -9.8;
+            return 9.8;
         }
 
         inline virtual void setPosition(const glm::vec3 position) final {
@@ -220,7 +220,7 @@ class Entity : public Particle {
             this->_lifetime += deltaTime;
             this->_hurttime = glm::max(0.0f, this->_hurttime - deltaTime);
 
-            this->setPosition(this->getPosition() + deltaTime*glm::vec3(glm::vec4(this->getVelocity(), 0.0f)*glm::rotate(glm::mat4(1.0f), -this->getRotation().x, this->getUpVector()))); // TODO: gravity  - 0.0f*glm::vec3(0.0f, this->getGravity(), 0.0f)
+            this->setPosition(this->getPosition() + deltaTime*glm::vec3(glm::vec4(this->getVelocity(), 0.0f)*glm::rotate(glm::mat4(1.0f), -this->getRotation().x, this->getUpVector())) - deltaTime*glm::vec3(0.0f, this->getGravity(), 0.0f)); // This isn't how actually gravity works but it good enough for now
             
             if(this->getPosition().y < 0.0f) {
                 this->damage(this->getMaxHealth());

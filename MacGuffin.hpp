@@ -37,11 +37,18 @@ class MacGuffin : public Entity {
             }
         }
 
+        inline virtual void update(const float deltaTime) override {
+            Entity::update(deltaTime);
+
+            // If landed on a block, pick a new spot
+            if(this->getWorld().getBlock(this->getPosition() - glm::vec3(0.0f, -1.0f, 0.0f))) {
+                this->scatter();
+            }
+        }
+
         /// Place MacGuffin at random location
         inline void scatter() {
             this->setPosition({f8::randi(4, 4*Chunk::CHUNK_SIZE - 4) + 0.5f, 25.0f, f8::randi(4, 4*Chunk::CHUNK_SIZE - 4) + 0.5f});
-            // do {
-            // } while(this->getPosition().y != this->getWorld().getTerrainHeight(this->getPosition().x, this->getPosition().z));
         }
 };
 
