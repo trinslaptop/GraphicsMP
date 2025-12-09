@@ -73,7 +73,7 @@ class Zombie final : public Entity {
             std::dynamic_pointer_cast<mcmodel::Group>(this->_right_arm)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_arm)->rotation.z = 0.25f*std::cos(this->getLifetime()) + glutils::PI/2) + glutils::PI;
             std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glutils::PI/8.0f * glm::sin(3.0f*glm::length(this->getPosition())));
 
-            if(this->getHealth() <= 0.0f) {
+            if(this->getHealth() <= 0) {
                 this->remove();
             }
         }

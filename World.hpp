@@ -78,6 +78,10 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
 
         inline virtual ~Chunk() = default;
 
+        inline static glm::ivec3 getChunkPos(const glm::vec3& pos) {
+            return glm::floor(pos/Chunk::CHUNK_SIZE);
+        }
+
         inline virtual void draw(glutils::RenderContext& ctx) const override {
             // Draw terrain
             if(!this->_chunk_pos.y) {
@@ -265,13 +269,13 @@ class World final : public mcmodel::Drawable, NonCopyable {
         /// Sets the block at a position or removes it if nullptr
         /// Initializes chunk at pos
         inline void setBlock(const glm::ivec3& pos, std::shared_ptr<Block> block = nullptr) {
-            this->getChunk(pos/(int) Chunk::CHUNK_SIZE)->setBlock(pos%(int) Chunk::CHUNK_SIZE, block);
+            this->getChunk(Chunk::getChunkPos(pos))->setBlock(pos%(int) Chunk::CHUNK_SIZE, block);
         }
 
         /// Gets the block at a position or nullptr if none
         /// Does *not* initialize chunk if it does not exists
         inline std::shared_ptr<Block> getBlock(const glm::ivec3& pos) const {
-            const auto iter = this->_chunks.find(pos/(int) Chunk::CHUNK_SIZE);
+            const auto iter = this->_chunks.find(Chunk::getChunkPos(pos));
             if(iter != this->_chunks.end()) {
                 return iter->second->getBlock(pos%(int) Chunk::CHUNK_SIZE);
             } else {
@@ -281,7 +285,7 @@ class World final : public mcmodel::Drawable, NonCopyable {
 
         /// Gets the minimum y value for this chunk, only meaningful for bottom chunk of world
         inline float getTerrainHeight(const float x, const float z) const {
-            const auto iter = this->_chunks.find({x/(int) Chunk::CHUNK_SIZE, 0, z/(int) Chunk::CHUNK_SIZE});
+            const auto iter = this->_chunks.find(Chunk::getChunkPos({x, 0, z}));
             if(iter != this->_chunks.end()) {
                 return iter->second->getTerrainHeight(glm::fmod(x, Chunk::CHUNK_SIZE), glm::fmod(z, Chunk::CHUNK_SIZE));
             } else {

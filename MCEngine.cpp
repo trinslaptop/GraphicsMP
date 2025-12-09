@@ -396,8 +396,8 @@ void MCEngine::mSetupBuffers() {
 
     // Setup players
     this->_player = get_player(*this->_world, *this->_shaders.primary, *this->_tm, this->_player_name);
-    this->_player->setPosition({32.0f, this->_world->getTerrainHeight(32.0f, 32.0f), 32.0f});
-    this->_player->setHealth(9999);
+    this->_player->setPosition({32.0f, 0.0f, 32.0f});
+    this->_player->setHealth(this->_player->getMaxHealth());
 
     this->_macguffin = std::make_shared<MacGuffin>(*this->_world);
     this->_world->add(this->_macguffin);
@@ -632,8 +632,11 @@ void MCEngine::_renderUI(glutils::RenderContext& ctx) const {
         glm::vec2 area = this->_pr->sprite(glutils::format("XYZ:%.1f,%.1f,%.1f", this->_player->getPosition().x, this->_player->getPosition().y, this->_player->getPosition().z), {0.0f, 1.0f - em, 0.0f}, glm::vec3(1.0f, 1.0f, 1.0f), em);
         this->_pr->rect({0.0f, 1.0f - em}, area, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
         
-        area = this->_pr->sprite(glutils::format("GND: %.1f", this->_world->getTerrainHeight(_player->getPosition().x, this->_player->getPosition().z)), {0.0f, 1.0f - 2.0f*em, 0.0f}, glm::vec3(1.0f, 1.0f, 1.0f), em);
+        area = this->_pr->sprite(glutils::format("CHK:%d,%d,%d", Chunk::getChunkPos(this->_player->getPosition()).x, Chunk::getChunkPos(this->_player->getPosition()).y, Chunk::getChunkPos(this->_player->getPosition()).z), {0.0f, 1.0f - 2.0f*em, 0.0f}, glm::vec3(1.0f, 1.0f, 1.0f), em);
         this->_pr->rect({0.0f, 1.0f - 2.0f*em}, area, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+
+        area = this->_pr->sprite(glutils::format("GND:%.1f", this->_world->getTerrainHeight(_player->getPosition().x, this->_player->getPosition().z)), {0.0f, 1.0f - 3.0f*em, 0.0f}, glm::vec3(1.0f, 1.0f, 1.0f), em);
+        this->_pr->rect({0.0f, 1.0f - 3.0f*em}, area, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
     }
 }
 
@@ -662,6 +665,13 @@ void MCEngine::_updateScene() {
             this->add_zombie();
         }
     }
+
+    if(this->_player->getHealth() <= 0) {
+        this->_player->setPosition({32.0f, 0.0f, 32.0f});
+        this->_player->setHealth(this->_player->getMaxHealth());
+        this->_deaths++;
+    }
+
 
     // Play movie
     if(!this->_movie.empty()) {
