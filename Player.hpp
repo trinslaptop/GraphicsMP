@@ -51,7 +51,7 @@ class Player final : public Entity {
         }
 
     public:
-        Player(std::shared_ptr<World> world, const ShaderProgram& shader, const std::array<GLuint, 2> textures, bool thinArms = true, const std::optional<const std::array<GLuint, 2>> cape = std::nullopt) : Entity(world), _arcballcamera(1.0f, 6.0f), _skycamera(), _fpcamera(), _shader(shader) {
+        Player(World& world, const ShaderProgram& shader, const std::array<GLuint, 2> textures, bool thinArms = true, const std::optional<const std::array<GLuint, 2>> cape = std::nullopt) : Entity(world), _arcballcamera(1.0f, 6.0f), _skycamera(), _fpcamera(), _shader(shader) {
             this->_arcballcamera.moveBackward(2.5f);
             
             // Create player model

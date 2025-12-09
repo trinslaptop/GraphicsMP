@@ -18,7 +18,7 @@ class Zombie final : public Entity {
         std::shared_ptr<Player> _target = nullptr;
 
     public:
-        inline Zombie(const std::shared_ptr<World> world, const ShaderProgram& shader, const std::array<GLuint, 2> textures) : Entity(world) {
+        inline Zombie(World& world, const ShaderProgram& shader, const std::array<GLuint, 2> textures) : Entity(world) {
             // Slightly modified from player model
             this->_root = mcmodel::group({
                 this->_body = mcmodel::group({
@@ -53,7 +53,7 @@ class Zombie final : public Entity {
                     this->_root->draw(ctx);
                 ctx.popTransformation();
             }
-        };
+        }
 
         inline virtual void update(const float deltaTime) override {
             Entity::update(deltaTime);

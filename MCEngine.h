@@ -18,6 +18,7 @@
 
 #include "ShaderProgram.hpp"
 #include "Particle.hpp"
+#include "MacGuffin.hpp"
 #include "input.hpp"
 #include "mcmodel.hpp"
 #include "glutils.hpp"
@@ -137,6 +138,7 @@ class MCEngine final : public CSCI441::OpenGLEngine {
         const std::string _player_name;
         std::shared_ptr<Player> _player;
         int _score = 0, _deaths = 0;
+        std::shared_ptr<MacGuffin> _macguffin;
 
         std::unordered_map<std::string, std::shared_ptr<Block>> _blocks;
 

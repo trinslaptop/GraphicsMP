@@ -255,10 +255,12 @@ void MCEngine::mSetupShaders() {
 }
 
 void MCEngine::mSetupBuffers() {
-    // Initialize random
+    // Initialize random number generators (specific state and global ones)
     const unsigned int seed = 0x80801;
     uint32_t state;
     f8::srand(seed, state);
+    f8::srand();
+    f8::srandv();
 
     // Make default.png texture handle 1, any textures that fail to load will fallback to this
     this->_tm->load("assets/textures/default.png");
@@ -388,12 +390,16 @@ void MCEngine::mSetupBuffers() {
     }
 
     // Setup players
-    this->_player = get_player(this->_world, *this->_shaders.primary, *this->_tm, this->_player_name);
+    this->_player = get_player(*this->_world, *this->_shaders.primary, *this->_tm, this->_player_name);
     this->_player->setPosition({32.0f, this->_world->getTerrainHeight(32.0f, 32.0f), 32.0f});
     this->_player->setHealth(9999);
 
+    this->_macguffin = std::make_shared<MacGuffin>(*this->_world);
+    this->_world->add(this->_macguffin);
+    this->_macguffin->scatter();
+
     // Summon a zombie
-    const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
+    const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(*this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
     zombie->setTarget(this->_player);
     zombie->setHealth(9999);
     this->_world->add(zombie);
@@ -452,6 +458,7 @@ void MCEngine::mCleanupBuffers() {
     this->_skybox = nullptr;
     this->_clouds = nullptr;
     this->_player = nullptr;
+    this->_macguffin = nullptr;
     this->_blocks.clear();
     this->_pr = nullptr;
 }
@@ -556,7 +563,7 @@ void MCEngine::_handleConsoleInput() {
         stream >> name;
 
         if(name == "zombie") {
-            const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
+            const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(*this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
             zombie->setTarget(this->_player);
             zombie->setHealth(9999);
             zombie->setPosition({0, 0, 0});
@@ -564,6 +571,9 @@ void MCEngine::_handleConsoleInput() {
         } else {
             fprintf(stderr, "[ERROR]: Unknown creature\n");
         }
+    } else if(f8::cyrb(cmd) == 18374542636879944076U) {
+        // No hints for you unless you break the hash!
+        fprintf(stdout, "Diamond is at %f, %f, %f\n", this->_macguffin->getPosition().x, this->_macguffin->getPosition().y, this->_macguffin->getPosition().z);
     } else if(cmd == "md5play") {
         stream >> std::ws;
         this->_movie = md5camera::load(std::string(std::istreambuf_iterator<char>(stream), {}).c_str());
@@ -632,6 +642,11 @@ void MCEngine::_updateScene() {
     this->_player->update(deltaTime);
     
     this->_world->update(deltaTime);
+
+    if(this->_macguffin->isTouching(this->_player)) {
+        this->_score++;
+        this->_macguffin->scatter();
+    }
 
     // Play movie
     if(!this->_movie.empty()) {

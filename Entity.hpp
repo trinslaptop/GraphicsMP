@@ -45,19 +45,19 @@ struct AABB {
 
 class Entity : public Particle {
     private:
-        bool _hidden = false;
+        bool _hidden = false, _invulnerable = false;
         glm::vec3 _position = {0.0f, 0.0f, 0.0f};
         glm::vec3 _rotation = {0.0f, 0.0f, 0.0f};
         double _lifetime = 0.0f;
         int _health = 0;
         float _hurttime = 0;
 
-        const std::shared_ptr<World> _world;
+        World& _world;
     public:
         /// During this timeframe after taking damage, entities are temporarily immune to additional damage
         static constexpr float HURT_DURATION = 2.0f;
 
-        inline explicit Entity(const std::shared_ptr<World> world) : _world(world) {}
+        inline explicit Entity(World& world) : _world(world) {}
 
         inline virtual ~Entity() = default;
 
@@ -65,7 +65,9 @@ class Entity : public Particle {
         inline virtual float getHeight() const = 0;
         inline virtual float getEyeHeight() const = 0;
         inline virtual float getRadius() const = 0;
-        inline virtual const glm::vec3 getVelocity() const = 0;
+        inline virtual const glm::vec3 getVelocity() const {
+            return glm::vec3(0.0f, 0.0f, 0.0f);
+        };
 
         inline virtual float getGravity() const {
             return -9.8;
@@ -73,14 +75,14 @@ class Entity : public Particle {
 
         inline virtual void setPosition(const glm::vec3 position) final {
             // Clamp to terrain if in valid chunk
-            this->_position = glm::vec3(position.x, glm::max(position.y, this->getWorld()->getTerrainHeight(position.x, position.z)), position.z);
+            this->_position = glm::vec3(position.x, glm::max(position.y, this->getWorld().getTerrainHeight(position.x, position.z)), position.z);
         
             // Fix block collision
             const glm::ivec3 imin = glm::floor(this->getAABB().min), imax = glm::ceil(this->getAABB().max);
             for(int x = imin.x; x < imax.x; x++) {
                 for(int y = imin.y; y < imax.y; y++) {
                     for(int z = imin.z; z < imax.z; z++) {
-                        const std::shared_ptr<Block> block = this->getWorld()->getBlock(glm::ivec3(x, y, z));
+                        const std::shared_ptr<Block> block = this->getWorld().getBlock(glm::ivec3(x, y, z));
                         if(block && block->isSolid()) {
                             this->_position += this->getMTV(AABB {
                                 .min = glm::vec3(x,y,z),
@@ -112,8 +114,16 @@ class Entity : public Particle {
             this->_health = glm::clamp(health, 0, this->getMaxHealth());
         }
 
+        inline virtual void setInvulnerable(const bool invulnerable = true) final {
+            this->_invulnerable = invulnerable;
+        }
+
+        inline virtual bool isInvulnerable() const final {
+            return this->_invulnerable;
+        }
+
         inline virtual void damage(const int amount = 1) final {
-            if(this->_hurttime == 0.0f && this->getHealth() > 0) {
+            if(!this->isInvulnerable() && this->_hurttime == 0.0f && this->getHealth() > 0) {
                 this->setHealth(this->getHealth() - amount);
                 this->_hurttime = Entity::HURT_DURATION;
             }
@@ -131,7 +141,7 @@ class Entity : public Particle {
         }
 
         inline virtual void remove() const {
-            this->getWorld()->remove(*this);
+            this->getWorld().remove(*this);
         }
 
         inline virtual const glm::vec3 getOverlap(const AABB& other) const final {
@@ -180,7 +190,7 @@ class Entity : public Particle {
             return this->_lifetime;
         }
 
-        inline std::shared_ptr<World> getWorld() const {
+        inline World& getWorld() const {
             return this->_world;
         }
 
@@ -197,7 +207,7 @@ class Entity : public Particle {
                 for(int x = imin.x; x < imax.x; x++) {
                     for(int y = imin.y; y < imax.y; y++) {
                         for(int z = imin.z; z < imax.z; z++) {
-                            const std::shared_ptr<Block> block = this->getWorld()->getBlock(glm::ivec3(x, y, z));
+                            const std::shared_ptr<Block> block = this->getWorld().getBlock(glm::ivec3(x, y, z));
                             ctx.getPrimitiveRenderer().cube({x,y,z}, {1,1,1}, block && block->isSolid() ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f));
                         }
                     }

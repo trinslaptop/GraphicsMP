@@ -64,7 +64,7 @@ namespace webdl {
 }
 
 /// Loads a player's skin from online, uses fallback in event of error
-std::shared_ptr<Player> get_player(std::shared_ptr<World> world, const ShaderProgram& shader, glutils::TextureManager& tm, const std::string name) {
+std::shared_ptr<Player> get_player(World& world, const ShaderProgram& shader, glutils::TextureManager& tm, const std::string name) {
     if(name != "Idril" && !name.empty()) {
         try {
             const webdl::Connection conn;
@@ -91,7 +91,7 @@ std::shared_ptr<Player> get_player(std::shared_ptr<World> world, const ShaderPro
 
 #else
 /// Fallback implementation to load internal Idril player
-std::shared_ptr<Player> get_player(std::shared_ptr<World> world, const ShaderProgram& shader, glutils::TextureManager& tm, const std::string _unused) {
+std::shared_ptr<Player> get_player(World& world, const ShaderProgram& shader, glutils::TextureManager& tm, const std::string _unused) {
     return std::make_shared<Player>(world, shader, std::array<GLuint, 2> {tm.load("assets/textures/idril.png"), tm.load("assets/textures/idril_specular.png")}, true, std::array<GLuint, 2> {tm.load("assets/textures/cape.png"), tm.load("assets/textures/cape_specular.png")});
 }
 #endif
