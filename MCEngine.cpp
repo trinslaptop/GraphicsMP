@@ -622,8 +622,6 @@ void MCEngine::_updateScene() {
     GLfloat deltaTime = currTime - _lastTime;
     this->_lastTime = currTime;
 
-    this->_pr->sprite(std::to_string(1.0f/deltaTime), {0, 0.5, 0}, {1.0f, 1.0f, 1.0f}, 1/32.0f);
-
     this->_shader_globals->setUniform("time", currTime);
 
     // Update keybinds
