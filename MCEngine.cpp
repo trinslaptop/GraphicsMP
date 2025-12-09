@@ -631,6 +631,9 @@ void MCEngine::_renderUI(glutils::RenderContext& ctx) const {
         // Because of z buffer, draw front to back
         glm::vec2 area = this->_pr->sprite(glutils::format("XYZ:%.1f,%.1f,%.1f", this->_player->getPosition().x, this->_player->getPosition().y, this->_player->getPosition().z), {0.0f, 1.0f - em, 0.0f}, glm::vec3(1.0f, 1.0f, 1.0f), em);
         this->_pr->rect({0.0f, 1.0f - em}, area, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+        
+        area = this->_pr->sprite(glutils::format("GND: %.1f", this->_world->getTerrainHeight(_player->getPosition().x, this->_player->getPosition().z)), {0.0f, 1.0f - 2.0f*em, 0.0f}, glm::vec3(1.0f, 1.0f, 1.0f), em);
+        this->_pr->rect({0.0f, 1.0f - 2.0f*em}, area, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
     }
 }
 
