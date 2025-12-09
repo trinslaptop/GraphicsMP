@@ -105,7 +105,7 @@ MCEngine::MCEngine(const std::string& player_name)
         if(this->_primaryCamera == 0) {
             this->_freecam->moveForward(20.0f*deltaTime);
         } else {
-            this->_player->setPosition(this->_player->getPosition() + this->_player->getForwardVector()*5.0f*deltaTime);//FIXME:
+            this->_player->setPosition(this->_player->getPosition() + this->_player->getForwardVector()*5.0f*deltaTime);
         }
     }, input::Event::Hold);
 
@@ -114,7 +114,7 @@ MCEngine::MCEngine(const std::string& player_name)
         if(this->_primaryCamera == 0) {
             this->_freecam->moveBackward(20.0f*deltaTime);
         } else {
-            this->_player->setPosition(this->_player->getPosition() - this->_player->getForwardVector()*5.0f*deltaTime); //FIXME:
+            this->_player->setPosition(this->_player->getPosition() - this->_player->getForwardVector()*5.0f*deltaTime);
         }
     }, input::Event::Hold);
 
@@ -127,6 +127,11 @@ MCEngine::MCEngine(const std::string& player_name)
     this->_im->on({input::key(GLFW_KEY_D)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         this->_player->setRotation(this->_player->getRotation() - glm::vec3(5.0f, 0.0f, 0.0f)*deltaTime);
     }, input::Event::Hold);
+
+    // SPACE to jump
+    this->_im->on({input::key(GLFW_KEY_SPACE)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        this->_player->jump();
+    });
 
     // Cursor to rotate camera or zoom
     this->_im->on_axis(input::AxisType::Cursor, [this](const glm::vec2 pos) {
@@ -341,14 +346,14 @@ void MCEngine::mSetupBuffers() {
     this->_world->setBlock(glm::ivec3(63, 0, 63), this->_blocks["cube"]);
 
     // Place some trees
-    this->_place_tree({10, this->_world->getTerrainHeight(10.5f, 10.5f) - 0.5, 10});
-    this->_place_tree({12, this->_world->getTerrainHeight(12.5f, 38.5f) - 0.5, 12}, 7);
-    this->_place_tree({40, this->_world->getTerrainHeight(40.5f, 30.5f) - 0.5, 40});
-    this->_place_tree({32, this->_world->getTerrainHeight(32.5f, 50.5f) - 0.5, 50}, 5);
-    this->_place_tree({10, this->_world->getTerrainHeight(10.5f, 25.5f) - 0.5, 25}, 8);
-    this->_place_tree({50, this->_world->getTerrainHeight(50.5f, 8.5f) - 0.5, 8});
-    this->_place_tree({9, this->_world->getTerrainHeight(9.5f, 56.5f) - 0.5, 56}, 6);
-    this->_place_tree({46, this->_world->getTerrainHeight(46.5f, 50.5f) - 0.5, 50});
+    this->_place_tree({10, this->_world->getTerrainHeight(10.5f, 10.5f) - 0.5f, 10});
+    this->_place_tree({12, this->_world->getTerrainHeight(12.5f, 38.5f) - 1.0f, 12}, 7);
+    this->_place_tree({40, this->_world->getTerrainHeight(40.5f, 30.5f) - 0.5f, 40});
+    this->_place_tree({32, this->_world->getTerrainHeight(32.5f, 50.5f) - 0.5f, 50}, 5);
+    this->_place_tree({10, this->_world->getTerrainHeight(10.5f, 25.5f) - 0.5f, 25}, 8);
+    this->_place_tree({50, this->_world->getTerrainHeight(50.5f, 8.5f) - 0.5f, 8});
+    this->_place_tree({9, this->_world->getTerrainHeight(9.5f, 56.5f) - 0.5f, 56}, 6);
+    this->_place_tree({46, this->_world->getTerrainHeight(46.5f, 50.5f) - 0.5f, 50});
 
     // Place amethyst pyramid
     this->_world->setBlock(glm::ivec3(17, this->_world->getTerrainHeight(17.5, 17.5) + 3, 17), this->_blocks["torch"]);
