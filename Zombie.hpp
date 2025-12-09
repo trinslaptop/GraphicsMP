@@ -15,10 +15,11 @@
 class Zombie final : public Entity {
     private:
         std::shared_ptr<mcmodel::Drawable> _head, _body, _right_arm, _left_arm, _right_leg, _left_leg, _root;
+        const ShaderProgram& _shader;
         std::shared_ptr<Player> _target = nullptr;
 
     public:
-        inline Zombie(World& world, const ShaderProgram& shader, const std::array<GLuint, 2> textures) : Entity(world) {
+        inline Zombie(World& world, const ShaderProgram& shader, const std::array<GLuint, 2> textures) : Entity(world), _shader(shader) {
             // Slightly modified from player model
             this->_root = mcmodel::group({
                 this->_body = mcmodel::group({
@@ -49,6 +50,8 @@ class Zombie final : public Entity {
         inline virtual void draw(glutils::RenderContext& ctx) const override {
             Entity::draw(ctx);
             if(!this->isHidden()) {
+                this->_shader.setProgramUniform("tint", glm::vec4(glm::mix(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 0.33f, 0.33f), glm::cos(glutils::PI*(this->getHurtTime() - Entity::HURT_DURATION/2.0f)/Entity::HURT_DURATION)), 1.0f));
+
                 ctx.pushTransformation(glm::translate(glm::mat4(1.0f), this->getPosition())*glm::yawPitchRoll(this->getRotation().x, this->getRotation().y, this->getRotation().z));
                     this->_root->draw(ctx);
                 ctx.popTransformation();
@@ -63,7 +66,7 @@ class Zombie final : public Entity {
                 const glm::vec3 v = this->getTarget()->getPosition() - this->getPosition();
                 this->setRotation({glm::mix(this->getRotation().x, -glm::atan2(v.z, v.x), 0.9f), this->getRotation().y, this->getRotation().z});
                 
-                if(this->isTouching(this->getTarget()) && f8::randb(0.2f)) {
+                if(this->isTouching(*this->getTarget()) && f8::randb(0.2f)) {
                     this->getTarget()->damage();
                 }
             }
@@ -74,7 +77,7 @@ class Zombie final : public Entity {
             std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glutils::PI/8.0f * glm::sin(3.0f*glm::length(this->getPosition())));
 
             if(this->getHealth() <= 0) {
-                this->remove();
+                this->setDead();
             }
         }
 
@@ -106,6 +109,20 @@ class Zombie final : public Entity {
         inline virtual const glm::vec3 getVelocity() const override {
             return this->getTarget() ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(0.0f, 0.0f, 0.0f);
         }
+
+        inline virtual bool hasInteraction() const {
+            return true;
+        }
+
+        inline virtual void interact(Particle& other) {
+            if(Zombie* zombie = dynamic_cast<Zombie*>(&other)) {
+                if(this->isTouching(*zombie)) {
+                    zombie->damage(1);
+                }
+            }
+        }
+
+
 };
 
 #endif

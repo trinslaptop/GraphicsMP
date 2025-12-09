@@ -133,6 +133,11 @@ MCEngine::MCEngine(const std::string& player_name)
         this->_player->jump();
     });
 
+    // Konami cheat code for invulnerability
+    this->_im->on({input::key(GLFW_KEY_UP), input::key(GLFW_KEY_UP), input::key(GLFW_KEY_DOWN), input::key(GLFW_KEY_DOWN), input::key(GLFW_KEY_LEFT), input::key(GLFW_KEY_RIGHT), input::key(GLFW_KEY_LEFT), input::key(GLFW_KEY_RIGHT)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        this->_player->setInvulnerable(!this->_player->isInvulnerable());
+    }, input::Event::Press, 1.0f);
+
     // Cursor to rotate camera or zoom
     this->_im->on_axis(input::AxisType::Cursor, [this](const glm::vec2 pos) {
         if(this->_im->is_down(input::mouse(GLFW_MOUSE_BUTTON_LEFT)) && (this->_im->is_down(input::key(GLFW_KEY_LEFT_SHIFT)) || this->_im->is_down(input::key(GLFW_KEY_RIGHT_SHIFT)))) {
@@ -656,7 +661,7 @@ void MCEngine::_updateScene() {
     
     this->_world->update(deltaTime);
 
-    if(this->_macguffin->isTouching(this->_player)) {
+    if(this->_macguffin->isTouching(*this->_player)) {
         this->_score++;
         this->_macguffin->scatter();
 

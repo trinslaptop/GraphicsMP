@@ -306,22 +306,31 @@ class World final : public mcmodel::Drawable, NonCopyable {
         }
 
         inline void update(GLfloat deltaTime) {
-            // Update particles and entities
-            for(auto& entry : this->_particles) {
-                entry.second->update(deltaTime);
+            // Update particles and remove dead ones
+            for(auto iter = this->_particles.begin(); iter != this->_particles.end();) {
+                if(!iter->second || iter->second->isDead()) {
+                    iter = this->_particles.erase(iter);
+                } else {
+                    iter->second->update(deltaTime);
+                    ++iter;
+                }
+            }
+
+            // Process interactions
+            // TODO: make this faster by limiting interaction range
+            for(auto& particle : this->_particles) {
+                if(particle.second->hasInteraction()) {
+                    for(auto& other : this->_particles) {
+                        if(particle.second.get() != other.second.get() && other.second->hasInteraction()) {
+                            particle.second->interact(*other.second);
+                        }
+                    }
+                }
             }
         }
 
         inline void add(std::shared_ptr<Particle> particle) {
             this->_particles[particle->getUUID()] = particle;
-        }
-
-        inline void remove(std::shared_ptr<Particle> particle) {
-            this->_particles.erase(particle->getUUID());
-        }
-
-        inline void remove(const Particle& particle) {
-            this->_particles.erase(particle.getUUID());
         }
 };
 

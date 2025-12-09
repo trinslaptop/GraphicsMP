@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 
+/// Axis-Aligned Bounding Box
 struct AABB {
     const glm::vec3 min, max;
 
@@ -43,6 +44,7 @@ struct AABB {
     }
 };
 
+/// Entities are more advanced particles with gameplay features like AABB collision
 class Entity : public Particle {
     private:
         bool _hidden = false, _invulnerable = false;
@@ -55,7 +57,7 @@ class Entity : public Particle {
         World& _world;
     public:
         /// During this timeframe after taking damage, entities are temporarily immune to additional damage
-        static constexpr float HURT_DURATION = 2.0f;
+        static constexpr float HURT_DURATION = 1.5f;
 
         inline explicit Entity(World& world) : _world(world) {}
 
@@ -65,6 +67,7 @@ class Entity : public Particle {
         inline virtual float getHeight() const = 0;
         inline virtual float getEyeHeight() const = 0;
         inline virtual float getRadius() const = 0;
+
         inline virtual const glm::vec3 getVelocity() const {
             return glm::vec3(0.0f, 0.0f, 0.0f);
         };
@@ -102,6 +105,11 @@ class Entity : public Particle {
             this->_rotation = glm::mod(rotation, 2.0f*glutils::PI);
         }
 
+        inline virtual const glm::vec3 getRotation() const final {
+            return this->_rotation;
+        }
+
+
         inline virtual int getHealth() const final {
             return this->_health;
         }
@@ -110,6 +118,8 @@ class Entity : public Particle {
             return this->_hurttime;
         }
 
+        /// Directly modifies the entity health
+        /// NOTE: If you're trying to deal damage to the entity use damage() instead
         inline virtual void setHealth(const int health) final {
             this->_health = glm::clamp(health, 0, this->getMaxHealth());
         }
@@ -122,15 +132,12 @@ class Entity : public Particle {
             return this->_invulnerable;
         }
 
-        inline virtual void damage(const int amount = 1) final {
-            if(!this->isInvulnerable() && this->_hurttime == 0.0f && this->getHealth() > 0) {
+        /// Deals damage to the entity, if absolute is true ignores invulnerability
+        inline virtual void damage(const int amount = 1, bool absolute = false) final {
+            if((!this->isInvulnerable() || absolute) && this->_hurttime == 0.0f && this->getHealth() > 0) {
                 this->setHealth(this->getHealth() - amount);
                 this->_hurttime = Entity::HURT_DURATION;
             }
-        }
-
-        inline virtual const glm::vec3 getRotation() const final {
-            return this->_rotation;
         }
 
         inline virtual const AABB getAABB() const final {
@@ -140,28 +147,28 @@ class Entity : public Particle {
             };
         }
 
-        inline virtual void remove() const final {
-            this->getWorld().remove(*this);
-        }
-
+        /// Gets the amount of overlap along each axis, directionless
         inline virtual const glm::vec3 getOverlap(const AABB& other) const final {
             return AABB::getOverlap(this->getAABB(), other);
         }
 
-        inline virtual const glm::vec3 getOverlap(const std::shared_ptr<Entity> other) const final {
-            return AABB::getOverlap(this->getAABB(), other->getAABB());
+        /// Gets the amount of overlap along each axis, directionless
+        inline virtual const glm::vec3 getOverlap(const Entity& other) const final {
+            return AABB::getOverlap(this->getAABB(), other.getAABB());
         }
 
+        /// Gets the minumum translation vector needed to rectify collision
         inline virtual const glm::vec3 getMTV(const AABB& other) const final {
             return AABB::getMTV(this->getAABB(), other);
         }
 
-        inline virtual const glm::vec3 getMTV(const std::shared_ptr<Entity> other) const final {
-            return AABB::getMTV(this->getAABB(), other->getAABB());
+        /// Gets the minumum translation vector needed to rectify collision
+        inline virtual const glm::vec3 getMTV(const Entity& other) const final {
+            return AABB::getMTV(this->getAABB(), other.getAABB());
         }
 
-
-        inline virtual bool isTouching(const std::shared_ptr<Entity> other) const final {
+        /// Returns true if two entities touch
+        inline virtual bool isTouching(const Entity& other) const final {
             return glm::all(glm::greaterThan(this->getOverlap(other), glm::vec3(0.0f, 0.0f, 0.0f)));
         }
 
@@ -186,6 +193,7 @@ class Entity : public Particle {
             return this->_hidden;
         }
 
+        /// Gets the total time this entity has been alive
         inline virtual double getLifetime() const final {
             return this->_lifetime;
         }
@@ -194,6 +202,7 @@ class Entity : public Particle {
             return this->_world;
         }
 
+        /// True if the entity is in the air or a non-solid block
         inline virtual bool isInAir() const final {
             const std::shared_ptr<Block> block = this->getWorld().getBlock(this->getPosition() - glm::vec3(0.0f, 1.0f, 0.0f));
             return (!block || !block->isSolid()) && this->getPosition().y != this->getWorld().getTerrainHeight(this->getPosition().x, this->getPosition().z);
@@ -230,7 +239,7 @@ class Entity : public Particle {
             this->setPosition(this->getPosition() + deltaTime*glm::vec3(glm::vec4(this->getVelocity(), 0.0f)*glm::rotate(glm::mat4(1.0f), -this->getRotation().x, this->getUpVector())) - deltaTime*glm::vec3(0.0f, this->getGravity(), 0.0f)); // This isn't how actually gravity works but it good enough for now
             
             if(this->getPosition().y < 0.0f) {
-                this->damage();
+                this->damage(1, true);
             }
         }
 };
