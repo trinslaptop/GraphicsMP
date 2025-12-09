@@ -1,22 +1,16 @@
-Trin Wasinger (Idril, Player 1)
+Trin Wasinger (Idril)
 twasinger at mines dot edu
-
-Samvat Dangol (Fuyuzetsu Toyota, Player 2)
-sdangol1 at mines dot edu
-
-Thuan Nguyen (Jon Snow, Player 3)
-thuannguyen at mines dot edu
 
 Guild: Colorado School of Mines of Moria
 
-Midterm Project (2025-11-06)
+A4 (2025-12-12)
 
 # Description
-This program renders a basic 3d world (art inspired by Minecraft) with three players that can be moved around and viewed from
-several different cameras. Additionally, it also implements Phong Illumination and several types of lights.
+This program renders a 3d cube world (art inspired by Minecraft) and implements AABB collision. The player can run around collecting 
+as many diamonds as possible while avoiding zombies!
 
 # Usage
-To run the program, first compile it (see below), then look for a `mp` or `mp.exe` in the build directory and execute it.
+To run the program, first compile it (see below), then look for a `a4` or `a4.exe` in the build directory and execute it.
 Make sure you are in this current directory containing the shaders and assets folder when running!
 
 This program has a variety of different inputs:
@@ -29,46 +23,69 @@ This program has a variety of different inputs:
  + S - Moves player backward along heading
  + A - Rotates player right
  + D - Rotates player left
- + 1 through 3 - Selects different players
- + C - Switches between arcball and freecam in primary view
- + V - Switches between first person, skycam, and no camera in secondary view
- + Space - Takes screenshot
- + P - Plays md5camera movie (See notes below)
-For debugging:
- + Z - prints player position
+ + SPACE - Jump
+ + F5 - Switches between arcball and freecam in primary view
+ + F4 - Switches between first person, skycam, and no camera in secondary view
+ + F2 - Take PNG screenshot
+ + F3 - Toggle debug HUD (Position, region, etc...)
+ + Secret cheat codes (try classic ones)?
+
+This program also supports console commands for debugging on stdin:
+(These aren't intended for normal use and may have unexpected effects!)
+ + `exit` - Exits the program
+ + `tp x y z` - Moves player to a given position (insert numbers for x, y, z)
+ + `setblock x y z name` - Places a block in the world, valid blocks are `air`, `planks`, `leaves`, `log`, `glass`, 
+   `amethyst`, `mushroom`, and `tallgrass` (insert integers for x, y, z) 
+ + `summon zombie` - Adds an additional zombie to the game
+ + `md5play path/to/file.txt` - Plays an MD5 camera track file
+ + `unstuck` - Resets player and diamond positions
+ + Secret cheat codes?
 
 # Compiling
-Compile like normal with cmake and make. If on Linux, you can just run `./run.sh` to regenerate, compile,
-and run the program.
+Compile like normal with cmake and make. If on Linux, you can just run `./run.sh` to regenerate, compile, and run the program.
+
+If you're on Linux and have HTTPS capable libcurl, you can set `-DUSE_CURL=True` for cmake. Doing so and providing a real Minecraft username
+as the first argument on the command will fetch and use that player's Minecraft skin (and cape if applicable)! This requires a network connection!
+
+E.g. `./run.sh -DUSE_CURL=True -- Technoblade`
 
 # Bugs, Notes, Etc...
-Idril based the graphics for this project on Minecraft; however, all the textures are their own or were made by a (non-Mines) friend that
-Idril has explicit permission to use. The player textures are our custom Minecraft skins. The format is exactly the same, so you can
-drop in a different valid Minecraft skin and update the texture path at the end of `mSetupBuffers()`, and it should work.
+I based the graphics for this project on Minecraft; however, all the textures are my own or were made by a (non-Mines) friend that
+I have explicit permission to use. Like last time, the player skin format is exactly the same as official Minecraft ones. There's my skin builtin,
+but see the notes above about using libcurl to fetch any player's skin.
 
-The player has a basic idle animation consisting of arm swing, minor head rotation, and cape blowing. While walking, there is also a leg
+The goal is to collect as many diamonds as possible without dying. When you pick up one, another is placed randomly. The ground and most blocks have
+collision, but leaves don't so that you can intentionally move through them. You can see your health, diamonds, and deaths on the screen. When you
+pick up a diamond, there is a chance another zombie will spawn. If you or zombies fall off the world, they will die. When zombies hit the player or
+each other, they have a chance to deal damage. After dying, the player respawns and the death counter goes up. When the player or zombies take damage,
+they animate going red and recoiling from the hit.
+
+Press F3 to enable debug view and see the collision checks. I think it's really cool to watch! Green cubes are the areas it checks, white is the hitbox.
+
+The zombies slowly track the player but can get stuck behind blocks since they have no path finding.
+
+The player and zombie have a basic idle animation consisting of arm swing, minor head rotation, and cape blowing. While walking, there is also a leg
 swing animation.
 
 The world has several objects made out of "blocks". There are trees, mushrooms, grass, a pyramid of amethyst, and a few others things
 scattered around the world. The grass and leaves wave in the wind, and the mushrooms have animated textures (A lot of the animations are
 pretty subtle so as to not be garish). There's also indicators of where light sources are. The torch atop the pyramid is a slightly orange
-point light, the three spotlights have shells at their source, and the directional light comes from approximately the sun's angle. All applicable
-lights are attenuated. If you stand under the spotlights, you can see the different RGB colors mix depending on cone overlap.
+point light, and the directional light comes from approximately the sun's angle. All applicable lights are attenuated. 
 
-The world is a 64x64(x64) level. It has a hidden grid at y=0 carried over from A3, but it also has a tessellated patch surface with a grass texture.
-Players move along and are oriented with this terrain. Instead of using bezier curves, it is based off of a sine and cosine equation that
-was designed to give pretty results.
+The world is a 64x64 block level. It has a hidden grid at y=0 carried over from A3, but it also has a tessellated bezier patch surface with a grass
+texture to create nice hills and elevation. These are procedurally generated with Perlin-like noise. Players and zombies move with the terrain.
+In the MP, the player was oriented with the terrain too; however, I removed this feature because I personally didn't like how it looked, and it overly
+complicated AABB collision and jumping.
 
 The skybox uses a cubemap to efficiently render the textures around the player. This was based on https://learnopengl.com/Advanced-OpenGL/Cubemaps,
-and used a free skybox texture from http://www.humus.name.
+and used a free skybox texture from http://www.humus.name. There is also a animated cloud plane. Look for easter eggs in the clouds... there's a heart
+and my name.
 
-In addition to the required cameras, there's also a bonus skycamera that can be shown in the secondary viewport. You can also play md5camera tracks
-(format described on the class website) by pressing P in-game and entering a file name into the console (Note: not prompted at startup so as to not
-block normal usage). There's a sample track in the data folder. To generate camera tracks, you can use edit the md5camera.py script to easily add
-rotations around a point, movements along a line, and more. 
+In addition to the arcball camera and free camera, there's also a bonus skycamera and first person view that can be shown in the secondary viewport.
+You can also play md5camera tracks (format described on the class website) via the console. There's a sample track in the data folder. To generate
+camera tracks, you can use edit the md5camera.py script to easily add rotations around a point, movements along a line, and more. 
 
 Some additional but not required features:
- - Basic collision on solid blocks
  - Tinted textures (e.g. grass.png is white and is then multiplied by a variable green color, all spotlights use the same texture)
  - Animated textures from vertically stacked texture files
  - Using textures for specular color and shininess
@@ -79,15 +96,13 @@ Some helper classes were implemented as header-only files; while not ideal for c
 
 One minor known bug/artifact is that moving too far from the player may cause the different layers (e.g. arm vs sleeve) to start z-fighting.
 
+Gravity isn't physically accurate, but it still looks and plays fine. It is occasionally possible to glitch through blocks.
+
 # Class Stuff
-Contributions:
- - Idril - This project was *heavily* built on Trin's A3 which provided a lot of needed features already, also did the skybox, terrain,
-   and a bunch of other features for fun that aren't required but look cool (animated textures, waving plants, tinted textures)
- - Toyota - XCode bug fixes, added additional players
- - Jon Snow - Spotlights, controls, added character
+This was based on my A3 and midterm project.
 
-This assignment took around 16 hours in addition to the work carried over from Idril's A3.
+This assignment took an insane amount of time. I have no idea exactly how much but many full days were spent on it.
 
-The labs were helpful guidance for A3 and a starting point for some features, but weren't used much here (7/10).
+The billboarding lab was helpful, but I did the collision from scratch (5/10).
 
 This was very a fun assignment, and I think it looks awesome (10/10)!

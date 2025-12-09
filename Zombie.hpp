@@ -121,7 +121,7 @@ class Zombie final : public Entity {
 
         inline virtual void interact(Particle& other) {
             if(Zombie* zombie = dynamic_cast<Zombie*>(&other)) {
-                if(this->isTouching(*zombie)) {
+                if(this->isTouching(*zombie) && f8::randb(0.1f)) {
                     zombie->damage(1);
                 }
             }
