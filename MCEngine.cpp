@@ -403,12 +403,18 @@ void MCEngine::mSetupBuffers() {
     this->_world->add(this->_macguffin);
     this->_macguffin->scatter();
 
-    // Summon a zombie
+    this->add_zombie();
+}
+
+/// Summons a new zombie
+void MCEngine::add_zombie(const glm::vec3 pos) {
     const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(*this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
     zombie->setTarget(this->_player);
-    zombie->setHealth(9999);
+    zombie->setHealth(zombie->getMaxHealth());
+    zombie->setPosition(pos);
     this->_world->add(zombie);
 }
+
 
 /// Generates a tree at pos with variable log height
 void MCEngine::_place_tree(const glm::ivec3 pos, const size_t height) {
@@ -568,11 +574,7 @@ void MCEngine::_handleConsoleInput() {
         stream >> name;
 
         if(name == "zombie") {
-            const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(*this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
-            zombie->setTarget(this->_player);
-            zombie->setHealth(9999);
-            zombie->setPosition({0, 0, 0});
-            this->_world->add(zombie);
+            this->add_zombie();
         } else {
             fprintf(stderr, "[ERROR]: Unknown creature\n");
         }
@@ -651,6 +653,11 @@ void MCEngine::_updateScene() {
     if(this->_macguffin->isTouching(this->_player)) {
         this->_score++;
         this->_macguffin->scatter();
+
+        // Summon a new zombie sometimes
+        if(f8::randb(0.33f)) {
+            this->add_zombie();
+        }
     }
 
     // Play movie

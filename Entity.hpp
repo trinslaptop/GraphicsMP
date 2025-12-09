@@ -230,7 +230,7 @@ class Entity : public Particle {
             this->setPosition(this->getPosition() + deltaTime*glm::vec3(glm::vec4(this->getVelocity(), 0.0f)*glm::rotate(glm::mat4(1.0f), -this->getRotation().x, this->getUpVector())) - deltaTime*glm::vec3(0.0f, this->getGravity(), 0.0f)); // This isn't how actually gravity works but it good enough for now
             
             if(this->getPosition().y < 0.0f) {
-                this->damage(this->getMaxHealth());
+                this->damage();
             }
         }
 };
