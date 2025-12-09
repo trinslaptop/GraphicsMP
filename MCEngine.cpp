@@ -583,6 +583,9 @@ void MCEngine::_handleConsoleInput() {
         } else {
             fprintf(stderr, "[ERROR]: Unknown creature\n");
         }
+    } else if(cmd =="unstuck") {
+        this->_player->setPosition({32.0f, 0.0f, 32.0f});
+        this->_macguffin->scatter();
     } else if(f8::cyrb(cmd) == 18374542636879944076U) {
         // No hints for you unless you break the hash!
         fprintf(stdout, "Diamond is at %f, %f, %f\n", this->_macguffin->getPosition().x, this->_macguffin->getPosition().y, this->_macguffin->getPosition().z);

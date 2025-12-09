@@ -146,7 +146,7 @@ class MCEngine final : public CSCI441::OpenGLEngine {
         void _place_tree(const glm::ivec3 pos, const size_t height = 5);
 
         /// Summons a new zombie
-        void add_zombie(const glm::vec3 pos = glm::vec3(1.0, 0.0f, 1.0f));
+        void add_zombie(const glm::vec3 pos = glm::vec3(4.0, 0.0f, 4.0f));
 };
 
 /*** C Callbacks ***/
