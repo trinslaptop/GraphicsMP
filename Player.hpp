@@ -35,6 +35,8 @@ class Player final : public Entity {
         CSCI441::FixedCam _skycamera;
         CSCI441::FixedCam _fpcamera;
 
+        glm::vec3 _velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+
         inline void _updateCameras() {
             this->_arcballcamera.setLookAtPoint(this->getEyePosition());
             this->_arcballcamera.recomputeOrientation();
@@ -120,6 +122,11 @@ class Player final : public Entity {
             std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glutils::PI/8.0f * glm::sin(3.0f*glm::length(this->getPosition())));
         
             this->_updateCameras();
+
+            // Again, not how physics works but I don't care for now
+            if(this->isInAir()) {
+                this->_velocity.y = glm::max(0.0f, this->_velocity.y - deltaTime*this->getGravity());
+            }
         }
 
         inline virtual void draw(glutils::RenderContext& ctx) const override {
@@ -150,7 +157,13 @@ class Player final : public Entity {
         }
 
         inline virtual const glm::vec3 getVelocity() const override {
-            return glm::vec3(0.0f, 0.0f, 0.0f);//TODO:
+            return this->_velocity;
+        }
+
+        inline void jump(const float strength = 15.0f) {
+            if(!this->isInAir()) {
+                this->_velocity.y = strength;
+            }
         }
 };
 #endif
