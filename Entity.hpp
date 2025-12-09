@@ -226,7 +226,6 @@ class Entity : public Particle {
                 this->damage(this->getMaxHealth());
             }
         }
-
 };
 
 #endif
