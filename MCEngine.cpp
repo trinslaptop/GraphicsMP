@@ -551,6 +551,19 @@ void MCEngine::_handleConsoleInput() {
         } else {
             this->_world->setBlock(glm::vec3(x, y, z), block->second);
         }
+    } else if(cmd == "summon") {
+        std::string name;
+        stream >> name;
+
+        if(name == "zombie") {
+            const std::shared_ptr<Zombie> zombie = std::make_shared<Zombie>(this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/zombie.png"), this->_tm->load("assets/textures/dull.png")});
+            zombie->setTarget(this->_player);
+            zombie->setHealth(9999);
+            zombie->setPosition({0, 0, 0});
+            this->_world->add(zombie);
+        } else {
+            fprintf(stderr, "[ERROR]: Unknown creature\n");
+        }
     } else if(cmd == "md5play") {
         stream >> std::ws;
         this->_movie = md5camera::load(std::string(std::istreambuf_iterator<char>(stream), {}).c_str());
@@ -608,6 +621,8 @@ void MCEngine::_updateScene() {
     GLfloat currTime = (GLfloat) glfwGetTime();
     GLfloat deltaTime = currTime - _lastTime;
     this->_lastTime = currTime;
+
+    this->_pr->sprite(std::to_string(1.0f/deltaTime), {0, 0.5, 0}, {1.0f, 1.0f, 1.0f}, 1/32.0f);
 
     this->_shader_globals->setUniform("time", currTime);
 
