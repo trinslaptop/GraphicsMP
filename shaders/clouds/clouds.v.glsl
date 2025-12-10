@@ -1,6 +1,11 @@
 #version 410 core
 
-#include "../globals.glsl"
+layout(std140) uniform Globals {
+    mat4 projection;
+    mat4 view;
+    float time;
+    vec3 eyePos;
+};
 
 uniform float height = 62.0;
 uniform float scale = 512.0;

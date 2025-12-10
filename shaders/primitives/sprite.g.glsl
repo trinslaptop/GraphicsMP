@@ -3,11 +3,25 @@
 layout(points) in;
 layout(triangle_strip, max_vertices = 4) out;
 
-#include "../globals.glsl"
+layout(std140) uniform Globals {
+    mat4 projection;
+    mat4 view;
+    float time;
+    vec3 eyePos;
+};
 
 // Since GLSL lacks enums, use constants and include the same file on the C++ side in PrimitiveRenderer.hpp
 const int
-#include "SpriteMode.glsl"
+UI_ANCHOR_CENTER = 0,
+
+/// Renders a sprite flat on the UI with it's lower left corner at the given position (ignores z pos)
+UI_ANCHOR_CORNER = 1,
+
+/// Renders a billboarded sprite in the 3D world
+PARTICLE = 2,
+
+/// Computes size without actually drawing sprite
+HIDDEN = 3
 ;
 
 uniform sampler2D diffuseTexture;

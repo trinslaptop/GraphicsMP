@@ -3,7 +3,12 @@
 layout(points) in;
 layout(line_strip, max_vertices = 2) out;
 
-#include "../globals.glsl"
+layout(std140) uniform Globals {
+    mat4 projection;
+    mat4 view;
+    float time;
+    vec3 eyePos;
+};
 
 uniform vec3 pos1 = vec3(0.0);
 uniform vec3 pos2 = vec3(1.0);

@@ -1,6 +1,11 @@
 #version 410 core
 
-#include "globals.glsl"
+layout(std140) uniform Globals {
+    mat4 projection;
+    mat4 view;
+    float time;
+    vec3 eyePos;
+};
 
 uniform mat4 modelMatrix;
 uniform mat3 normalMatrix;

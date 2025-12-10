@@ -2,7 +2,12 @@
 
 layout(quads, equal_spacing, ccw) in;
 
-#include "../globals.glsl"
+layout(std140) uniform Globals {
+    mat4 projection;
+    mat4 view;
+    float time;
+    vec3 eyePos;
+};
 
 uniform mat4 modelMatrix;
 
