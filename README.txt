@@ -98,6 +98,8 @@ One minor known bug/artifact is that moving too far from the player may cause th
 
 Gravity isn't physically accurate, but it still looks and plays fine. It is occasionally possible to glitch through blocks.
 
+I implemented a bunch of other utilities like an `#include` processor and `json` parser for this project!
+
 # Class Stuff
 This was based on my A3 and midterm project.
 

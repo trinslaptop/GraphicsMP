@@ -9,6 +9,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+/// Wraps an OpenGL UBO to allow sharing shader uniforms. Bind once and it's set.
 class UniformBufferObject final {
     private:
         GLuint _buffer, _binding;
