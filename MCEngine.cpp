@@ -37,7 +37,7 @@ inline char const* get_gl_error_message(GLenum const err) noexcept {
 /*** Engine Interface ***/
 
 MCEngine::MCEngine(const std::string& player_name)
-    : CSCI441::OpenGLEngine(4, 1, 720, 720, "Minceraft"),
+    : CSCI441::OpenGLEngine(4, 1, 720*3, 720*3, "Minceraft"),
     _player_name(player_name),
     _freecam(nullptr),
     _fixedcam(nullptr),

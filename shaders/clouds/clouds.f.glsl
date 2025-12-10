@@ -1,6 +1,11 @@
 #version 410 core
 
-#include "../globals.glsl"
+layout(std140) uniform Globals {
+    mat4 projection;
+    mat4 view;
+    float time;
+    vec3 eyePos;
+};
 
 uniform sampler2D clouds;
 uniform float scale = 512.0;

@@ -1,8 +1,8 @@
 #ifndef SHADERPROGRAM_HPP
 #define SHADERPROGRAM_HPP
 
-#include "include/mcpre.hpp"
-#include <string>
+//#include "include/mcpre.hpp"
+//#include <string>
 
 /*
  * ShaderProgram.hpp
@@ -17,7 +17,9 @@
 /////////////////////////////////////////
 
 // Include CSCI441/ShaderUtils.hpp but overwrite compileShader()
+/*
 #define compileShader _compileShader
+#include <iostream>
 #include <CSCI441/ShaderUtils.hpp>
 #undef compileShader
 
@@ -31,6 +33,10 @@ namespace CSCI441_INTERNAL::ShaderUtils {
 
         // Read in and preprocess text file
         if(!(shaderString = mcpre::preprocess(filename, {}, {"include", "pragma"})).empty()) {
+
+
+std::cout<<shaderString;
+
             // Generate a shader handle for the corresponding shader type
             const GLuint shaderHandle = glCreateShader(shaderType);
 
@@ -50,7 +56,7 @@ namespace CSCI441_INTERNAL::ShaderUtils {
             return 0;
         }
     }
-}
+}*/
 
 // Now include CSCI441/ShaderProgram.hpp. Since CSCI441/ShaderUtils.hpp is included
 // above and it has a proper include guard, it won't get included again, and
