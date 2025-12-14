@@ -49,6 +49,7 @@ class Entity : public Particle {
     private:
         bool _hidden = false, _invulnerable = false;
         glm::vec3 _position = {0.0f, 0.0f, 0.0f};
+        glm::vec3 _last_position = {0.0f, 0.0f, 0.0f};
         glm::vec3 _rotation = {0.0f, 0.0f, 0.0f};
         double _lifetime = 0.0f;
         int _health = 0;
@@ -99,6 +100,10 @@ class Entity : public Particle {
 
         inline virtual const glm::vec3 getPosition() const final {
             return this->_position;
+        }
+
+        inline virtual const glm::vec3 getLastPosition() const final {
+            return this->_last_position;
         }
 
         inline virtual void setRotation(const glm::vec3 rotation) final {
@@ -235,6 +240,7 @@ class Entity : public Particle {
         inline virtual void update(const float deltaTime) override {
             this->_lifetime += deltaTime;
             this->_hurttime = glm::max(0.0f, this->_hurttime - deltaTime);
+            this->_last_position = this->_position;
 
             this->setPosition(this->getPosition() + deltaTime*glm::vec3(glm::vec4(this->getVelocity(), 0.0f)*glm::rotate(glm::mat4(1.0f), -this->getRotation().x, this->getUpVector())) - deltaTime*glm::vec3(0.0f, this->getGravity(), 0.0f)); // This isn't how actually gravity works but it good enough for now
             

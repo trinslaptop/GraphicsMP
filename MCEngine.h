@@ -17,7 +17,6 @@
 #include <unordered_map>
 
 #include "ShaderProgram.hpp"
-#include "Particle.hpp"
 #include "MacGuffin.hpp"
 #include "input.hpp"
 #include "mcmodel.hpp"

@@ -15,6 +15,7 @@
 #include "include/json.hpp"
 
 #include "get_player.hpp"
+#include "Particle.hpp"
 #include "Zombie.hpp"
 
 static constexpr GLfloat GLM_PI = glm::pi<float>();
@@ -107,6 +108,9 @@ MCEngine::MCEngine(const std::string& player_name)
             this->_freecam->moveForward(20.0f*deltaTime);
         } else {
             this->_player->setPosition(this->_player->getPosition() + this->_player->getForwardVector()*5.0f*deltaTime);
+            if(f8::randb(0.2f) && !this->_player->isInAir()) {
+                this->_player->getWorld().add(std::make_shared<DustParticle>(this->_player->getPosition(), this->_player->getRadius()));
+            }
         }
     }, input::Event::Hold);
 
@@ -116,6 +120,9 @@ MCEngine::MCEngine(const std::string& player_name)
             this->_freecam->moveBackward(20.0f*deltaTime);
         } else {
             this->_player->setPosition(this->_player->getPosition() - this->_player->getForwardVector()*5.0f*deltaTime);
+            if(f8::randb(0.2f) && !this->_player->isInAir()) {
+                this->_player->getWorld().add(std::make_shared<DustParticle>(this->_player->getPosition(), this->_player->getRadius()));
+            }
         }
     }, input::Event::Hold);
 
@@ -653,6 +660,13 @@ void MCEngine::_updateScene() {
     this->_player->update(deltaTime);
     
     this->_world->update(deltaTime);
+
+    if(f8::randb(0.05f)) {
+        this->_world->add(std::make_shared<SmokeParticle>(glm::vec3(17.5f, 4.5f, 17.5f)));
+    }
+    if(f8::randb(0.025f)) {
+        this->_world->add(std::make_shared<TorchParticle>(glm::vec3(17.5f, 4.5f, 17.5f)));
+    }
 
     if(this->_macguffin->isTouching(*this->_player)) {
         this->_score++;
