@@ -1,6 +1,7 @@
 #ifndef MCPRE_HPP
 #define MCPRE_HPP
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <regex>
 #include <stack>
@@ -99,7 +100,7 @@ namespace mcpre {
                 rules.push_back({std::regex("^\\s*#include\\s+\"([^\"]*)\"(?:\\s*?//.*?)?\\s*$"), [&](auto match) {
                     try {
                         const std::filesystem::path path = std::filesystem::canonical(std::filesystem::path(files.top().first).parent_path() / std::string(match[1]));
-                        if(!excludes.count(path)) {
+                        if(!excludes.count(path.string())) {
                             std::ifstream include(path);
                             if(include.is_open()) files.push({path, std::move(include)});
                         }
@@ -128,7 +129,7 @@ namespace mcpre {
 
 			if(features.find("pragma") != features.end()) {
                 rules.push_back({std::regex("^\\s*#pragma\\s+once(?:\\s*?//.*?)?\\s*$"), [&](auto match) {
-                    excludes.insert(files.top().first);
+                    excludes.insert(files.top().first.string());
                     return "";
                 }});
         
