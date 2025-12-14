@@ -9,6 +9,7 @@
  */
 
 #include "glutils.hpp"
+#include "include/json.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/matrix.hpp>
@@ -158,8 +159,8 @@ namespace mcmodel {
             
             bool hidden;
             
-            inline Group(
-                std::initializer_list<std::shared_ptr<Drawable>> children,
+            template<typename T> inline Group(
+                const T& children,
                 const glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
                 const glm::vec3 rotation = glm::vec3(0.0f, 0.0f, 0.0f),
                 const glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f),
@@ -330,6 +331,85 @@ namespace mcmodel {
                 size*glm::vec3(0, 0, 1), size*glm::vec3(1, 0, 1), size*glm::vec3(1, 1, 1), size*glm::vec3(0, 1, 1)
             }, texOffset, glm::vec2(size.x, size.y)/texScale)
         }, -size/2.0f);
+    }
+
+    /// Loads a model from JSON, see README
+    inline std::shared_ptr<Drawable> from_json(const ShaderProgram &shader, glutils::TextureManager& tm, const std::any& data) {
+        auto root = json::cast::object(data);
+        const std::string type = json::cast::string(root["type"]);
+
+        // Currently doesn't support mcmodel::wrapped_cube
+        if(type == "cube") {
+            const auto textures = json::cast::list(root["textures"]);
+            const glm::vec3 pos = glm::vec3(
+                json::is::empty(root["pos"]) ? 0.0f : json::cast::number(json::cast::list(root["pos"])[0]),
+                json::is::empty(root["pos"]) ? 0.0f : json::cast::number(json::cast::list(root["pos"])[1]),
+                json::is::empty(root["pos"]) ? 0.0f : json::cast::number(json::cast::list(root["pos"])[2])
+            );
+            const glm::vec3 size = glm::vec3(
+                json::is::empty(root["size"]) ? 1.0f : json::cast::number(json::cast::list(root["size"])[0]),
+                json::is::empty(root["size"]) ? 1.0f : json::cast::number(json::cast::list(root["size"])[1]),
+                json::is::empty(root["size"]) ? 1.0f : json::cast::number(json::cast::list(root["size"])[2])
+            );
+            if(textures.size() == 2) {
+                return cube(shader, std::array<std::array<GLuint, 2>, 1> {tm.load(json::cast::string(textures[0])), tm.load(json::cast::string(textures[1]))}, pos, size);
+            } else {
+                return cube(shader, std::array<std::array<GLuint, 2>, 6> {
+                    std::array<GLuint, 2> {tm.load(json::cast::string(textures[0])), tm.load(json::cast::string(textures[1]))},
+                    std::array<GLuint, 2> {tm.load(json::cast::string(textures[2])), tm.load(json::cast::string(textures[3]))},
+                    std::array<GLuint, 2> {tm.load(json::cast::string(textures[4])), tm.load(json::cast::string(textures[5]))},
+                    std::array<GLuint, 2> {tm.load(json::cast::string(textures[6])), tm.load(json::cast::string(textures[7]))},
+                    std::array<GLuint, 2> {tm.load(json::cast::string(textures[8])), tm.load(json::cast::string(textures[9]))},
+                    std::array<GLuint, 2> {tm.load(json::cast::string(textures[10])), tm.load(json::cast::string(textures[11]))}
+                }, pos, size);
+            }
+        } else if(type == "cross") {
+            const auto textures = json::cast::list(root["textures"]);
+            const glm::vec3 pos = glm::vec3(
+                json::is::empty(root["pos"]) ? 0.0f : json::cast::number(json::cast::list(root["pos"])[0]),
+                json::is::empty(root["pos"]) ? 0.0f : json::cast::number(json::cast::list(root["pos"])[1]),
+                json::is::empty(root["pos"]) ? 0.0f : json::cast::number(json::cast::list(root["pos"])[2])
+            );
+            const float size = json::is::empty(root["size"]) ? 1.0f : json::cast::number(json::cast::list(root["size"])[0]);
+            return cross(shader, std::array<GLuint, 2> {tm.load(json::cast::string(textures[0])), tm.load(json::cast::string(textures[1]))}, pos, size);
+        } else if(type == "group") {
+            const glm::vec3 pos = glm::vec3(
+                json::is::empty(root["pos"]) ? 0.0f : json::cast::number(json::cast::list(root["pos"])[0]),
+                json::is::empty(root["pos"]) ? 0.0f : json::cast::number(json::cast::list(root["pos"])[1]),
+                json::is::empty(root["pos"]) ? 0.0f : json::cast::number(json::cast::list(root["pos"])[2])
+            );
+            const glm::vec3 rotation = glm::vec3(
+                json::is::empty(root["rotation"]) ? 0.0f : json::cast::number(json::cast::list(root["rotation"])[0]),
+                json::is::empty(root["rotation"]) ? 0.0f : json::cast::number(json::cast::list(root["rotation"])[1]),
+                json::is::empty(root["rotation"]) ? 0.0f : json::cast::number(json::cast::list(root["rotation"])[2])
+            );
+            const glm::vec3 scale = glm::vec3(
+                json::is::empty(root["scale"]) ? 1.0f : json::cast::number(json::cast::list(root["scale"])[0]),
+                json::is::empty(root["scale"]) ? 1.0f : json::cast::number(json::cast::list(root["scale"])[1]),
+                json::is::empty(root["scale"]) ? 1.0f : json::cast::number(json::cast::list(root["scale"])[2])
+            );
+            const bool hidden = json::is::empty(root["hidden"]) ? false : json::cast::boolean(root["hidden"]);
+            
+            std::vector<std::shared_ptr<Drawable>> children;
+            for(auto& child : json::cast::list(root["children"])) {
+                children.push_back(from_json(shader, tm, child));
+            }
+
+            return std::make_shared<Group>(children, pos, rotation, scale, hidden);
+        } else if(type == "oscillate") {
+            return oscillate(shader, from_json(shader, tm, root["child"]), json::is::empty(root["value"]) ? 1.0f : json::cast::number(root["value"]));
+        } else if(type == "tint") {
+            const auto color = json::cast::list(root["color"]);
+            return tint(shader, from_json(shader, tm, root["child"]), glm::vec3(json::cast::number(color[0]), json::cast::number(color[1]), json::cast::number(color[2])));
+        } else if(type == "ignore_light") {
+            return ignore_light(shader, from_json(shader, tm, root["child"]));
+        } else if (type == "animtex") {
+            return animtex(shader, from_json(shader, tm, root["child"]), json::cast::number(root["frames"]), json::is::empty(root["time"]) ? 1.0f : json::cast::number(root["time"]));
+        } else if(type == "cullface") {
+            return cullface(from_json(shader, tm, root["child"]), json::is::empty(root["face"]) ? GL_BACK : (json::cast::string(root["face"]) == "front" ? GL_FRONT : GL_BACK));
+        } else {
+            return cube(shader, std::array<std::array<GLuint, 2>, 1> {1, 1});
+        }
     }
 }
 

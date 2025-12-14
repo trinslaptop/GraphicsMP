@@ -1,0 +1,10 @@
+{
+    "name": "glass",
+    "model": {
+        "type": "cube",
+        "textures": [
+            "assets/textures/block/glass.png",
+            "assets/textures/shiny.png"
+        ]
+    }
+}

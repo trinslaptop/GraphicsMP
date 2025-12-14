@@ -1,0 +1,14 @@
+{
+    "name": "log",
+    "model": {
+        "type": "cube",
+        "textures": [
+            "assets/textures/block/log_side.png", "assets/textures/dull.png",
+            "assets/textures/block/log_side.png", "assets/textures/dull.png",
+            "assets/textures/block/log_top.png", "assets/textures/dull.png",
+            "assets/textures/block/log_top.png", "assets/textures/dull.png",
+            "assets/textures/block/log_side.png", "assets/textures/dull.png",
+            "assets/textures/block/log_side.png", "assets/textures/dull.png"
+        ]
+    }
+}

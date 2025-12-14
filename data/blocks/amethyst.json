@@ -1,0 +1,10 @@
+{
+    "name": "amethyst",
+    "model": {
+        "type": "cube",
+        "textures": [
+            "assets/textures/block/amethyst.png",
+            "assets/textures/shiny.png"
+        ]
+    }
+}

@@ -43,6 +43,11 @@ namespace json {
 			return value.type() == typeid(NullT);
 		}
 
+		/// Returns true if `value` does not exists (possible via map indexing with nonexistent key, this is not the same as null)
+		inline bool empty(const std::any& value) {
+			return !value.has_value();
+		}
+
 		inline bool object(const std::any& value) {
 			return value.type() == typeid(std::map<std::string, std::any>);
 		}

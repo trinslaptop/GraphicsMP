@@ -1,0 +1,17 @@
+{
+    "name": "leaves",
+    "collision": false,
+    "model": {
+        "type": "oscillate",
+        "value": 0.5,
+        "child": {
+            "type": "cube",
+            "pos": [0,0,0],
+            "size": [1,1,1],
+            "textures": [
+                "assets/textures/block/leaves.png",
+                "assets/textures/shiny.png"
+            ]
+        } 
+    }
+}

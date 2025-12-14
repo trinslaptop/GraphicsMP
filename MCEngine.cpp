@@ -12,6 +12,7 @@
 #include <glm/gtc/constants.hpp>
 
 #include "include/f8.hpp"
+#include "include/json.hpp"
 
 #include "get_player.hpp"
 #include "Zombie.hpp"
@@ -304,27 +305,16 @@ void MCEngine::mSetupBuffers() {
     );
 
     // Register blocks
+    for(const std::string& path : glutils::ls("data/blocks", "json")) {
+        fprintf(stderr, "Loading block from %s\n", path.c_str());
+        auto data = json::parse(glutils::cat(path));
+        this->_blocks[json::cast::string(json::cast::object(data)["name"])] = Block::from_json(*this->_shaders.primary, *this->_tm, data);
+    }
+
+    // Ensure air is always nullptr
     this->_blocks["air"] = nullptr;
-    this->_blocks["planks"] = Block::from(mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/planks.png"), this->_tm->load("assets/textures/dull.png")}}));
-    this->_blocks["glass"] = Block::from(mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/glass.png"), this->_tm->load("assets/textures/shiny.png")}}));
-    this->_blocks["log"] = Block::from(mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 6> {
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_top.png"), this->_tm->load("assets/textures/dull.png")},
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_top.png"), this->_tm->load("assets/textures/dull.png")},
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")},
-        std::array<GLuint, 2> {this->_tm->load("assets/textures/block/log_side.png"), this->_tm->load("assets/textures/dull.png")}
-    }));
-    this->_blocks["leaves"] = Block::from(mcmodel::oscillate(*this->_shaders.primary, mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/leaves.png"), this->_tm->load("assets/textures/shiny.png")}}), 0.5f), false);
-    this->_blocks["amethyst"] = Block::from(mcmodel::cube(*this->_shaders.primary, std::array<std::array<GLuint, 2>, 1> {{this->_tm->load("assets/textures/block/amethyst.png"), this->_tm->load("assets/textures/shiny.png")}}));
-    this->_blocks["mushroom"] = Block::from(
-        mcmodel::animtex(*this->_shaders.primary, mcmodel::cross(*this->_shaders.primary, {this->_tm->load("assets/textures/block/mushroom_anim.png"), this->_tm->load("assets/textures/shiny.png")}), 4, 8.0f),
-        false
-    );
-    this->_blocks["tall_grass"] = Block::from(
-        mcmodel::group({mcmodel::tint(*this->_shaders.primary, mcmodel::oscillate(*this->_shaders.primary, mcmodel::cross(*this->_shaders.primary, {this->_tm->load("assets/textures/block/tall_grass.png"), this->_tm->load("assets/textures/dull.png")})), glm::vec4(0.19f, 0.5f, 0.0f, 1.0f))}, glm::vec3(0.0f, -0.0625f, 0.0f)),
-        false
-    );
+
+    // Torch is hardcoded since it's a light source
     this->_blocks["torch"] = Block::from(mcmodel::ignore_light(*this->_shaders.primary, mcmodel::group({mcmodel::wrapped_cube(*this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/torch.png"), this->_tm->load("assets/textures/dull.png")}, {0.125f, 0.5f, 0.125f})}, {0.5f, 0.25f, 0.5f})), false);
 
     // We do what we must because we can

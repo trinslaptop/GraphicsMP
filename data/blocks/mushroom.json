@@ -1,0 +1,16 @@
+{
+    "name": "mushroom",
+    "collision": false,
+    "model": {
+        "type": "animtex",
+        "frames": 4,
+        "time": 8.0,
+        "child": {
+            "type": "cross",
+            "textures": [
+                "assets/textures/block/mushroom_anim.png",
+                "assets/textures/shiny.png"
+            ]
+        }
+    }
+}

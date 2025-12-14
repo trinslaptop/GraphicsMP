@@ -1,0 +1,10 @@
+{
+    "name": "planks",
+    "model": {
+        "type": "cube",
+        "textures": [
+            "assets/textures/block/planks.png",
+            "assets/textures/dull.png"
+        ]
+    }
+}

@@ -12,6 +12,12 @@
 #include <vector>
 #include <map>
 
+#include <fstream>
+#include <sstream>
+#include <ios>
+#include <string_view>
+#include <filesystem>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/ext.hpp>
@@ -69,6 +75,37 @@ namespace glutils {
 		return buffer;
 	}
 
+    /// Read a file into a string (not ideal for large files!)
+    inline std::string cat(const std::string& path) {
+        std::ifstream istream(path);
+        istream.exceptions(std::ios_base::badbit);
+        std::ostringstream ostream;
+        ostream << istream.rdbuf();
+        return ostream.str();
+    }
+
+    /// Checks is `string` ends with `suffix`
+    /// Based on https://stackoverflow.com/a/42844629
+    inline bool string_ends_with(std::string_view string, std::string_view suffix) {
+        return string.size() >= suffix.size() && string.compare(string.size() - suffix.size(), suffix.size(), suffix) == 0;
+    }
+
+    /// Checks is `string` starts with `prefix`
+    /// Based on https://stackoverflow.com/a/42844629
+    inline bool string_starts_with(std::string_view string, std::string_view prefix) {
+        return string.size() >= prefix.size() && string.compare(0, prefix.size(), prefix) == 0;
+    }
+
+    /// Lists all entries in a directory. If `ext` is not empty, filters for only that extension
+    inline std::vector<std::string> ls(const std::string& path, const std::string& ext = "") {
+        std::vector<std::string> paths;
+        for(const auto& entry : std::filesystem::directory_iterator(path)) {
+            if(ext.empty() || string_ends_with(entry.path().string(), "." + ext)) {
+                paths.push_back(entry.path().string());
+            }
+        }
+        return paths;
+    }
 
     // Gets a RGB color vector from hex
     inline glm::vec3 hex3(const uint32_t color) {

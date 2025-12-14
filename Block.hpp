@@ -9,6 +9,8 @@
  */
 
 #include "mcmodel.hpp"
+#include "glutils.hpp"
+#include "include/json.hpp"
 
 #include <memory>
 
@@ -37,6 +39,12 @@ class Block final : public mcmodel::Drawable {
 
         inline static std::shared_ptr<Block> from(std::shared_ptr<mcmodel::Drawable> model, const bool solid = true) {
             return std::make_shared<Block>(model, solid);
+        }
+
+        /// Loads a block from JSON, see README
+        inline static std::shared_ptr<Block> from_json(const ShaderProgram &shader, glutils::TextureManager& tm, const std::any& data) {
+            auto root = json::cast::object(data);
+            return from(mcmodel::from_json(shader, tm, root["model"]), json::is::empty(root["collision"]) ? true : json::cast::boolean(root["collision"]));
         }
 };
 
