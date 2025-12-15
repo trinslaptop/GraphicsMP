@@ -10,8 +10,6 @@ const int
 #include "SpriteMode.glsl"
 ;
 
-uniform sampler2D diffuseTexture;
-
 uniform int sprite;
 uniform vec3 pos;
 uniform int mode;
