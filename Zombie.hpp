@@ -122,11 +122,11 @@ class Zombie final : public Entity {
             return this->getTarget() ? glm::vec3(glm::min(2.0f*glm::distance(this->getTarget()->getPosition(), this->getPosition()), 1.0f), 0.0f, 0.0f) : glm::vec3(0.0f, 0.0f, 0.0f);
         }
 
-        inline virtual bool hasInteraction() const {
+        inline virtual bool hasInteraction() const override {
             return true;
         }
 
-        inline virtual void interact(Particle& other) {
+        inline virtual void interact(Particle& other) override {
             if(Zombie* zombie = dynamic_cast<Zombie*>(&other)) {
                 if(this->isTouching(*zombie) && f8::randb(0.1f)) {
                     zombie->damage(1);
