@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 
 #include "mcmodel.hpp"
+#include "glutils.hpp"
 #include "Block.hpp"
 #include "NonCopyable.hpp"
 #include "Particle.hpp"
@@ -38,11 +39,6 @@ namespace std {
             return result;
         }
     };
-}
-
-/// Cubic Bezier Curve formula
-template<typename T> inline T bc(const T p0, const T p1, const T p2, const T p3, const float t) {
-    return glm::pow(1 - t, 3)*p0 + 3*glm::pow(1 - t, 2)*t*p1 + 3*(1-t)*glm::pow(t, 2)*p2 + glm::pow(t, 3)*p3;
 }
 
 /// A subregion of the world, if at y=0, also has terrain
@@ -116,11 +112,11 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
 
         /// Gets the minimum y value for this chunk, only meaningful for bottom chunk of world
         inline float getTerrainHeight(const float x, const float z) const {
-            return this->_chunk_pos.y ? -INFINITY : bc(
-                bc(this->_terrain[0x0], this->_terrain[0x1], this->_terrain[0x2], this->_terrain[0x3], glm::mod(x, Chunk::CHUNK_SIZE)/CHUNK_SIZE),
-                bc(this->_terrain[0x4], this->_terrain[0x5], this->_terrain[0x6], this->_terrain[0x7], glm::mod(x, Chunk::CHUNK_SIZE)/CHUNK_SIZE),
-                bc(this->_terrain[0x8], this->_terrain[0x9], this->_terrain[0xa], this->_terrain[0xb], glm::mod(x, Chunk::CHUNK_SIZE)/CHUNK_SIZE),
-                bc(this->_terrain[0xc], this->_terrain[0xd], this->_terrain[0xe], this->_terrain[0xf], glm::mod(x, Chunk::CHUNK_SIZE)/CHUNK_SIZE),
+            return this->_chunk_pos.y ? -INFINITY : glutils::bc(
+                glutils::bc(this->_terrain[0x0], this->_terrain[0x1], this->_terrain[0x2], this->_terrain[0x3], glm::mod(x, Chunk::CHUNK_SIZE)/CHUNK_SIZE),
+                glutils::bc(this->_terrain[0x4], this->_terrain[0x5], this->_terrain[0x6], this->_terrain[0x7], glm::mod(x, Chunk::CHUNK_SIZE)/CHUNK_SIZE),
+                glutils::bc(this->_terrain[0x8], this->_terrain[0x9], this->_terrain[0xa], this->_terrain[0xb], glm::mod(x, Chunk::CHUNK_SIZE)/CHUNK_SIZE),
+                glutils::bc(this->_terrain[0xc], this->_terrain[0xd], this->_terrain[0xe], this->_terrain[0xf], glm::mod(x, Chunk::CHUNK_SIZE)/CHUNK_SIZE),
                 glm::mod(z, Chunk::CHUNK_SIZE)/CHUNK_SIZE
             ).y;
         }

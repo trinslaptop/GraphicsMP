@@ -48,7 +48,7 @@ class Particle : public mcmodel::Drawable, NonCopyable {
 /// Base class for particles that render as a sprite, supports velocity and lifetimes too 
 class SpriteParticle : public Particle {
     private:
-        float _lifetime = 0.0f;
+        double _lifetime = 0.0f;
         glm::vec3 _position;
     protected:
         inline virtual float getSize() const {
@@ -65,9 +65,9 @@ class SpriteParticle : public Particle {
         }
         inline virtual const char getSprite() const = 0;
     public:
-        SpriteParticle(const glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f)) : Particle(), _position(position) {}
+        inline SpriteParticle(const glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f)) : Particle(), _position(position) {}
 
-        inline virtual float getLifetime() const final {
+        inline virtual double getLifetime() const final {
             return this->_lifetime;
         }
 
@@ -106,7 +106,7 @@ class SmokeParticle final : public SpriteParticle {
             return '\xe0' + this->getLifetime();
         }
     public:
-        SmokeParticle(const glm::vec3 position, const float spread = 0.25f) : SpriteParticle(position), _velocity(spread*glm::normalize(glm::vec3(2.0f*f8::randf() - 1.0f, 1.0f, 2.0f*f8::randf() - 1.0f))) {}
+        inline SmokeParticle(const glm::vec3 position, const float spread = 0.25f) : SpriteParticle(position), _velocity(spread*glm::normalize(glm::vec3(2.0f*f8::randf() - 1.0f, 1.0f, 2.0f*f8::randf() - 1.0f))) {}
 };
 
 /// Randomized torch flame particle
@@ -121,7 +121,7 @@ class TorchParticle final : public SpriteParticle {
             return '\xc4' + this->_variant;
         }
     public:
-        TorchParticle(const glm::vec3 position) : SpriteParticle(position + 0.0625f*glm::vec3(2.0f*f8::randf() - 1.0f, 2.0f*f8::randf() - 1.0f, 2.0f*f8::randf() - 1.0f)), _variant(f8::randi(0,3)) {}
+        inline TorchParticle(const glm::vec3 position) : SpriteParticle(position + 0.0625f*glm::vec3(2.0f*f8::randf() - 1.0f, 2.0f*f8::randf() - 1.0f, 2.0f*f8::randf() - 1.0f)), _variant(f8::randi(0,3)) {}
 };
 
 /// Particle used for footsteps
@@ -143,7 +143,7 @@ class DustParticle final : public SpriteParticle {
             return glm::vec3(0.2f, 0.2f, 0.2f);
         }
     public:
-        DustParticle(const glm::vec3 position, const float spread) : SpriteParticle(position + spread*glm::vec3(2.0f*f8::randf() - 1.0f, 0.25f*f8::randf(), 2.0f*f8::randf() - 1.0f)), _variant(f8::randi(0,2)), _velocity(0.01f*glm::vec3(2.0f*f8::randf() - 1.0f, 2.0f*f8::randf() - 1.0f, 2.0f*f8::randf() - 1.0f)) {}
+        inline DustParticle(const glm::vec3 position, const float spread) : SpriteParticle(position + spread*glm::vec3(2.0f*f8::randf() - 1.0f, 0.25f*f8::randf(), 2.0f*f8::randf() - 1.0f)), _variant(f8::randi(0,2)), _velocity(0.01f*glm::vec3(2.0f*f8::randf() - 1.0f, 2.0f*f8::randf() - 1.0f, 2.0f*f8::randf() - 1.0f)) {}
 };
 
 #endif

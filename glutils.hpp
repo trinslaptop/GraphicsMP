@@ -75,6 +75,16 @@ namespace glutils {
 		return buffer;
 	}
 
+    /// Cubic Bezier Curve formula
+    template<typename T> inline T bc(const T p0, const T p1, const T p2, const T p3, const float t) {
+        return glm::pow(1 - t, 3)*p0 + 3*glm::pow(1 - t, 2)*t*p1 + 3*(1-t)*glm::pow(t, 2)*p2 + glm::pow(t, 3)*p3;
+    }
+
+    /// Safe divide, if denominator is zero then returns zero
+    template<typename T> inline T safediv(const T& numerator, const T& denominator) {
+        return denominator == T() ? T() : numerator/denominator;
+    }
+
     /// Read a file into a string (not ideal for large files!)
     inline std::string cat(const std::string& path) {
         std::ifstream istream(path);

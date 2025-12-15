@@ -57,6 +57,8 @@ class Zombie final : public Entity {
                 ctx.pushTransformation(glm::translate(glm::mat4(1.0f), this->getPosition())*glm::yawPitchRoll(this->getRotation().x, this->getRotation().y, this->getRotation().z));
                     this->_root->draw(ctx);
                 ctx.popTransformation();
+
+                this->_shader.setProgramUniform("tint", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
             }
         }
 
