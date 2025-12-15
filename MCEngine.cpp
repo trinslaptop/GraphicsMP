@@ -17,6 +17,7 @@
 #include "get_player.hpp"
 #include "Particle.hpp"
 #include "Zombie.hpp"
+#include "Fireflies.hpp"
 
 static constexpr GLfloat GLM_PI = glm::pi<float>();
 static constexpr GLfloat GLM_2PI = glm::two_pi<float>();
@@ -313,7 +314,7 @@ void MCEngine::mSetupBuffers() {
 
     // Register blocks
     for(const std::string& path : glutils::ls("data/blocks", "json")) {
-        fprintf(stderr, "Loading block from %s\n", path.c_str());
+        fprintf(stdout, "[INFO]: Loading block from %s\n", path.c_str());
         auto data = json::parse(glutils::cat(path));
         this->_blocks[json::cast::string(json::cast::object(data)["name"])] = Block::from_json(*this->_shaders.primary, *this->_tm, data);
     }
@@ -406,6 +407,11 @@ void MCEngine::mSetupBuffers() {
     this->_macguffin->scatter();
 
     this->add_zombie();
+
+    std::shared_ptr<Fireflies> fireflies = Fireflies::from_json(*this->_world, json::parse(glutils::cat("data/world/fireflies.json")));
+    fprintf(stdout, "[INFO]: Loading fireflies (%ld curves, %ld points, %f blocks long)\n", fireflies->getCurveCount(), fireflies->getPointCount(), fireflies->getArcLength());
+    this->_world->add(fireflies);
+
 }
 
 /// Summons a new zombie
