@@ -21,7 +21,9 @@ vec3 getCloudColor() {
     );
 }
 
-
+vec3 getSunDirection() {
+    return -vec3(0.0, sin(PI*time/DAY_LENGTH), cos(PI*time/DAY_LENGTH));
+}
 
 // vec3 getSunColor() {
 

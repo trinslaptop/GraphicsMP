@@ -1,7 +1,7 @@
 #version 410 core
 
 #include "../globals.glsl"
-#include "../sun.glsl"
+#include "../daylight.glsl"
 
 uniform samplerCube skybox0;
 uniform samplerCube skybox1;

@@ -1,7 +1,7 @@
 #version 410 core
 
 #include "globals.glsl"
-#include "sun.glsl"
+#include "daylight.glsl"
 
 uniform sampler2D diffuseTexture;
 uniform sampler2D specularTexture;
@@ -98,7 +98,7 @@ void main() {
         // Point and spot lights are distance attenuated, but sun light isn't, so reduce it by a constant factor so it isn't overpowering
         // (That could be accounted for in the color itself, but this seems more consistent)
         fColorOut = 
-            getSunIntensity()*directional_light(sunDirection, sunColor)
+            getSunIntensity()*directional_light(getSunDirection(), sunColor)
             + point_light(torchPos, torchColor, vec3(0.0, 0.005, 0.01))
         ;
     } else {

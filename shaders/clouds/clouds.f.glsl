@@ -1,7 +1,7 @@
 #version 410 core
 
 #include "../globals.glsl"
-#include "../sun.glsl"
+#include "../daylight.glsl"
 
 uniform sampler2D clouds;
 uniform float scale = 512.0;
