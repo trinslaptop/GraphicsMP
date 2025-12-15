@@ -310,6 +310,7 @@ namespace glutils {
                 glUseProgram(shader);
             }
 
+            /// Renders a colored rectangle on the UI
             inline void rect(const glm::vec2 pos = glm::vec2(0.0f), const glm::vec2 size = glm::vec2(1.0f), const glm::vec4 color = glm::vec4(1.0f), const glm::bvec2 centered = glm::bvec2(false, false)) const {
                 const GLint shader = get_shader();
                 this->_shaders.rect.useProgram();
@@ -321,6 +322,12 @@ namespace glutils {
                 glBindVertexArray(this->_vao);
                 glDrawArrays(GL_POINTS, 0, 1);
                 glUseProgram(shader);
+            }
+
+            /// Triggers the rendering pipeline with an empty VAO, use with shaders that take no attributes
+            inline void draw() const {
+                glBindVertexArray(this->_vao);
+                glDrawArrays(GL_POINTS, 0, 1);
             }
 
             enum SpriteMode {
