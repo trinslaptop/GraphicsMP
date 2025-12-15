@@ -22,7 +22,7 @@
 class Skybox final : public mcmodel::Drawable, NonCopyable {
     private:
         const ShaderProgram& _shader;
-        GLuint _texture;
+        const GLuint _day_texture, _night_texture;
         GLuint _vao, _vbo;
         static constexpr std::array<GLfloat, 36*3> _POS = {
             -1.0f,  1.0f, -1.0f,
@@ -69,11 +69,11 @@ class Skybox final : public mcmodel::Drawable, NonCopyable {
         };
 
     public:
-        /// Pass textures +-xyz (NOTE: different order from mcmodel::cube functions)
-        inline Skybox(const ShaderProgram& shader, const std::array<std::string, 6>& textures) : _shader(shader), _texture(0), _vao(0), _vbo(0) {
+        static inline GLuint load_cubemap(const std::array<std::string, 6>& textures) {
             // Load textures
-            glGenTextures(1, &this->_texture);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, this->_texture);
+            GLuint texture;
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
             GLint width, height, channels;
             GLubyte* data;
             
@@ -95,7 +95,12 @@ class Skybox final : public mcmodel::Drawable, NonCopyable {
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        
+
+            return texture;
+        }
+
+        /// Pass textures +-xyz (NOTE: different order from mcmodel::cube functions)
+        inline Skybox(const ShaderProgram& shader, const std::array<std::string, 6>& day_textures, const std::array<std::string, 6>& night_textures) : _shader(shader), _day_texture(Skybox::load_cubemap(day_textures)), _night_texture(Skybox::load_cubemap(night_textures)), _vao(0), _vbo(0) {
             // Load vao
             glGenVertexArrays(1, &this->_vao);
             glBindVertexArray(this->_vao);
@@ -110,7 +115,8 @@ class Skybox final : public mcmodel::Drawable, NonCopyable {
         }
 
         inline virtual ~Skybox() override {
-            glDeleteTextures(1, &this->_texture);
+            glDeleteTextures(1, &this->_day_texture);
+            glDeleteTextures(1, &this->_night_texture);
             glDeleteVertexArrays(1, &this->_vao);
             glDeleteBuffers(1, &this->_vbo);
         }
@@ -128,7 +134,9 @@ class Skybox final : public mcmodel::Drawable, NonCopyable {
             // Draw
             glBindVertexArray(this->_vao);
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, this->_texture);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, this->_night_texture);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, this->_day_texture);
             glDrawArrays(GL_TRIANGLES, 0, 36);
             
             // Restore

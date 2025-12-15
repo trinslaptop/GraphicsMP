@@ -3,7 +3,7 @@
 #include "globals.glsl"
 #include "util.glsl"
 
-const float DAY_LENGTH = 15.0;
+const float DAY_LENGTH = 35.0;
 
 float getSunIntensity() {
     return 0.95*pow(sin(PI*time/DAY_LENGTH), 2.0) + 0.05;

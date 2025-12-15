@@ -244,7 +244,8 @@ void MCEngine::mSetupShaders() {
 
     this->_shaders.skybox = std::make_unique<ShaderProgram>("shaders/skybox/skybox.v.glsl", "shaders/skybox/skybox.f.glsl");
     this->_shader_globals->bindShaderBlock(*this->_shaders.skybox, "Globals");
-    this->_shaders.skybox->setProgramUniform("skybox", 0);
+    this->_shaders.skybox->setProgramUniform("skybox0", 0);
+    this->_shaders.skybox->setProgramUniform("skybox1", 1);
 
     this->_shaders.clouds = std::make_unique<ShaderProgram>("shaders/clouds/clouds.v.glsl", "shaders/clouds/clouds.f.glsl");
     this->_shader_globals->bindShaderBlock(*this->_shaders.clouds, "Globals");
@@ -284,12 +285,19 @@ void MCEngine::mSetupBuffers() {
 
     // Create skybox
     this->_skybox = std::make_shared<Skybox>(*this->_shaders.skybox, std::array<std::string, 6> {
-        "assets/textures/skybox/posx.jpg",
-        "assets/textures/skybox/negx.jpg",
-        "assets/textures/skybox/posy.jpg",
-        "assets/textures/skybox/negy.jpg",
-        "assets/textures/skybox/posz.jpg",
-        "assets/textures/skybox/negz.jpg"
+        "assets/textures/skybox/day/skybox.png",
+        "assets/textures/skybox/day/skybox.png",
+        "assets/textures/skybox/day/skybox.png",
+        "assets/textures/skybox/day/skybox.png",
+        "assets/textures/skybox/day/skybox.png",
+        "assets/textures/skybox/day/skybox.png"
+    }, std::array<std::string, 6> {
+        "assets/textures/skybox/night/front.png",
+        "assets/textures/skybox/night/back.png",
+        "assets/textures/skybox/night/top.png",
+        "assets/textures/skybox/night/bottom.png",
+        "assets/textures/skybox/night/right.png",
+        "assets/textures/skybox/night/left.png",
     });
 
     this->_clouds = Clouds::from(*this->_shaders.clouds, this->_tm->load("assets/textures/clouds.png"));
