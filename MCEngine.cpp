@@ -232,7 +232,6 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     // Directional Light (Sun)
     shader.setProgramUniform("sunColor", glm::vec3(0.95, 1.0, 1.0) /* Slight blue */);
     shader.setProgramUniform("sunDirection", glm::vec3(1.0f, -1.0f, 1.0f));
-    shader.setProgramUniform("sunIntensity", 0.85f);
 }
 
 void MCEngine::mSetupShaders() {
