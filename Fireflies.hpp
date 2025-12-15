@@ -33,6 +33,9 @@ class Firefly final : public SpriteParticle {
         inline virtual float getSize() const override final {
             return 0.35f;
         }
+        inline virtual bool isLit() const override final {
+            return false;
+        }
         inline virtual glm::vec3 getTint() const override final {
             return glm::mix(glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::pow(glm::cos(this->getLifetime() + this->_phase), 2));
         }

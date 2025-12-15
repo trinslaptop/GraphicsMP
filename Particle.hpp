@@ -63,6 +63,9 @@ class SpriteParticle : public Particle {
         inline virtual glm::vec3 getVelocity() const {
             return glm::vec3(0.0f, 0.0f, 0.0f);
         }
+        inline virtual bool isLit() const {
+            return true;
+        }
         inline virtual const char getSprite() const = 0;
     public:
         inline SpriteParticle(const glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f)) : Particle(), _position(position) {}
@@ -76,7 +79,7 @@ class SpriteParticle : public Particle {
                 ctx.getPrimitiveRenderer().point(this->_position, glm::vec3(1.0f, 0.0f, 0.0f));
             }
             
-            ctx.getPrimitiveRenderer().sprite(std::string(1, this->getSprite()), this->_position, this->getTint(), this->getSize(), glutils::PrimitiveRenderer::SpriteMode::PARTICLE);
+            ctx.getPrimitiveRenderer().sprite(std::string(1, this->getSprite()), this->_position, this->getTint(), this->getSize(), glutils::PrimitiveRenderer::SpriteMode::PARTICLE, this->isLit());
         }
 
         inline virtual void update(const float deltaTime) override final {
@@ -118,7 +121,10 @@ class TorchParticle final : public SpriteParticle {
             return 2.5f;
         }
         inline virtual const char getSprite() const override final {
-            return '\xc4' + this->_variant;
+            return '\xc5' + this->_variant;
+        }
+        inline virtual bool isLit() const override final {
+            return false;
         }
     public:
         inline TorchParticle(const glm::vec3 position) : SpriteParticle(position + 0.0625f*glm::vec3(2.0f*f8::randf() - 1.0f, 2.0f*f8::randf() - 1.0f, 2.0f*f8::randf() - 1.0f)), _variant(f8::randi(0,3)) {}

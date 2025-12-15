@@ -58,7 +58,6 @@ MCEngine::MCEngine(const std::string& player_name)
     _blocks(),
     _world()
 {
-    this->_tm = std::make_unique<glutils::TextureManager>();
     this->_im = std::make_unique<input::InputManager>();
 
     // Initialize Input Bindings
@@ -265,7 +264,7 @@ void MCEngine::mSetupShaders() {
 
     this->_shaders.sprite = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/sprite.g.glsl", "shaders/texshader.f.glsl");
     this->_shader_globals->bindShaderBlock(*this->_shaders.sprite, "Globals");
-    initCommonFragmentShaderUniforms(*this->_shaders.primary);
+    initCommonFragmentShaderUniforms(*this->_shaders.sprite);
 
     this->_shaders.terrain = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_shaders.terrain);
@@ -281,12 +280,8 @@ void MCEngine::mSetupBuffers() {
     f8::srand();
     f8::srandv();
 
-    // Make default.png texture handle 1, any textures that fail to load will fallback to this
-    this->_tm->load("assets/textures/default.png");
-    this->_tm->load("assets/textures/dull.png");
-    this->_tm->load("assets/textures/shiny.png");
-
-    this->_pr = std::make_unique<glutils::PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, *this->_shaders.rect, *this->_shaders.sprite, this->_tm->load("assets/textures/sprites.png"));
+    this->_tm = std::make_unique<glutils::TextureManager>();
+    this->_pr = std::make_unique<glutils::PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, *this->_shaders.rect, *this->_shaders.sprite, this->_tm->load("assets/textures/sprites.png"), this->_tm->DULL);
 
     // Create skybox
     this->_skybox = std::make_shared<Skybox>(*this->_shaders.skybox, std::array<std::string, 6> {

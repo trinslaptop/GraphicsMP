@@ -132,9 +132,11 @@ namespace glutils {
     class TextureManager final : NonCopyable {
         private:
             std::map<std::string, GLuint> _textures;
-
         public:
-            TextureManager() = default;
+            const GLuint DEFAULT, DULL, SHINY; // Make default.png texture handle 1, any textures that fail to load will fallback to this, NOTE: these must be declared after `_textures` so that they can be initialized using `load()`
+
+            TextureManager() : DEFAULT(load("assets/textures/default.png")), DULL(load("assets/textures/dull.png")), SHINY(load("assets/textures/shiny.png")) {}
+
             inline ~TextureManager() {
                 for(const auto& texture : this->_textures) {
                     // Release textures
@@ -248,12 +250,12 @@ namespace glutils {
                 const ShaderProgram& sprite;
             } _shaders;
 
-            const GLuint _sprite_texture;
+            const GLuint _sprite_texture, _dull_texture;
 
             GLuint _vao;
 
         public:
-            inline PrimitiveRenderer(const ShaderProgram& cube_shader, const ShaderProgram& line_shader, const ShaderProgram& point_shader, const ShaderProgram& rect_shader, const ShaderProgram& sprite_shader, const GLuint sprite_texture) : _shaders {cube_shader, line_shader, point_shader, rect_shader, sprite_shader}, _sprite_texture(sprite_texture) {
+            inline PrimitiveRenderer(const ShaderProgram& cube_shader, const ShaderProgram& line_shader, const ShaderProgram& point_shader, const ShaderProgram& rect_shader, const ShaderProgram& sprite_shader, const GLuint sprite_texture, const GLuint dull_texture) : _shaders {cube_shader, line_shader, point_shader, rect_shader, sprite_shader}, _sprite_texture(sprite_texture), _dull_texture(dull_texture) {
                 // Enable gl_PointSize in shaders
                 glEnable(GL_PROGRAM_POINT_SIZE);
 
@@ -326,7 +328,8 @@ namespace glutils {
             };
 
             /// Returns the area covered by the sprites, useful for using rect() to fill below text
-            inline glm::vec2 sprite(const std::string& sprites, const glm::vec3 pos, const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f, const SpriteMode mode = SpriteMode::UI_ANCHOR_CORNER) const {
+            /// `lit` only applies to PARTICLE mode
+            inline glm::vec2 sprite(const std::string& sprites, const glm::vec3 pos, const glm::vec3 color = glm::vec3(1.0f), const float size = 1.0f, const SpriteMode mode = SpriteMode::UI_ANCHOR_CORNER, const bool lit = false) const {
                 const GLint shader = get_shader();
                 this->_shaders.sprite.useProgram();
 
@@ -336,13 +339,16 @@ namespace glutils {
                 this->_shaders.sprite.setProgramUniform("mode", mode);
                 
                 this->_shaders.sprite.setProgramUniform("tint", glm::vec4(color, 1.0f));
-                this->_shaders.sprite.setProgramUniform("lit", false); // TODO: enable for mode == SpriteMode::PARTICLE?
+                this->_shaders.sprite.setProgramUniform("lit", mode == SpriteMode::PARTICLE && lit);
                 this->_shaders.sprite.setProgramUniform("frameCount", (GLuint) 1);
                 this->_shaders.sprite.setProgramUniform("frameTime", 1.0f);
 
                 glBindVertexArray(this->_vao);
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, this->_sprite_texture);
+
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, this->_dull_texture);
 
                 for(const char c : sprites) {
                     switch(c) {

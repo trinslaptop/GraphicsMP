@@ -39,7 +39,7 @@ void main() {
     switch(mode) {
         case PARTICLE:
             fPos = pos;
-            fNormal = vec3(0.0, 0.0, 1.0);
+            fNormal = -normalize(eyePos - pos);
 
             vertex(vec2(-size, -size), vec2(0.0, 0.0));
             vertex(vec2(-size, size), vec2(0.0, texSpan));
