@@ -359,7 +359,7 @@ void MCEngine::mSetupBuffers() {
         })
     );
 
-    this->_world = std::make_shared<World>(seed, *this->_shaders.primary, *this->_shaders.terrain, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/grass.png"), this->_tm->load("assets/textures/dull.png")});
+    this->_world = std::make_shared<World>(seed, *this->_shaders.primary, *this->_shaders.terrain, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/grass.png"), this->_tm->load("assets/textures/dull.png")}, this->_blocks);
 
     // Initialize chunks
     for(size_t ckx = 0; ckx < 4; ckx++) {
@@ -370,16 +370,6 @@ void MCEngine::mSetupBuffers() {
 
     this->_world->setBlock(glm::ivec3(63, 0, 63), this->_blocks["cube"]);
 
-    // Place some trees
-    this->_place_tree({10, this->_world->getTerrainHeight(10.5f, 10.5f) - 0.5f, 10});
-    this->_place_tree({12, this->_world->getTerrainHeight(12.5f, 38.5f) - 1.0f, 12}, 7);
-    this->_place_tree({40, this->_world->getTerrainHeight(40.5f, 30.5f) - 0.5f, 40});
-    this->_place_tree({32, this->_world->getTerrainHeight(32.5f, 50.5f) - 0.5f, 50}, 5);
-    this->_place_tree({10, this->_world->getTerrainHeight(10.5f, 25.5f) - 0.5f, 25}, 8);
-    this->_place_tree({50, this->_world->getTerrainHeight(50.5f, 8.5f) - 0.5f, 8});
-    this->_place_tree({9, this->_world->getTerrainHeight(9.5f, 56.5f) - 0.5f, 56}, 6);
-    this->_place_tree({46, this->_world->getTerrainHeight(46.5f, 50.5f) - 0.5f, 50});
-
     // Place amethyst pyramid
     this->_world->setBlock(glm::ivec3(17, this->_world->getTerrainHeight(17.5, 17.5) + 3, 17), this->_blocks["torch"]);
     for(int dy = 0; dy < 3; dy++) {
@@ -388,34 +378,6 @@ void MCEngine::mSetupBuffers() {
             for(int dz = -r; dz <= r; dz++) {
                 this->_world->setBlock(glm::ivec3(17, this->_world->getTerrainHeight(17.5, 17.5), 17) + glm::ivec3(dx, dy, dz), this->_blocks["amethyst"]);
             }
-        }
-    }
-
-    // // Place collision test
-    // for(int dz = 0; dz < 9; dz++) {
-    //     if(dz < 3 || dz > 5) {
-    //         this->_world->setBlock(glm::vec3(34.0f, this->_world->getTerrainHeight(34.0f, 5.0f), 5.0f + dz), this->_block_planks);
-    //     }
-    //     this->_world->setBlock(glm::vec3(34.0f, this->_world->getTerrainHeight(34.0f, 5.0f) + 1.0f, 5.0f + dz), this->_block_planks);
-    // }
-
-    // Scatter mushrooms
-    for(size_t i = 0; i < 150; i++) {
-        const int x = f8::randi(0, 4*Chunk::CHUNK_SIZE, state), z = f8::randi(0, 4*Chunk::CHUNK_SIZE, state);
-        const glm::vec3 pos = glm::vec3(x, this->_world->getTerrainHeight(x + 0.5f, z + 0.5f), z);
-        // Check if ground mostly flat and empty
-        if(this->_world->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.125 && !this->_world->getBlock(pos)) {
-            this->_world->setBlock(pos, this->_blocks["mushroom"]);
-        }
-    }
-
-    // Scatter tall grass
-    for(size_t i = 0; i < 350; i++) {
-        const int x = f8::randi(0, 4*Chunk::CHUNK_SIZE, state), z = f8::randi(0, 4*Chunk::CHUNK_SIZE, state);
-        const glm::vec3 pos = glm::vec3(x, this->_world->getTerrainHeight(x + 0.5f, z + 0.5f), z);
-        // Check if ground mostly flat and empty
-        if(this->_world->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.1875 && !this->_world->getBlock(pos)) {
-            this->_world->setBlock(pos, this->_blocks["tall_grass"]);
         }
     }
 
@@ -443,32 +405,6 @@ void MCEngine::add_zombie(const glm::vec3 pos) {
     zombie->setHealth(zombie->getMaxHealth());
     zombie->setPosition(pos);
     this->_world->add(zombie);
-}
-
-
-/// Generates a tree at pos with variable log height
-void MCEngine::_place_tree(const glm::ivec3 pos, const size_t height) {
-    for(int dy = 0; dy <= height; dy++) {
-        this->_world->setBlock(pos + glm::ivec3(0, dy, 0), dy == height ? this->_blocks["leaves"] : this->_blocks["log"]);
-        
-        if(dy > height - 2) {
-            for(int dx = -1; dx <= 1; dx++) {
-                for(int dz = -1; dz <= 1; dz++) {
-                    if((dx == 0) ^ (dz == 0)) {
-                        this->_world->setBlock(pos + glm::ivec3(dx, dy, dz), this->_blocks["leaves"]);
-                    }
-                }
-            }
-        } else if(dy > height - 4) {
-            for(int dx = -2; dx <= 2; dx++) {
-                for(int dz = -2; dz <= 2; dz++) {
-                    if((dx != 0) || (dz != 0)) {
-                        this->_world->setBlock(pos + glm::ivec3(dx, dy, dz), this->_blocks["leaves"]);
-                    }
-                }
-            }
-        }
-    }
 }
 
 void MCEngine::mSetupScene() {

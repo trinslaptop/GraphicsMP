@@ -145,9 +145,6 @@ class MCEngine final : public CSCI441::OpenGLEngine {
 
         std::unordered_map<std::string, std::shared_ptr<Block>> _blocks;
 
-        /// Generates a tree at pos with variable log height
-        void _place_tree(const glm::ivec3 pos, const size_t height = 5);
-
         /// Summons a new zombie
         void add_zombie(const glm::vec3 pos = glm::vec3(4.0, 0.0f, 4.0f));
 };

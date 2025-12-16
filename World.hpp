@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <cstdint>
 
 #include <glm/glm.hpp>
 
@@ -62,10 +63,10 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
         const GLuint _vbo;
         const std::array<GLuint, 2> _textures;
     public:
-        inline Chunk(const ShaderProgram& block_shader, const ShaderProgram& terrain_shader, const glm::ivec3 chunk_pos, const std::array<glm::vec3, 16> terrain, const std::array<GLuint, 2> textures, GLuint vao, GLuint vbo) :
+        inline Chunk(const ShaderProgram& block_shader, const ShaderProgram& terrain_shader, const glm::ivec3 chunk_pos, const std::array<glm::vec3, 16> terrain, const std::array<GLuint, 2> textures, GLuint vao, GLuint vbo, const std::unordered_map<glm::ivec3, std::shared_ptr<Block>, std::hash<glm::ivec3>>& blocks = {}) :
             _shaders{block_shader, terrain_shader},
             _chunk_pos(chunk_pos),
-            _blocks(),
+            _blocks(blocks),
             _terrain(terrain),
             _textures(textures),
             _vao(vao),
@@ -150,15 +151,16 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
             const ShaderProgram& terrain_shader,
             const glm::ivec3 chunk_pos,
             const unsigned int seed,
-            const std::array<GLuint, 2> textures
+            const std::array<GLuint, 2> textures,
+            std::unordered_map<std::string, std::shared_ptr<Block>>& blocks
         ) {
             if(!chunk_pos.y) {
-                glm::vec2 state;
-                f8::srandv(seed, state);
+                glm::vec2 vstate;
+                f8::srandv(seed, vstate);
 
                 // For the sake of not mixing up different "y", the below code uses the xz of a vec3 with y=0 instead of a vec2 when needed
                 const auto sample = [&](const glm::vec3 pos) {
-                    return 5.0f*f8::fbm(glm::vec2(pos.x, pos.z), 6, state) + 1.0f/16.0f;
+                    return 5.0f*f8::fbm(glm::vec2(pos.x, pos.z), 6, vstate) + 1.0f/16.0f;
                 };
 
                 // Use a centered difference to approximate the gradient of the noise (MATH 307)
@@ -217,7 +219,69 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
                     glVertexAttribPointer(attrloc, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
                 }
     
-                return std::make_shared<Chunk>(block_shader, terrain_shader, chunk_pos, terrain, textures, vao, vbo);
+                std::shared_ptr<Chunk> chunk = std::make_shared<Chunk>(block_shader, terrain_shader, chunk_pos, terrain, textures, vao, vbo);
+
+                uint32_t state;
+                f8::srand(seed + 0xdeadbeef*f8::randfv(vstate), state);
+
+                // Place trees
+                for(size_t i = 0; i < 3; i++) {
+                    // Ensure trees go in center of chunk to prevent runaway generation
+                    const int x = f8::randi(4, Chunk::CHUNK_SIZE - 4, state), z = f8::randi(4, Chunk::CHUNK_SIZE - 4, state);
+                    const glm::vec3 pos = glm::vec3(x, chunk->getTerrainHeight(x + 0.5f, z + 0.5f), z);
+                    // Check if ground mostly flat and empty
+                    if(chunk->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.5 && !chunk->getBlock(pos) && f8::randb(0.35)) {
+                        int height = f8::randi(5, 8);
+
+                        // Place tree
+                        for(int dy = 0; dy <= height; dy++) {
+                            chunk->setBlock(pos + glm::vec3(0, dy, 0), dy == height ? blocks["leaves"] : blocks["log"]);
+                            if(dy > height - 2) {
+                                for(int dx = -1; dx <= 1; dx++) {
+                                    for(int dz = -1; dz <= 1; dz++) {
+                                        if((dx == 0) ^ (dz == 0)) {
+                                            chunk->setBlock(pos + glm::vec3(dx, dy, dz), blocks["leaves"]);
+                                        }
+                                    }
+                                }
+                            } else if(dy > height - 4) {
+                                for(int dx = -2; dx <= 2; dx++) {
+                                    for(int dz = -2; dz <= 2; dz++) {
+                                        if((dx != 0) || (dz != 0)) {
+                                            chunk->setBlock(pos + glm::vec3(dx, dy, dz), blocks["leaves"]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if(f8::randb(0.75)) {
+                            break;
+                        }
+                    }
+                }
+
+                // Scatter tall grass
+                for(size_t i = 0; i < 24; i++) {
+                    const int x = f8::randi(0, Chunk::CHUNK_SIZE, state), z = f8::randi(0, Chunk::CHUNK_SIZE, state);
+                    const glm::vec3 pos = glm::vec3(x, chunk->getTerrainHeight(x + 0.5f, z + 0.5f), z);
+                    // Check if ground mostly flat and empty
+                    if(chunk->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.1875 && !chunk->getBlock(pos)) {
+                        chunk->setBlock(pos, blocks["tall_grass"]);
+                    }
+                }
+
+                // Scatter mushrooms
+                for(size_t i = 0; i < 12; i++) {
+                    const int x = f8::randi(0, Chunk::CHUNK_SIZE, state), z = f8::randi(0, Chunk::CHUNK_SIZE, state);
+                    const glm::vec3 pos = glm::vec3(x, chunk->getTerrainHeight(x + 0.5f, z + 0.5f), z);
+                    // Check if ground mostly flat and empty
+                    if(chunk->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.125 && !chunk->getBlock(pos)) {
+                        chunk->setBlock(pos, blocks["mushroom"]);
+                    }
+                }
+
+                return chunk;
             } else {
                 return std::make_shared<Chunk>(block_shader, terrain_shader, chunk_pos, std::array<glm::vec3, 16>(), textures, 0, 0);
             }
@@ -231,6 +295,9 @@ class World final : public mcmodel::Drawable, NonCopyable {
         // This world is very sparse, so store as a map
         std::unordered_map<glm::ivec3, std::shared_ptr<Chunk>, std::hash<glm::ivec3>> _chunks;
 
+        std::unordered_map<std::string, std::shared_ptr<Block>>& _blocks;
+
+
         std::unordered_map<std::string, std::shared_ptr<Particle>> _particles;
 
         const unsigned int _seed;
@@ -243,11 +310,12 @@ class World final : public mcmodel::Drawable, NonCopyable {
         } _shaders;
 
     public:
-        inline World(const unsigned int seed, const ShaderProgram& block_shader, const ShaderProgram& terrain_shader, const std::array<GLuint, 2> terrain_textures) :
+        inline World(const unsigned int seed, const ShaderProgram& block_shader, const ShaderProgram& terrain_shader, const std::array<GLuint, 2> terrain_textures, std::unordered_map<std::string, std::shared_ptr<Block>>& blocks) :
             _seed(seed),
             _terrain_textures(terrain_textures),
             _shaders {block_shader, terrain_shader},
-            _chunks()
+            _chunks(),
+            _blocks(blocks)
             {}
 
         virtual inline ~World() = default;
@@ -256,7 +324,7 @@ class World final : public mcmodel::Drawable, NonCopyable {
         inline std::shared_ptr<Chunk> getChunk(const glm::ivec3& chunk_pos) {
             const std::shared_ptr<Chunk> chunk = this->_chunks[chunk_pos];
             if(chunk == nullptr) {
-                return this->_chunks[chunk_pos] = Chunk::from(this->_shaders.block, this->_shaders.terrain, chunk_pos, this->_seed, this->_terrain_textures);
+                return this->_chunks[chunk_pos] = Chunk::from(this->_shaders.block, this->_shaders.terrain, chunk_pos, this->_seed, this->_terrain_textures, this->_blocks);
             } else {
                 return chunk;
             }
