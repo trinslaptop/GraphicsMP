@@ -7,6 +7,7 @@
 #include <cmath>
 #include <string>
 #include <iostream>
+#include <iterator>
 #include <stdint.h>
 
 #include <glm/gtc/constants.hpp>
@@ -288,6 +289,9 @@ void MCEngine::mSetupBuffers() {
     this->_tm = std::make_unique<glutils::TextureManager>();
     this->_pr = std::make_unique<glutils::PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, *this->_shaders.rect, *this->_shaders.sprite, this->_tm->load("assets/textures/sprites.png"), this->_tm->DULL);
 
+    this->_ac = std::make_unique<AudioContext>();
+    this->_audio_source = this->_ac->createSource();
+
     // Create skybox
     this->_skybox = std::make_shared<Skybox>(*this->_shaders.skybox, std::array<std::string, 6> {
         "assets/textures/skybox/day/skybox.png",
@@ -446,6 +450,9 @@ void MCEngine::mCleanupBuffers() {
     this->_macguffin = nullptr;
     this->_blocks.clear();
     this->_pr = nullptr;
+
+    this->_ac->deleteSource(this->_audio_source);
+    this->_ac = nullptr;
 }
 
 void MCEngine::mCleanupTextures() {
@@ -561,6 +568,19 @@ void MCEngine::_handleConsoleInput() {
     } else if(cmd == "md5play") {
         stream >> std::ws;
         this->_movie = md5camera::load(std::string(std::istreambuf_iterator<char>(stream), {}).c_str());
+    } else if(cmd == "playsound") {
+        if(AudioContext::ENABLED) {
+            stream >> std::ws;
+            this->_ac->play(this->_ac->load(std::string(std::istreambuf_iterator<char>(stream), {})), this->_audio_source);
+        } else {
+            fprintf(stderr, "[ERROR]: Not compiled with sound support\n");
+        }
+    } else if(cmd == "stopsound") {
+        if(AudioContext::ENABLED) {
+            this->_ac->stop(this->_audio_source);
+        } else {
+            fprintf(stderr, "[ERROR]: Not compiled with sound support\n");
+        }
     } else {
         fprintf(stderr, "[ERROR]: Unknown command '%s'\n", cmd.c_str());
     }

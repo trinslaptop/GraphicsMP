@@ -35,4 +35,12 @@ elseif( UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
     endif()
     unset(USE_CURL CACHE)
 
+    # Use -DUSE_OPENAL=True to enable playing sounds
+    # Requires OpenAL and ALUT (e.g. libopenal-dev libalut-dev on Ubuntu)
+    if( USE_OPENAL )
+        target_link_libraries(${PROJECT_NAME} openal alut)
+        add_definitions(-DUSE_OPENAL)
+    endif()
+    unset(USE_OPENAL CACHE)
+
 endif()

@@ -21,6 +21,7 @@
 #include "input.hpp"
 #include "mcmodel.hpp"
 #include "glutils.hpp"
+#include "AudioContext.hpp"
 #include "Player.hpp"
 #include "Block.hpp"
 #include "World.hpp"
@@ -129,6 +130,8 @@ class MCEngine final : public CSCI441::OpenGLEngine {
         std::unique_ptr<input::InputManager> _im;
         std::unique_ptr<glutils::TextureManager> _tm;
         std::unique_ptr<glutils::PrimitiveRenderer> _pr;
+        std::shared_ptr<AudioContext> _ac;
+        ALuint _audio_source = 0;
 
         /*** Objects ***/
         std::shared_ptr<Skybox> _skybox;
