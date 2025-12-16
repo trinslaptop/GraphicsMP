@@ -55,6 +55,8 @@ class Entity : public Particle {
         int _health = 0;
         float _hurttime = 0;
 
+        float _limbSwingAmount = 0.0, _prevLimbSwingAmount = 0.0, _limbSwing = 0.0;
+
         World& _world;
     public:
         /// During this timeframe after taking damage, entities are temporarily immune to additional damage
@@ -207,6 +209,14 @@ class Entity : public Particle {
             return this->_world;
         }
 
+        inline virtual float getLimbSwing(const float deltaTime) const final {
+            return this->_limbSwing - this->_limbSwingAmount*(1.0f - deltaTime);
+        }
+
+        inline virtual float getLimbSwingAmount(const float deltaTime) const final {
+            return this->_prevLimbSwingAmount + deltaTime*(this->_limbSwingAmount - this->_prevLimbSwingAmount);
+        }
+
         /// True if the entity is in the air or a non-solid block
         inline virtual bool isInAir() const final {
             const std::shared_ptr<Block> block = this->getWorld().getBlock(this->getPosition() - glm::vec3(0.0f, 1.0f, 0.0f));
@@ -240,6 +250,11 @@ class Entity : public Particle {
         inline virtual void update(const float deltaTime) override {
             this->_lifetime += deltaTime;
             this->_hurttime = glm::max(0.0f, this->_hurttime - deltaTime);
+
+            this->_prevLimbSwingAmount = this->_limbSwingAmount;
+            this->_limbSwingAmount += (glm::min(1.0f, glm::length(glm::vec2(this->getPosition().x, this->getPosition().z) - glm::vec2(this->getLastPosition().x, this->getLastPosition().z))*2.0f) - this->_limbSwingAmount)*0.5f;
+            this->_limbSwing += this->_limbSwingAmount;
+
             this->_last_position = this->_position;
 
             this->setPosition(this->getPosition() + deltaTime*glm::vec3(glm::vec4(this->getVelocity(), 0.0f)*glm::rotate(glm::mat4(1.0f), -this->getRotation().x, this->getUpVector())) - deltaTime*glm::vec3(0.0f, this->getGravity(), 0.0f)); // This isn't how actually gravity works but it good enough for now

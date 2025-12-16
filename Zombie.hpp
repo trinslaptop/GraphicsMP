@@ -81,7 +81,7 @@ class Zombie final : public Entity {
             // Animate
             std::dynamic_pointer_cast<mcmodel::Group>(this->_head)->rotation.x = 0.125f*std::cos(this->getLifetime() + 0.50f);
             std::dynamic_pointer_cast<mcmodel::Group>(this->_right_arm)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_arm)->rotation.z = 0.25f*std::cos(this->getLifetime()) + glutils::PI/2) + glutils::PI;
-            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glutils::PI/8.0f * glm::sin(3.0f*glm::length(this->getPosition())));
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = 4.0f*glm::cos(this->getLimbSwing(deltaTime))*this->getLimbSwingAmount(deltaTime));
 
             if(glm::distance(glm::vec2(this->getPosition().x, this->getPosition().z), glm::vec2(this->getLastPosition().x, this->getLastPosition().z)) > 0.01f && f8::randb(0.2f) && !this->isInAir()) {
                 this->getWorld().add(std::make_shared<DustParticle>(this->getPosition(), this->getRadius()));

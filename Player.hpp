@@ -37,6 +37,8 @@ class Player final : public Entity {
 
         glm::vec3 _velocity = glm::vec3(0.0f, 0.0f, 0.0f);
 
+        bool _sneaking = false;
+
         inline void _updateCameras() {
             this->_arcballcamera.setLookAtPoint(this->getEyePosition());
             this->_arcballcamera.recomputeOrientation();
@@ -107,6 +109,7 @@ class Player final : public Entity {
         }
 
         inline virtual void update(const GLfloat deltaTime) override {
+            const auto last_position = this->getLastPosition();
             Entity::update(deltaTime);
 
             // Animate cape
@@ -119,7 +122,7 @@ class Player final : public Entity {
             std::dynamic_pointer_cast<mcmodel::Group>(this->_right_arm)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_arm)->rotation.z = 0.25f*std::cos(this->getLifetime()));
             
             // Animate legs
-            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glutils::PI/8.0f * glm::sin(3.0f*glm::length(this->getPosition())));
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glm::cos(this->getLimbSwing(deltaTime))*this->getLimbSwingAmount(deltaTime));
         
             this->_updateCameras();
 
@@ -161,6 +164,14 @@ class Player final : public Entity {
 
         inline virtual const glm::vec3 getVelocity() const override {
             return this->_velocity;
+        }
+
+        inline virtual void setSneaking(const bool sneaking = true) {
+            this->_sneaking = sneaking;
+        }
+
+        inline virtual bool isSneaking() const {
+            return this->_sneaking;
         }
 
         inline void jump(const float strength = 15.0f) {

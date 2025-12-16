@@ -141,6 +141,14 @@ MCEngine::MCEngine(const std::string& player_name)
         this->_player->jump();
     });
 
+    // LEFT SHIFT to crouch
+    this->_im->on({input::key(GLFW_KEY_LEFT_SHIFT)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        this->_player->setSneaking(true);
+    }, input::Event::Press);
+    this->_im->on({input::key(GLFW_KEY_LEFT_SHIFT)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
+        this->_player->setSneaking(false);
+    }, input::Event::Release);
+
     // Konami cheat code for invulnerability
     this->_im->on({input::key(GLFW_KEY_UP), input::key(GLFW_KEY_UP), input::key(GLFW_KEY_DOWN), input::key(GLFW_KEY_DOWN), input::key(GLFW_KEY_LEFT), input::key(GLFW_KEY_RIGHT), input::key(GLFW_KEY_LEFT), input::key(GLFW_KEY_RIGHT)}, {}, [this](GLFWwindow *const window, const float deltaTime) {
         this->_player->setInvulnerable(!this->_player->isInvulnerable());
@@ -291,7 +299,7 @@ void MCEngine::mSetupBuffers() {
     }, std::array<std::string, 6> {
         "assets/textures/skybox/night/front.png",
         "assets/textures/skybox/night/back.png",
-        "assets/textures/skybox/night/top.png",
+        "assets/textures/skybox/night/top_alt.png",
         "assets/textures/skybox/night/bottom.png",
         "assets/textures/skybox/night/right.png",
         "assets/textures/skybox/night/left.png",
