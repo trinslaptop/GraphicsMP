@@ -19,5 +19,5 @@ void main() {
     }
 
     // We always draw clouds second to only the skybox, and they're in the distance, so we can get away with alpha
-    fColorOut = vec4(getCloudColor(), 1 - smoothstep(scale/4.0, scale/2.0, distance(eyePos.xz, fPos.xz)));
+    fColorOut = vec4(getCloudColor(gl_FragCoord.xy), 1 - smoothstep(scale/4.0, scale/2.0, distance(eyePos.xz, fPos.xz)));
 }

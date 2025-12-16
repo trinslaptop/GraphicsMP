@@ -231,7 +231,6 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
 
     // Directional Light (Sun)
     shader.setProgramUniform("sunColor", glm::vec3(0.95, 1.0, 1.0) /* Slight blue */);
-    shader.setProgramUniform("sunDirection", glm::vec3(1.0f, -1.0f, 1.0f));
 }
 
 void MCEngine::mSetupShaders() {
@@ -266,6 +265,11 @@ void MCEngine::mSetupShaders() {
     this->_shader_globals->bindShaderBlock(*this->_shaders.sprite, "Globals");
     initCommonFragmentShaderUniforms(*this->_shaders.sprite);
 
+    this->_shaders.sky = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/skybox/inner.g.glsl", "shaders/texshader.f.glsl");
+    this->_shader_globals->bindShaderBlock(*this->_shaders.sky, "Globals");
+    initCommonFragmentShaderUniforms(*this->_shaders.sky);
+    this->_shaders.sky->setProgramUniform("lit", false);
+
     this->_shaders.terrain = std::make_unique<ShaderProgram>("shaders/terrain/terrain.v.glsl", "shaders/terrain/terrain.tc.glsl", "shaders/terrain/terrain.te.glsl", "shaders/texshader.f.glsl");
     initCommonFragmentShaderUniforms(*this->_shaders.terrain);
     this->_shader_globals->bindShaderBlock(*this->_shaders.terrain, "Globals");
@@ -298,6 +302,29 @@ void MCEngine::mSetupBuffers() {
         "assets/textures/skybox/night/bottom.png",
         "assets/textures/skybox/night/right.png",
         "assets/textures/skybox/night/left.png",
+    });
+
+    this->_sky = std::make_shared<mcmodel::Lambda>([&, sky_texture = this->_tm->load("assets/textures/skybox/celestial.png")](glutils::RenderContext& ctx) {
+        GLint depthFunc;
+        glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
+
+        // Configure
+        glDepthFunc(GL_LEQUAL);
+        glDepthMask(GL_FALSE);
+        
+        this->_shaders.sky->useProgram();
+        
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, sky_texture);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, this->_tm->DULL);
+        
+        ctx.getPrimitiveRenderer().draw();
+
+        // Restore
+        glDepthMask(GL_TRUE);
+        glDepthFunc(depthFunc);
     });
 
     this->_clouds = Clouds::from(*this->_shaders.clouds, this->_tm->load("assets/textures/clouds.png"));
@@ -612,6 +639,12 @@ void MCEngine::_handleConsoleInput() {
 
 void MCEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
+
+    this->_sky->draw(ctx);
+    ////////
+    
+    /////////
+
     this->_clouds->draw(ctx);
 
     ctx.bind(*this->_shaders.primary);

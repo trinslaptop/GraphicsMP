@@ -118,6 +118,9 @@ class MCEngine final : public CSCI441::OpenGLEngine {
 
             /// Textured sprite shader
             std::unique_ptr<ShaderProgram> sprite;
+
+            /// Renders sun and moon
+            std::unique_ptr<ShaderProgram> sky;
         } _shaders;
 
         std::shared_ptr<UniformBufferObject> _shader_globals;
@@ -129,6 +132,7 @@ class MCEngine final : public CSCI441::OpenGLEngine {
 
         /*** Objects ***/
         std::shared_ptr<Skybox> _skybox;
+        std::shared_ptr<mcmodel::Drawable> _sky;
         std::shared_ptr<Clouds> _clouds;
         std::shared_ptr<mcmodel::Drawable> _grid;
 
