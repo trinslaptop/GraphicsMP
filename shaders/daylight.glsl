@@ -29,6 +29,10 @@ vec3 getSunDirection() {
     return -vec3(0.0, sin(2*PI*time/DAY_LENGTH), cos(2*PI*time/DAY_LENGTH));
 }
 
-// vec3 getSunColor() {
-
-// }
+vec3 getSunColor() {
+    return mix(
+        vec3(0.95, 1.0, 1.0),
+        vec3(1.0, 0.7647, 0.3333),
+        clamp(10.0*cos(4.0*PI*time/DAY_LENGTH) - 9.0, 0.0, 1.0)
+    );
+}

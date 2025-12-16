@@ -10,13 +10,9 @@ uniform sampler2D specularTexture;
 uniform vec3 torchColor;
 uniform vec3 torchPos;
 
-// Directional light
-uniform vec3 sunColor;
-uniform vec3 sunDirection;
+uniform bool lit = true;
 
-uniform bool lit;
-
-uniform vec4 tint;
+uniform vec4 tint = vec4(1.0, 1.0, 1.0, 1.0);
 
 in vec2 fTexCoord;
 in vec3 fNormal;
@@ -24,8 +20,8 @@ in vec3 fPos;
 
 out vec4 fColorOut;
 
-uniform float frameTime;
-uniform uint frameCount;
+uniform float frameTime = 1.0;
+uniform uint frameCount = 1;
 
 /// Gets the diffuse texture for this fragment, applies tint and frame animation
 vec4 diffuse() {
@@ -98,7 +94,7 @@ void main() {
         // Point and spot lights are distance attenuated, but sun light isn't, so reduce it by a constant factor so it isn't overpowering
         // (That could be accounted for in the color itself, but this seems more consistent)
         fColorOut = 
-            getSunIntensity()*directional_light(getSunDirection(), sunColor)
+            getSunIntensity()*directional_light(getSunDirection(), getSunColor())
             + point_light(torchPos, torchColor, vec3(0.0, 0.005, 0.01))
         ;
     } else {

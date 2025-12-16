@@ -220,17 +220,10 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     // Common uniforms
     shader.setProgramUniform("diffuseTexture", 0);
     shader.setProgramUniform("specularTexture", 1);
-    shader.setProgramUniform("lit", true);
-    shader.setProgramUniform("frameCount", (GLuint) 1);
-    shader.setProgramUniform("frameTime", 1.0f);
-    shader.setProgramUniform("tint", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
     // Positional Light (Torch)
     shader.setProgramUniform("torchPos", glm::vec3(17.5, 5.5, 17.5));
     shader.setProgramUniform("torchColor", glm::vec3(1.0f, 0.96f, 0.90f) /* Slight gold */);
-
-    // Directional Light (Sun)
-    shader.setProgramUniform("sunColor", glm::vec3(0.95, 1.0, 1.0) /* Slight blue */);
 }
 
 void MCEngine::mSetupShaders() {
