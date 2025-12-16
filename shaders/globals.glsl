@@ -6,4 +6,5 @@ layout(std140) uniform Globals {
     float time;
     vec3 eyePos;
     int pass;
+    float DAY_LENGTH;
 };

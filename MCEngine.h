@@ -16,6 +16,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "include/json.hpp"
 #include "ShaderProgram.hpp"
 #include "MacGuffin.hpp"
 #include "input.hpp"
@@ -33,7 +34,7 @@
 class MCEngine final : public CSCI441::OpenGLEngine {
     public:
         /*** Engine Interface ***/
-        MCEngine(const std::string& player_name = "Idril");
+        MCEngine(json::ObjectT config, const std::string& player_name = "Idril");
         ~MCEngine() override;
 
         void run() override;
@@ -66,6 +67,8 @@ class MCEngine final : public CSCI441::OpenGLEngine {
         
         /// Read debug commands from terminal
         void _handleConsoleInput();
+
+        json::ObjectT _config;
 
         /// If debug info should be drawn, separate from debug logging
         bool _debug = false;

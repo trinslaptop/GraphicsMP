@@ -302,6 +302,9 @@ class World final : public mcmodel::Drawable, NonCopyable {
 
         const unsigned int _seed;
 
+        const float _day_length;
+        const float& _time;
+
         const std::array<GLuint, 2> _terrain_textures;
 
         const struct {
@@ -310,8 +313,10 @@ class World final : public mcmodel::Drawable, NonCopyable {
         } _shaders;
 
     public:
-        inline World(const unsigned int seed, const ShaderProgram& block_shader, const ShaderProgram& terrain_shader, const std::array<GLuint, 2> terrain_textures, std::unordered_map<std::string, std::shared_ptr<Block>>& blocks) :
+        inline World(const unsigned int seed, const float day_length, const float& time, const ShaderProgram& block_shader, const ShaderProgram& terrain_shader, const std::array<GLuint, 2> terrain_textures, std::unordered_map<std::string, std::shared_ptr<Block>>& blocks) :
             _seed(seed),
+            _day_length(day_length),
+            _time(time),
             _terrain_textures(terrain_textures),
             _shaders {block_shader, terrain_shader},
             _chunks(),
@@ -345,6 +350,10 @@ class World final : public mcmodel::Drawable, NonCopyable {
             } else {
                 return nullptr;
             }
+        }
+        
+        inline float getTime() const {
+            return this->_time;
         }
 
         /// Gets the minimum y value for this chunk, only meaningful for bottom chunk of world

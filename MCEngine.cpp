@@ -40,7 +40,7 @@ inline char const* get_gl_error_message(GLenum const err) noexcept {
 
 /*** Engine Interface ***/
 
-MCEngine::MCEngine(const std::string& player_name)
+MCEngine::MCEngine(json::ObjectT config, const std::string& player_name)
     : CSCI441::OpenGLEngine(4, 1, 720, 720, "Minceraft"),
     _player_name(player_name),
     _freecam(nullptr),
@@ -56,6 +56,7 @@ MCEngine::MCEngine(const std::string& player_name)
     _skybox(nullptr),
     _clouds(nullptr),
     _player(nullptr),
+    _config(config),
     _blocks(),
     _world()
 {
@@ -371,7 +372,10 @@ void MCEngine::mSetupBuffers() {
         })
     );
 
-    this->_world = std::make_shared<World>(seed, *this->_shaders.primary, *this->_shaders.terrain, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/grass.png"), this->_tm->load("assets/textures/dull.png")}, this->_blocks);
+    const float day_length = json::is::number(this->_config["day_length"]) ? json::cast::number(this->_config["day_length"]) : 1440.0f;
+    this->_shader_globals->setUniform("DAY_LENGTH", day_length);
+
+    this->_world = std::make_shared<World>(seed, day_length, this->_lastTime, *this->_shaders.primary, *this->_shaders.terrain, std::array<GLuint, 2> {this->_tm->load("assets/textures/block/grass.png"), this->_tm->load("assets/textures/dull.png")}, this->_blocks);
 
     // Initialize chunks
     for(size_t ckx = 0; ckx < 4; ckx++) {
@@ -434,6 +438,7 @@ void MCEngine::mSetupScene() {
 }
 
 /*** Engine Cleanup ***/
+
 void MCEngine::mCleanupShaders() {
     fprintf(stdout, "[INFO]: ...deleting Shaders.\n");
     this->_shaders = Shaders {};
@@ -591,8 +596,8 @@ void MCEngine::_handleConsoleInput() {
     }
 }
 
-
 /*** Rendering/Drawing Functions ***/
+
 void MCEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
 
@@ -639,6 +644,9 @@ void MCEngine::_renderUI(glutils::RenderContext& ctx) const {
 
         area = this->_pr->sprite(glutils::format("GND:%.1f", this->_world->getTerrainHeight(_player->getPosition().x, this->_player->getPosition().z)), {0.0f, 1.0f - 3.0f*em, 0.0f}, glm::vec3(1.0f, 1.0f, 1.0f), em);
         this->_pr->rect({0.0f, 1.0f - 3.0f*em}, area, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+
+        area = this->_pr->sprite(glutils::format("Time:%.1f", this->_world->getTime()), {0.0f, 1.0f - 4.0f*em, 0.0f}, glm::vec3(1.0f, 1.0f, 1.0f), em);
+        this->_pr->rect({0.0f, 1.0f - 4.0f*em}, area, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
     }
 }
 
@@ -766,6 +774,7 @@ input::InputManager& MCEngine::getInputManager() {
 }
 
 /*** Callbacks (forward to input manager) ***/
+
 void keyboard_callback(GLFWwindow *window, const int key, const int scancode, const int action, const int mods) {
     auto engine = static_cast<MCEngine*>(glfwGetWindowUserPointer(window));
     if(key != GLFW_KEY_UNKNOWN) {

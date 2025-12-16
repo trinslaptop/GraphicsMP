@@ -21,12 +21,22 @@
 #include <stb_image.h>
 
 #include <string>
+#include <fstream>
+#include <sstream>
+#include <ios>
+
+#include "include/json.hpp"
 
 // Launch engine
 int main(int argc, char* argv[]) {
     const std::string player = argc > 1 ? argv[1] : "Idril";
 
-    const auto engine = new MCEngine(player);
+    std::ifstream istream("data/config.json");
+    istream.exceptions(std::ios_base::badbit);
+    std::ostringstream ostream;
+    ostream << istream.rdbuf();
+
+    const auto engine = new MCEngine(json::cast::object(json::parse(ostream.str())), player);
     engine->initialize();
     if (engine->getError() == CSCI441::OpenGLEngine::OPENGL_ENGINE_ERROR_NO_ERROR) {
         engine->run();

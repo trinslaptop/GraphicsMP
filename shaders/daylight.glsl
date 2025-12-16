@@ -3,8 +3,6 @@
 #include "globals.glsl"
 #include "util.glsl"
 
-const float DAY_LENGTH = 1440.0;
-
 float sunmod(float amplitude, float bias) {
     return clamp(amplitude*sin(2.0*PI*time/DAY_LENGTH) + bias, 0.0, 1.0);
 }
