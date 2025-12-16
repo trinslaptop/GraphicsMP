@@ -107,7 +107,7 @@ MCEngine::MCEngine(const std::string& player_name)
         if(this->_primaryCamera == 0) {
             this->_freecam->moveForward(20.0f*deltaTime);
         } else {
-            this->_player->setPosition(this->_player->getPosition() + this->_player->getForwardVector()*5.0f*deltaTime);
+            this->_player->setPosition(this->_player->getPosition() + this->_player->getForwardVector()*glm::mix(5.0f, 2.0f, this->_player->isSneaking())*deltaTime);
             if(f8::randb(0.2f) && !this->_player->isInAir()) {
                 this->_player->getWorld().add(std::make_shared<DustParticle>(this->_player->getPosition(), this->_player->getRadius()));
             }
@@ -119,7 +119,7 @@ MCEngine::MCEngine(const std::string& player_name)
         if(this->_primaryCamera == 0) {
             this->_freecam->moveBackward(20.0f*deltaTime);
         } else {
-            this->_player->setPosition(this->_player->getPosition() - this->_player->getForwardVector()*5.0f*deltaTime);
+            this->_player->setPosition(this->_player->getPosition() - this->_player->getForwardVector()*glm::mix(5.0f, 2.0f, this->_player->isSneaking())*deltaTime);
             if(f8::randb(0.2f) && !this->_player->isInAir()) {
                 this->_player->getWorld().add(std::make_shared<DustParticle>(this->_player->getPosition(), this->_player->getRadius()));
             }
@@ -156,7 +156,7 @@ MCEngine::MCEngine(const std::string& player_name)
 
     // Cursor to rotate camera or zoom
     this->_im->on_axis(input::AxisType::Cursor, [this](const glm::vec2 pos) {
-        if(this->_im->is_down(input::mouse(GLFW_MOUSE_BUTTON_LEFT)) && (this->_im->is_down(input::key(GLFW_KEY_LEFT_SHIFT)) || this->_im->is_down(input::key(GLFW_KEY_RIGHT_SHIFT)))) {
+        if(this->_im->is_down(input::mouse(GLFW_MOUSE_BUTTON_LEFT)) && (this->_im->is_down(input::key(GLFW_KEY_LEFT_ALT)) || this->_im->is_down(input::key(GLFW_KEY_RIGHT_ALT)))) {
             if(this->_primaryCamera == 1) {
                 this->_player->getArcballCamera().moveForward((pos.y - this->_im->cursor().y)/12.0f);
             }

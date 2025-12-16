@@ -38,6 +38,7 @@ class Player final : public Entity {
         glm::vec3 _velocity = glm::vec3(0.0f, 0.0f, 0.0f);
 
         bool _sneaking = false;
+        float _sneaktime = 0.0f;
 
         inline void _updateCameras() {
             this->_arcballcamera.setLookAtPoint(this->getEyePosition());
@@ -111,6 +112,8 @@ class Player final : public Entity {
         inline virtual void update(const GLfloat deltaTime) override {
             Entity::update(deltaTime);
 
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_body)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_head)->rotation.z = glm::mix(0.0f, glutils::PI/6.0f, this->_sneaktime));
+
             // Animate cape
             std::dynamic_pointer_cast<mcmodel::Group>(this->_cape)->rotation.z = glutils::PI/8.0f + 0.25f*glm::cos(this->getLifetime() + 0.25f);
 
@@ -129,6 +132,9 @@ class Player final : public Entity {
             if(this->isInAir()) {
                 this->_velocity.y = glm::max(0.0f, this->_velocity.y - deltaTime*this->getGravity());
             }
+
+            // What were you doin'?
+            this->_sneaktime = glm::clamp(this->_sneaktime += 2.0f*deltaTime*(2.0f*this->isSneaking() - 1.0f), 0.0f, 1.0f);
         }
 
         inline virtual void draw(glutils::RenderContext& ctx) const override {
@@ -146,11 +152,11 @@ class Player final : public Entity {
         }
 
         inline virtual float getHeight() const override {
-            return 2.0f;
+            return glm::mix(2.0f, 1.9f, this->_sneaktime);
         }
 
         inline virtual float getEyeHeight() const override {
-            return 1.75f;
+            return glm::mix(1.75f, 1.65f, this->_sneaktime);
         }
 
         inline virtual float getRadius() const override {
