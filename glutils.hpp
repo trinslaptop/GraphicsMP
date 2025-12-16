@@ -332,6 +332,25 @@ namespace glutils {
 
                 this->_shaders.texrect.setProgramUniform("pos", pos - glm::vec2(centered)*size);
                 this->_shaders.texrect.setProgramUniform("size", size);
+                this->_shaders.texrect.setProgramUniform("grayscale", false);
+                this->_shaders.texrect.setProgramUniform("texCoord", texCoord);
+                this->_shaders.texrect.setProgramUniform("texSpan", texSpan);
+
+                glBindVertexArray(this->_vao);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, texture);
+                glDrawArrays(GL_POINTS, 0, 1);
+                glUseProgram(shader);
+            }
+
+            /// Renders a grayscale textured rectangle on the UI
+            inline void grayrect(const GLuint texture, const glm::vec2 pos = glm::vec2(0.0f), const glm::vec2 size = glm::vec2(1.0f), const glm::vec2 texCoord = glm::vec2(0.0f), const glm::vec2 texSpan = glm::vec2(1.0f), const glm::bvec2 centered = glm::bvec2(false, false)) const {
+                const GLint shader = get_shader();
+                this->_shaders.texrect.useProgram();
+
+                this->_shaders.texrect.setProgramUniform("pos", pos - glm::vec2(centered)*size);
+                this->_shaders.texrect.setProgramUniform("size", size);
+                this->_shaders.texrect.setProgramUniform("grayscale", true);
                 this->_shaders.texrect.setProgramUniform("texCoord", texCoord);
                 this->_shaders.texrect.setProgramUniform("texSpan", texSpan);
 
