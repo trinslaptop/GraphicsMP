@@ -247,6 +247,7 @@ namespace glutils {
                 const ShaderProgram& line;
                 const ShaderProgram& point;
                 const ShaderProgram& rect;
+                const ShaderProgram& texrect;
                 const ShaderProgram& sprite;
             } _shaders;
 
@@ -255,7 +256,7 @@ namespace glutils {
             GLuint _vao;
 
         public:
-            inline PrimitiveRenderer(const ShaderProgram& cube_shader, const ShaderProgram& line_shader, const ShaderProgram& point_shader, const ShaderProgram& rect_shader, const ShaderProgram& sprite_shader, const GLuint sprite_texture, const GLuint dull_texture) : _shaders {cube_shader, line_shader, point_shader, rect_shader, sprite_shader}, _sprite_texture(sprite_texture), _dull_texture(dull_texture) {
+            inline PrimitiveRenderer(const ShaderProgram& cube_shader, const ShaderProgram& line_shader, const ShaderProgram& point_shader, const ShaderProgram& rect_shader, const ShaderProgram& texrect_shader, const ShaderProgram& sprite_shader, const GLuint sprite_texture, const GLuint dull_texture) : _shaders {cube_shader, line_shader, point_shader, rect_shader, texrect_shader, sprite_shader}, _sprite_texture(sprite_texture), _dull_texture(dull_texture) {
                 // Enable gl_PointSize in shaders
                 glEnable(GL_PROGRAM_POINT_SIZE);
 
@@ -320,6 +321,23 @@ namespace glutils {
                 this->_shaders.rect.setProgramUniform("size", size);
 
                 glBindVertexArray(this->_vao);
+                glDrawArrays(GL_POINTS, 0, 1);
+                glUseProgram(shader);
+            }
+
+            /// Renders a textured rectangle on the UI
+            inline void rect(const GLuint texture, const glm::vec2 pos = glm::vec2(0.0f), const glm::vec2 size = glm::vec2(1.0f), const glm::vec2 texCoord = glm::vec2(0.0f), const glm::vec2 texSpan = glm::vec2(1.0f), const glm::bvec2 centered = glm::bvec2(false, false)) const {
+                const GLint shader = get_shader();
+                this->_shaders.texrect.useProgram();
+
+                this->_shaders.texrect.setProgramUniform("pos", pos - glm::vec2(centered)*size);
+                this->_shaders.texrect.setProgramUniform("size", size);
+                this->_shaders.texrect.setProgramUniform("texCoord", texCoord);
+                this->_shaders.texrect.setProgramUniform("texSpan", texSpan);
+
+                glBindVertexArray(this->_vao);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, texture);
                 glDrawArrays(GL_POINTS, 0, 1);
                 glUseProgram(shader);
             }

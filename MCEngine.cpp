@@ -268,6 +268,9 @@ void MCEngine::mSetupShaders() {
 
     this->_shaders.rect = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/rect.g.glsl", "shaders/alphacolor.f.glsl");
 
+    this->_shaders.texrect = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/texrect.g.glsl", "shaders/texture.f.glsl");
+    this->_shaders.texrect->setProgramUniform("tex", 0);
+
     this->_shaders.sprite = std::make_unique<ShaderProgram>("shaders/nop.glsl", "shaders/primitives/sprite.g.glsl", "shaders/texshader.f.glsl");
     this->_shader_globals->bindShaderBlock(*this->_shaders.sprite, "Globals");
     initCommonFragmentShaderUniforms(*this->_shaders.sprite);
@@ -292,7 +295,7 @@ void MCEngine::mSetupBuffers() {
     f8::srandv();
 
     this->_tm = std::make_unique<glutils::TextureManager>();
-    this->_pr = std::make_unique<glutils::PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, *this->_shaders.rect, *this->_shaders.sprite, this->_tm->load("assets/textures/sprites.png"), this->_tm->DULL);
+    this->_pr = std::make_unique<glutils::PrimitiveRenderer>(*this->_shaders.cube, *this->_shaders.line, *this->_shaders.point, *this->_shaders.rect, *this->_shaders.texrect, *this->_shaders.sprite, this->_tm->load("assets/textures/sprites.png"), this->_tm->DULL);
 
     this->_ac = std::make_unique<AudioContext>();
     this->_audio_source = this->_ac->createSource();
@@ -606,9 +609,6 @@ void MCEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
 
     this->_sky->draw(ctx);
-    ////////
-    
-    /////////
 
     this->_clouds->draw(ctx);
 
