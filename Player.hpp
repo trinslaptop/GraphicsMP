@@ -109,17 +109,16 @@ class Player final : public Entity {
         }
 
         inline virtual void update(const GLfloat deltaTime) override {
-            const auto last_position = this->getLastPosition();
             Entity::update(deltaTime);
 
             // Animate cape
-            std::dynamic_pointer_cast<mcmodel::Group>(this->_cape)->rotation.z = glutils::PI/8.0f + 0.25f*std::cos(this->getLifetime() + 0.25f);
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_cape)->rotation.z = glutils::PI/8.0f + 0.25f*glm::cos(this->getLifetime() + 0.25f);
 
             // Animate head
-            std::dynamic_pointer_cast<mcmodel::Group>(this->_head)->rotation.x = 0.125f*std::cos(this->getLifetime() + 0.50f);
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_head)->rotation.x = 0.125f*glm::cos(this->getLifetime() + 0.50f);
 
             // Animate arms
-            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_arm)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_arm)->rotation.z = 0.25f*std::cos(this->getLifetime()));
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_right_arm)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_arm)->rotation.z = 0.25f*glm::cos(this->getLifetime()));
             
             // Animate legs
             std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glm::cos(this->getLimbSwing(deltaTime))*this->getLimbSwingAmount(deltaTime));
