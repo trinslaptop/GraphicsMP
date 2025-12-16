@@ -385,9 +385,14 @@ namespace glutils {
     /// A class to manage stacking transforms
     /// NOTE: VP matrices have been moved to a UBO
     class RenderContext final : NonCopyable {
+        public:
+            enum RenderPass {
+                #include "shaders/RenderPass.glsl"
+            };
         private:
             const PrimitiveRenderer& _pr;
             const bool _debug;
+            const RenderPass _pass;
             std::vector<glm::mat4> _transformationStack;
             glm::mat4 _modelMatrix;
             GLuint _shader;
@@ -401,7 +406,7 @@ namespace glutils {
             }
 
         public:
-            inline RenderContext(const PrimitiveRenderer& pr, const bool debug) : _transformationStack {glm::mat4(1.0)}, _modelMatrix(1.0), _shader(0), _modelMatrixLocation(0), _normalMatrixLocation(0), _pr(pr), _debug(debug) {}
+            inline RenderContext(const PrimitiveRenderer& pr, const RenderPass pass, const bool debug) : _pass(pass), _transformationStack {glm::mat4(1.0)}, _modelMatrix(1.0), _shader(0), _modelMatrixLocation(0), _normalMatrixLocation(0), _pr(pr), _debug(debug) {}
                         
             /// Set which shader this context should update
             inline void bind(const ShaderProgram& shader, const char* modelMatrixUniformName = "modelMatrix", const char* normalMatrixUniformName = "normalMatrix") {
@@ -447,7 +452,11 @@ namespace glutils {
             }
 
             inline bool debug() const {
-                return this->_debug;
+                return this->_debug && this->_pass == RenderPass::PRIMARY_PASS;
+            }
+
+            inline RenderPass pass() const {
+                return this->_pass;
             }
     };
 }

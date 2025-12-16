@@ -593,7 +593,6 @@ void MCEngine::_handleConsoleInput() {
 
 
 /*** Rendering/Drawing Functions ***/
-
 void MCEngine::_renderScene(glutils::RenderContext& ctx) const {
     this->_skybox->draw(ctx);
 
@@ -720,7 +719,8 @@ void MCEngine::run() {
 
         // Draw primary camera to the whole window
         glViewport(0, 0, framebufferWidth, framebufferHeight);
-        glutils::RenderContext ctx(*this->_pr, this->_debug);
+        glutils::RenderContext ctx(*this->_pr, glutils::RenderContext::RenderPass::PRIMARY_PASS, this->_debug);
+        this->_shader_globals->setUniform("pass", (int) ctx.pass());
         this->_shader_globals->setUniform("projection", this->getPrimaryCamera()->getProjectionMatrix());
         this->_shader_globals->setUniform("view", this->getPrimaryCamera()->getViewMatrix());
         this->_shader_globals->setUniform("eyePos", this->getPrimaryCamera()->getPosition());
@@ -739,7 +739,8 @@ void MCEngine::run() {
             
             // Draw secondary camera
             glViewport(framebufferWidth*0.75, framebufferHeight*0.75, framebufferWidth*0.25, framebufferHeight*0.25);
-            glutils::RenderContext ctx(*this->_pr, this->_debug);
+            glutils::RenderContext ctx(*this->_pr, glutils::RenderContext::RenderPass::PRIMARY_PASS, this->_debug);
+            this->_shader_globals->setUniform("pass", (int) ctx.pass());
             this->_shader_globals->setUniform("projection", this->getSecondaryCamera()->getProjectionMatrix());
             this->_shader_globals->setUniform("view", this->getSecondaryCamera()->getViewMatrix());
             this->_shader_globals->setUniform("eyePos", this->getSecondaryCamera()->getPosition());

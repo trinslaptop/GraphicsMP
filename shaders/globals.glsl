@@ -5,4 +5,5 @@ layout(std140) uniform Globals {
     mat4 view;
     float time;
     vec3 eyePos;
+    int pass;
 };
