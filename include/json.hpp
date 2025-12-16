@@ -26,6 +26,13 @@ namespace json {
 			const unsigned char _ = 0;
 	};
 
+	using ValueT = std::any;
+	using ObjectT = std::map<std::string, std::any>;
+	using ListT = std::vector<std::any>;
+	using BooleanT = bool;
+	using NumberT = double;
+	using StringT = std::string;
+
 	namespace is {
 		inline bool string(const std::any& value) {
 			return value.type() == typeid(std::string);
