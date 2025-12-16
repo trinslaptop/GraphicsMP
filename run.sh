@@ -17,4 +17,4 @@ done
 
 cmake ${build[@]} -S . -B build
 (cd build && make)
-"./build/a4" ${run[@]} < /dev/stdin
+"./build/mc" ${run[@]} < /dev/stdin

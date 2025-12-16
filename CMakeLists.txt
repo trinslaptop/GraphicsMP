@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(a4)
+project(mc)
 set(CMAKE_CXX_STANDARD 17)
 set(SOURCE_FILES main.cpp MCEngine.cpp MCEngine.h input.cpp input.hpp)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
