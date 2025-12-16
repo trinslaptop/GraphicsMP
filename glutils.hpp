@@ -144,7 +144,7 @@ namespace glutils {
                 }
             };
 
-            // Retrieves texture from cache or loads it from a bytes
+            /// Retrieves texture from cache or loads it from a bytes
             inline GLuint load(const std::string& name, const std::vector<unsigned char>& bytes) {
                 // Try find existing
                 std::map<std::string, GLuint>::iterator iter = this->_textures.find(name);
@@ -187,7 +187,7 @@ namespace glutils {
                 return handle;
             }
 
-            // Retrieves texture from cache or loads it from a file
+            /// Retrieves texture from cache or loads it from a file
             inline GLuint load(const std::string& path) {
                 // Try find existing
                 std::map<std::string, GLuint>::iterator iter = this->_textures.find(path);
