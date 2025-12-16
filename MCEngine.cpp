@@ -41,7 +41,11 @@ inline char const* get_gl_error_message(GLenum const err) noexcept {
 /*** Engine Interface ***/
 
 MCEngine::MCEngine(json::ObjectT config, const std::string& player_name)
-    : CSCI441::OpenGLEngine(4, 1, 720, 720, "Minceraft"),
+    : CSCI441::OpenGLEngine(4, 1,
+        json::is::number(config["width"]) ? (int) json::cast::number(config["width"]) : 720,
+        json::is::number(config["height"]) ? (int) json::cast::number(config["height"]) : 720,
+        "Minceraft"
+    ),
     _player_name(player_name),
     _freecam(nullptr),
     _fixedcam(nullptr),
