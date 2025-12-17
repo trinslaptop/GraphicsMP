@@ -68,9 +68,8 @@ void main() {
 
     if(pass == PRIMARY_PASS) {
         gl_Position = projection*view*modelMatrix*p;
-        fPosLS = lsm*vec4(fPos, 1.0);
     } else {
         gl_Position = lsm*modelMatrix*p;
-        fPosLS = vec4(0.0, 0.0, 0.0, 0.0);
     }
+    fPosLS = lsm*vec4(fPos, 1.0);
 }
