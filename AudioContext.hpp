@@ -17,7 +17,8 @@
 typedef unsigned int ALuint;
 #endif
 
-/// Loads, stores, plays, and releases sounds, requires compile flag
+/// Loads, stores, plays, and releases sounds
+/// NOTE: requires compile flag
 /// Create a source for each unique thing that should play sounds then delete when no longer needed
 class AudioContext final : NonCopyable {
 #ifdef USE_OPENAL
