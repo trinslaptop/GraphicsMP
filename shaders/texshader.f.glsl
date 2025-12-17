@@ -33,6 +33,7 @@ uniform float frameTime = 1.0;
 uniform uint frameCount = 1;
 
 /// Compute shadow coverage
+/// Based on https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
 float shadow() {
     // Do perspective division and convert to normalized device coordinates
     vec3 proj = 0.5*(fPosLS.xyz/fPosLS.w) + 0.5;
