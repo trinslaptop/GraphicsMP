@@ -140,7 +140,7 @@ class Fireflies final : public Particle {
         inline virtual void update(const float deltaTime) override final {
             this->_lifetime += deltaTime;
 
-            if(f8::randb(0.2f)) {
+            if(!this->_world.isDay() && f8::randb(0.2f)) {
                 this->_world.add(std::make_shared<Firefly>(this->evaluate(this->s2t(this->_speed*this->_lifetime))));
             }
         }
