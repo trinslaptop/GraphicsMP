@@ -18,6 +18,7 @@
 
 #include "include/json.hpp"
 #include "ShaderProgram.hpp"
+#include "ShadowMap.hpp"
 #include "MacGuffin.hpp"
 #include "input.hpp"
 #include "mcmodel.hpp"
@@ -131,6 +132,8 @@ class MCEngine final : public CSCI441::OpenGLEngine {
         } _shaders;
 
         std::shared_ptr<UniformBufferObject> _shader_globals;
+
+        std::unique_ptr<ShadowMap> _shadows;
 
         /*** Helper Classes ***/
         std::unique_ptr<input::InputManager> _im;

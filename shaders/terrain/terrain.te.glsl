@@ -4,11 +4,16 @@ layout(quads, equal_spacing, ccw) in;
 
 #include "../globals.glsl"
 
+const int
+#include "../RenderPass.glsl"
+;
+
 uniform mat4 modelMatrix;
 
 out vec2 fTexCoord;
 out vec3 fNormal;
 out vec3 fPos;
+out vec4 fPosLS;
 
 vec4 bc(vec4 p0, vec4 p1, const vec4 p2, const vec4 p3, const float t) {
     return pow(1 - t, 3)*p0 + 3*pow(1 - t, 2)*t*p1 + 3*(1 - t)*pow(t, 2)*p2 + pow(t, 3)*p3;
@@ -61,5 +66,10 @@ void main() {
     fPos = vec3(modelMatrix*p);
     fTexCoord = p.xz;
 
-    gl_Position = projection*view*modelMatrix*p;
+    if(pass == PRIMARY_PASS) {
+        gl_Position = projection*view*modelMatrix*p;
+        fPosLS = lsm*vec4(fPos, 1.0);
+    } else {
+        gl_Position = lsm*modelMatrix*p;
+    }
 }

@@ -10,6 +10,10 @@ const int
 #include "SpriteMode.glsl"
 ;
 
+const int
+#include "../RenderPass.glsl"
+;
+
 uniform int sprite;
 uniform vec3 pos;
 uniform int mode;
@@ -20,9 +24,12 @@ out vec3 fNormal;
 out vec3 fPos;
 
 void vertex(vec2 offset, vec2 texOffset) {
-    gl_Position = projection*(view*vec4(pos, 1.0) + vec4(offset/2.0, 0.0, 0.0));
-    fTexCoord = vec2(sprite % 16, 15.0 - floor(sprite/16.0))/16.0 + texOffset;
-    EmitVertex();
+    if(pass == PRIMARY_PASS) {
+        gl_Position = projection*(view*vec4(pos, 1.0) + vec4(offset/2.0, 0.0, 0.0));
+        fTexCoord = vec2(sprite % 16, 15.0 - floor(sprite/16.0))/16.0 + texOffset;
+        EmitVertex();
+    }
+    // TODO: sprite shadows?
 }
 
 void uivertex(vec2 offset, vec2 texOffset) {

@@ -2,9 +2,16 @@
 
 #include "globals.glsl"
 #include "daylight.glsl"
+#include "util.glsl"
+
+// Since GLSL lacks enums, use constants and include the same file on the C++ side in glutils.hpp
+const int
+#include "RenderPass.glsl"
+;
 
 uniform sampler2D diffuseTexture;
 uniform sampler2D specularTexture;
+uniform sampler2D shadowTexture;
 
 // Point light
 uniform vec3 torchColor;
@@ -17,11 +24,27 @@ uniform vec4 tint = vec4(1.0, 1.0, 1.0, 1.0);
 in vec2 fTexCoord;
 in vec3 fNormal;
 in vec3 fPos;
+in vec4 fPosLS;
 
 out vec4 fColorOut;
 
 uniform float frameTime = 1.0;
 uniform uint frameCount = 1;
+
+/// Compute shadow coverage
+float shadow() {
+    // Do perspective division and convert to normalized device coordinates
+    vec3 proj = 0.5*(fPosLS.xyz/fPosLS.w) + 0.5;
+
+    if(proj.z > 1.0) {
+        return 0.0;
+    }
+
+    float closest = texture(shadowTexture, proj.xy).r;
+    float current = proj.z;
+
+    return current - 0.005 > closest ? 1.0 : 0.0;
+}
 
 /// Gets the diffuse texture for this fragment, applies tint and frame animation
 vec4 diffuse() {
@@ -50,7 +73,7 @@ vec4 phong(const vec3 L, const vec3 lColor) {
     vec4 specularTexel = texture(specularTexture, fTexCoord);
     vec3 specular = max(vec3(specularTexel)*lColor*pow(max(dot(V, R), 0.0), 32.0*specularTexel.a), vec3(0.0, 0.0, 0.0));
 
-    return clamp(vec4(diffuse + specular + ambient, 1.0), vec4(0.0), vec4(1.0));
+    return clamp(vec4((1.0 - shadow())*(diffuse + specular) + ambient, 1.0), vec4(0.0), vec4(1.0));
 }
 
 vec4 attenuate(const vec3 lPos, const vec4 i, const vec3 weights) {
@@ -89,15 +112,19 @@ void main() {
         discard;
     }
 
-    if(lit) {
-        // Compute Phong shading for all three lights
-        // Point and spot lights are distance attenuated, but sun light isn't, so reduce it by a constant factor so it isn't overpowering
-        // (That could be accounted for in the color itself, but this seems more consistent)
-        fColorOut = 
-            getSunIntensity()*directional_light(getSunDirection(), getSunColor())
-            + point_light(torchPos, torchColor, vec3(0.0, 0.005, 0.01))
-        ;
-    } else {
-        fColorOut = diffuseTexel;
+    if(pass == PRIMARY_PASS) {
+        if(lit) {
+            // Compute Phong shading for all three lights
+            // Point and spot lights are distance attenuated, but sun light isn't, so reduce it by a constant factor so it isn't overpowering
+            // (That could be accounted for in the color itself, but this seems more consistent and can be varied with time)
+            fColorOut = 
+                getSunIntensity()*directional_light(getSunDirection(), getSunColor())
+                + point_light(torchPos, torchColor, vec3(0.0, 0.005, 0.01))
+            ;
+        } else {
+            fColorOut = diffuseTexel;
+        }
     }
+
+    // gl_FragDepth = gl_FragCoord.z; (Implicit!)
 }

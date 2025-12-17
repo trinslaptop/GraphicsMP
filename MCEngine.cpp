@@ -234,6 +234,7 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     // Common uniforms
     shader.setProgramUniform("diffuseTexture", 0);
     shader.setProgramUniform("specularTexture", 1);
+    shader.setProgramUniform("shadowTexture", 2);
 
     // Positional Light (Torch)
     shader.setProgramUniform("torchPos", glm::vec3(17.5, 5.5, 17.5));
@@ -299,6 +300,8 @@ void MCEngine::mSetupBuffers() {
 
     this->_ac = std::make_unique<AudioContext>();
     this->_audio_source = this->_ac->createSource();
+
+    this->_shadows = std::make_unique<ShadowMap>();
 
     // Create skybox
     this->_skybox = std::make_shared<Skybox>(*this->_shaders.skybox, std::array<std::string, 6> {
@@ -462,6 +465,7 @@ void MCEngine::mCleanupBuffers() {
     this->_macguffin = nullptr;
     this->_blocks.clear();
     this->_pr = nullptr;
+    this->_shadows = nullptr;
 
     this->_ac->deleteSource(this->_audio_source);
     this->_ac = nullptr;
@@ -730,27 +734,45 @@ void MCEngine::run() {
         _updateScene();
 
         // Draw primary camera to the whole window
-        glViewport(0, 0, framebufferWidth, framebufferHeight);
-        glutils::RenderContext ctx(*this->_pr, glutils::RenderContext::RenderPass::PRIMARY_PASS, this->_debug);
-        this->_shader_globals->setUniform("pass", (int) ctx.pass());
         this->_shader_globals->setUniform("projection", this->getPrimaryCamera()->getProjectionMatrix());
         this->_shader_globals->setUniform("view", this->getPrimaryCamera()->getViewMatrix());
         this->_shader_globals->setUniform("eyePos", this->getPrimaryCamera()->getPosition());
+
+        this->_shadows->update(
+            {8, 10, 8},
+            {0, -1, 0},
+            *this->_pr,
+            mcmodel::Lambda([&](glutils::RenderContext& ctx) {
+                ctx.bind(*this->_shaders.primary);
+                this->_player->draw(ctx);
+                this->_world->draw(ctx);
+            }),
+            *this->_shader_globals
+        );
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, this->_shadows->getTexture());
+        
+        glViewport(0, 0, framebufferWidth, framebufferHeight);
+        glutils::RenderContext ctx(*this->_pr, glutils::RenderContext::RenderPass::PRIMARY_PASS, this->_debug);
+        this->_shader_globals->setUniform("pass", (int) ctx.pass());
         _renderScene(ctx);
         _renderUI(ctx);
 
+        this->_pr->grayrect(this->_shadows->getTexture(), glm::vec2(0.9f, 0.0f), glm::vec2(0.1f, 0.1f));
+
         // Optional secondary cameras
         if(this->getSecondaryCamera() != nullptr) {
-            this->_pr->rect({0.745f, 0.745}, {0.255f, 0.255f}, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+            this->_pr->rect({0.745f, 0.745f}, {0.255f, 0.255f}, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 
             // Clear just the region of the mini-viewport
             glEnable(GL_SCISSOR_TEST);
-            glScissor(framebufferWidth*0.75, framebufferHeight*0.75, framebufferWidth*0.25, framebufferHeight*0.25);
+            glScissor(framebufferWidth*0.75f, framebufferHeight*0.75f, framebufferWidth*0.25f, framebufferHeight*0.25f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glDisable(GL_SCISSOR_TEST);
             
             // Draw secondary camera
-            glViewport(framebufferWidth*0.75, framebufferHeight*0.75, framebufferWidth*0.25, framebufferHeight*0.25);
+            glViewport(framebufferWidth*0.75f, framebufferHeight*0.75f, framebufferWidth*0.25f, framebufferHeight*0.25f);
             glutils::RenderContext ctx(*this->_pr, glutils::RenderContext::RenderPass::PRIMARY_PASS, this->_debug);
             this->_shader_globals->setUniform("pass", (int) ctx.pass());
             this->_shader_globals->setUniform("projection", this->getSecondaryCamera()->getProjectionMatrix());
