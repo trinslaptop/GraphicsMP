@@ -15,7 +15,8 @@ uniform sampler2D shadowTexture;
 
 // Point light
 uniform vec3 torchColor;
-uniform vec3 torchPos;
+uniform vec3 torchPos1;
+uniform vec3 torchPos2;
 
 uniform bool lit = true;
 
@@ -126,7 +127,8 @@ void main() {
             // (That could be accounted for in the color itself, but this seems more consistent and can be varied with time)
             fColorOut = 
                 getSunIntensity()*directional_light(getSunDirection(), getSunColor())
-                + point_light(torchPos, torchColor, vec3(0.0, 0.005, 0.01))
+                + point_light(torchPos1, torchColor, vec3(0.0, 0.005, 0.01))
+                + point_light(torchPos2, torchColor, vec3(0.0, 0.005, 0.01))
             ;
         } else {
             fColorOut = diffuseTexel;

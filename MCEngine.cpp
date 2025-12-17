@@ -18,6 +18,7 @@
 #include "get_player.hpp"
 #include "Particle.hpp"
 #include "Zombie.hpp"
+#include "Wolf.hpp"
 #include "Fireflies.hpp"
 
 static constexpr GLfloat GLM_PI = glm::pi<float>();
@@ -237,7 +238,8 @@ inline void initCommonFragmentShaderUniforms(const ShaderProgram& shader) {
     shader.setProgramUniform("shadowTexture", 2);
 
     // Positional Light (Torch)
-    shader.setProgramUniform("torchPos", glm::vec3(17.5, 5.5, 17.5));
+    shader.setProgramUniform("torchPos1", glm::vec3(17.5f, 5.5f, 17.5f));
+    shader.setProgramUniform("torchPos2", glm::vec3(53.5f, 4.5f, 23.5f));
     shader.setProgramUniform("torchColor", glm::vec3(1.0f, 0.96f, 0.90f) /* Slight gold */);
 }
 
@@ -407,6 +409,11 @@ void MCEngine::mSetupBuffers() {
         }
     }
 
+    for(int dy = 0; dy < 4; dy++) {
+        this->_world->setBlock(glm::ivec3(53, 0 + dy, 23), this->_blocks["planks"]);
+    }
+    this->_world->setBlock(glm::ivec3(53, 4, 23), this->_blocks["torch"]);
+
     // Setup players
     this->_player = get_player(*this->_world, *this->_shaders.primary, *this->_tm, this->_player_name);
     this->_player->setPosition({32.0f, 0.0f, 32.0f});
@@ -418,10 +425,16 @@ void MCEngine::mSetupBuffers() {
 
     this->add_zombie();
 
+    // Summon wolf
+    std::shared_ptr<Wolf> wolf = std::make_shared<Wolf>(*this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/wolf.png"), this->_tm->load("assets/textures/dull.png")});
+    wolf->setPosition({2.0f, 0.0f, 2.0f});
+    wolf->setHealth(wolf->getMaxHealth());
+    wolf->setTarget(this->_player);
+    this->_world->add(wolf);
+
     std::shared_ptr<Fireflies> fireflies = Fireflies::from_json(*this->_world, json::parse(glutils::cat("data/world/fireflies.json")));
     fprintf(stdout, "[INFO]: Loading fireflies (%ld curves, %ld points, %f blocks long)\n", fireflies->getCurveCount(), fireflies->getPointCount(), fireflies->getArcLength());
     this->_world->add(fireflies);
-
 }
 
 /// Summons a new zombie
