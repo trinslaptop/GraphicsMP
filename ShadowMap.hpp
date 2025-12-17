@@ -17,7 +17,7 @@ class ShadowMap final : NonCopyable {
         const glm::mat4 _projection;
     public:
         const GLuint WIDTH, HEIGHT;
-        inline ShadowMap(const GLuint width = 1024, const GLuint height = 1024, const float near_plane = 0.1f, const float far_plane = 100.0f) : WIDTH(width), HEIGHT(height), _projection(glm::ortho(-16.0f, 16.0f, -16.0f, 16.0f, near_plane, far_plane)) {
+        inline ShadowMap(const GLuint width = 1024, const GLuint height = 1024, const float near_plane = 0.1f, const float far_plane = 100.0f) : WIDTH(width), HEIGHT(height), _projection(glm::ortho(-32.0f, 32.0f, -32.0f, 32.0f, near_plane, far_plane)) {
             // Setup texture
             glGenTextures(1, &this->_depthmap);
             glBindTexture(GL_TEXTURE_2D, this->_depthmap);
@@ -42,7 +42,7 @@ class ShadowMap final : NonCopyable {
             glDeleteFramebuffers(1, &this->_fbo);
         }
 
-        inline void update(const glm::vec3& eyePos, const glm::vec3& lDir, const glutils::PrimitiveRenderer& pr, const mcmodel::Drawable& scene, UniformBufferObject& globals) {
+        inline void update(const glm::vec3& eyePos, const glm::vec3& lDir, const glutils::PrimitiveRenderer& pr, UniformBufferObject& globals, const mcmodel::Drawable& scene) {
             glViewport(0, 0, this->WIDTH, this->HEIGHT);
             glBindFramebuffer(GL_FRAMEBUFFER, this->_fbo);
             glClear(GL_DEPTH_BUFFER_BIT);

@@ -742,12 +742,12 @@ void MCEngine::run() {
             this->getPrimaryCamera()->getPosition(),
             this->_world->getSunDirection(),
             *this->_pr,
+            *this->_shader_globals,
             mcmodel::Lambda([&](glutils::RenderContext& ctx) {
                 ctx.bind(*this->_shaders.primary);
                 this->_player->draw(ctx);
                 this->_world->draw(ctx);
-            }),
-            *this->_shader_globals
+            })
         );
 
         glActiveTexture(GL_TEXTURE2);
@@ -759,7 +759,9 @@ void MCEngine::run() {
         _renderScene(ctx);
         _renderUI(ctx);
 
-        this->_pr->grayrect(this->_shadows->getTexture(), glm::vec2(0.9f, 0.0f), glm::vec2(0.1f, 0.1f));
+        // For the sake of performance, reuse shadows for secondary camera. It's good enough
+
+        // this->_pr->grayrect(this->_shadows->getTexture(), glm::vec2(0.9f, 0.0f), glm::vec2(0.1f, 0.1f));
 
         // Optional secondary cameras
         if(this->getSecondaryCamera() != nullptr) {
