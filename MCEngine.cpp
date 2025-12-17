@@ -585,6 +585,12 @@ void MCEngine::_handleConsoleInput() {
 
         if(name == "zombie") {
             this->add_zombie();
+        } else if(name == "wolf") {
+            std::shared_ptr<Wolf> wolf = std::make_shared<Wolf>(*this->_world, *this->_shaders.primary, std::array<GLuint, 2> {this->_tm->load("assets/textures/entity/wolf.png"), this->_tm->load("assets/textures/dull.png")});
+            wolf->setPosition({2.0f, 0.0f, 2.0f});
+            wolf->setHealth(wolf->getMaxHealth());
+            wolf->setTarget(this->_player);
+            this->_world->add(wolf);
         } else {
             fprintf(stderr, "[ERROR]: Unknown creature\n");
         }
