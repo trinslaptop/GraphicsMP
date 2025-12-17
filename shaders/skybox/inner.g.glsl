@@ -9,6 +9,7 @@ layout(triangle_strip, max_vertices = 8) out;
 out vec2 fTexCoord;
 out vec3 fNormal;
 out vec3 fPos;
+out vec4 fPosLS;
 
 vec2 atlasSize = vec2(2, 2);
 
@@ -33,6 +34,7 @@ void skyquad(vec3 direction, vec2 atlasOffset, float size) {
 void main() {
     fNormal = vec3(0.0, 0.0, 1.0);
     fPos = vec3(0.0, 0.0, 0.0);
+    fPosLS = vec4(0.0, 0.0, 0.0, 0.0);
 
     // Sun
     skyquad(-getSunDirection(), vec2(0.0, 0.0), 0.1);

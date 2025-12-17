@@ -22,6 +22,7 @@ uniform float size;
 out vec2 fTexCoord;
 out vec3 fNormal;
 out vec3 fPos;
+out vec4 fPosLS;
 
 void vertex(vec2 offset, vec2 texOffset) {
     if(pass == PRIMARY_PASS) {
@@ -40,6 +41,7 @@ void uivertex(vec2 offset, vec2 texOffset) {
 
 void main() {
     float texSpan = 1.0/16.0;
+    fPosLS = vec4(0.0, 0.0, 0.0, 0.0);
 
     switch(mode) {
         case PARTICLE:
