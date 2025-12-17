@@ -11,6 +11,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+/// Handles rendering shadows to a FBO
+/// NOTE: due to legacy code, the shadow rendering is adapted to work with modified existing shaders instead of new ones!
+/// Based on https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping
 class ShadowMap final : NonCopyable {
     private:
         GLuint _fbo, _depthmap;
