@@ -126,6 +126,8 @@ class Player final : public Entity {
             // Animate legs
             std::dynamic_pointer_cast<mcmodel::Group>(this->_right_leg)->rotation.z = -(std::dynamic_pointer_cast<mcmodel::Group>(this->_left_leg)->rotation.z = glm::cos(this->getLimbSwing(deltaTime))*this->getLimbSwingAmount(deltaTime));
         
+            std::dynamic_pointer_cast<mcmodel::Group>(this->_root)->rotation.y = 0.05f*glm::cos(glutils::PI*(this->getHurtTime() - Entity::HURT_DURATION/2.0f)/Entity::HURT_DURATION);
+
             this->_updateCameras();
 
             // Again, not how physics works but I don't care for now
@@ -141,7 +143,6 @@ class Player final : public Entity {
             Entity::draw(ctx);
             if(!this->isHidden()) {
                 this->_shader.setProgramUniform("tint", glm::vec4(glm::mix(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 0.33f, 0.33f), glm::cos(glutils::PI*(this->getHurtTime() - Entity::HURT_DURATION/2.0f)/Entity::HURT_DURATION)), 1.0f));
-                std::dynamic_pointer_cast<mcmodel::Group>(this->_root)->rotation.y = 0.05f*glm::cos(glutils::PI*(this->getHurtTime() - Entity::HURT_DURATION/2.0f)/Entity::HURT_DURATION);
 
                 ctx.pushTransformation(glm::translate(glm::mat4(1.0f), this->getPosition())*glm::yawPitchRoll(this->getRotation().x, this->getRotation().y, this->getRotation().z));
                     this->_root->draw(ctx);

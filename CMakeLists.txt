@@ -43,4 +43,11 @@ elseif( UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
     endif()
     unset(USE_OPENAL CACHE)
 
+    # Use -DOPTIMIZE=True to enable compiler optimization
+    # May have unexpected results!
+    if( OPTIMIZE )
+        set(CMAKE_CXX_FLAGS "-O3")
+    endif()
+    unset(OPTIMIZE CACHE)
+
 endif()
