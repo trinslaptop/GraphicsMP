@@ -230,7 +230,7 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
                     const int x = f8::randi(4, Chunk::CHUNK_SIZE - 4, state), z = f8::randi(4, Chunk::CHUNK_SIZE - 4, state);
                     const glm::vec3 pos = glm::vec3(x, chunk->getTerrainHeight(x + 0.5f, z + 0.5f), z);
                     // Check if ground mostly flat and empty
-                    if(chunk->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.5 && !chunk->getBlock(pos) && f8::randb(0.35)) {
+                    if(chunk->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.5 && !chunk->getBlock(pos) && f8::randb(0.35, state)) {
                         int height = f8::randi(5, 8, state);
 
                         // Place tree
