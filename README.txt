@@ -83,6 +83,7 @@ Trin based the graphics for this project on Minecraft; however, all the textures
 they have explicit permission to use. Like last time, the player skin format is exactly the same as official Minecraft ones. There's Trin's skin builtin,
 but see the notes above about using libcurl to fetch any player's skin.
 
++ The name "Minceraft" is an intentional misspelling of Minecraft
 + The goal is to collect as many diamonds as possible.
 + When you pick up one, another is placed randomly, and there is a chance for another zombie to spawn.
 + You can see your health, diamonds, and deaths on the screen.
@@ -90,7 +91,7 @@ but see the notes above about using libcurl to fetch any player's skin.
 + When zombies hit the player or each other, they have a chance to deal damage.
 + After dying, the player respawns and the death counter goes up. Wolves can also respawn.
 + When the player or zombies take damage, they animate going red and recoiling from the hit.
-+ The zombies slowly track the player but can get stuck behind blocks since they have no path finding. 
++ The zombies slowly track the player but can get stuck behind blocks since they have no path finding.
 + Wolves are friends. They're sooo cute!!!
 + The player and mobs have a basic idle animation consisting of arm swing, minor head rotation, and cape blowing. While walking, there is also a leg
   swing animation (it even stops when you do!)
@@ -109,9 +110,9 @@ but see the notes above about using libcurl to fetch any player's skin.
   however, Trin removed this feature because they personally didn't like how it looked, and it overly complicated AABB collision and jumping.
 + There's also a pyramid of amethyst and a few others things scattered around the world.
 + The grass and leaves wave in the wind, and the mushrooms have animated textures (A lot of the animations are pretty subtle so as to not be garish).
-+ The torches are slightly orange point lights
-+ Torches give of smoke and ember particles
-+ Walking gives of dust particles
++ The torches are slightly orange point lights and are attenuated. 
++ Torches give of smoke and ember particles.
++ Walking gives of dust particles.
 
 + The skybox uses cubemaps to efficiently render the textures around the player. This was based on https://learnopengl.com/Advanced-OpenGL/Cubemaps.
 + There is also a animated cloud plane. Look for easter eggs in the clouds.
@@ -124,7 +125,16 @@ but see the notes above about using libcurl to fetch any player's skin.
   + Sunlight is normally bluish white but is golden right around sunrise and sunset.
   + Clouds turn a pretty marbled pink and orange at sunrise and sunset
   + Starts twinkle at night
-  + The sun and moon are generated COMPLETELY via shaders, no VBO. It pulls the same 
+  + There's shadows! (Only for the sun, not torches)
+  + The sun and moon are generated COMPLETELY via shaders, no VBO. It pulls the same direction the lighting uses then projects the textures onto the sky.
+
++ Fireflies spawn in a swarm at night (not visible during day):
+  + They float around and change color.
+  + While each individual firefly has it's own path, the swarm follows a bezier curve in a close loop around the world. It's got arc length
+    parameterization so that it's smooth and was designed to be C(1) continuous. See notes below about `fireflies.json`.
+
++ There's a ton of assorted shaders, and Trin shimmed ShaderProgram to support `#includes`.
++ To aid in using lots of shaders with shared uniforms, the program uses UBOs.
 
 + In addition to the arcball camera and free camera, there's also a bonus skycamera and first person view that can be shown in the secondary viewport.
 + You can also play md5camera tracks (format described on the class website) via the console. There's a sample track in the data folder. To generate
@@ -135,17 +145,6 @@ Some additional but not required features:
 + Animated textures from vertically stacked texture files
 + Using textures for specular color and shininess
 + Cutout textures
-
-
-TOOOOOOOODOODODODODODODO, and the directional light comes from approximately the sun's angle. All applicable lights are attenuated. 
-
-
-
-
-
-
-
-
 
 + Some helper classes were implemented as header-only files; while not ideal for compilation time, it had negligible impact and keeps code simple
   (plus the CSCI441 library does it already).
