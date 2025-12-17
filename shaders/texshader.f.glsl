@@ -43,7 +43,7 @@ float shadow() {
     float closest = texture(shadowTexture, proj.xy).r;
     float current = proj.z;
 
-    return current - 0.005 > closest ? 1.0 : 0.0;
+    return current - 0.008 > closest ? 1.0 : 0.0;
 }
 
 /// Gets the diffuse texture for this fragment, applies tint and frame animation
