@@ -10,6 +10,7 @@
 #include <AL/alc.h>
 #include <AL/alut.h>
 
+#include <cstdio>
 #include <map>
 #include <set>
 #else

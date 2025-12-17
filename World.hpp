@@ -157,7 +157,10 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
             if(!chunk_pos.y) {
                 glm::vec2 vstate;
                 f8::srandv(seed, vstate);
-
+                
+                uint32_t state;
+                f8::srand(glm::max(1U, seed + (unsigned int) (0xdeadbeef*f8::randfv(glm::vec2(chunk_pos.z, chunk_pos.z), vstate))), state);
+                
                 // For the sake of not mixing up different "y", the below code uses the xz of a vec3 with y=0 instead of a vec2 when needed
                 const auto sample = [&](const glm::vec3 pos) {
                     return 5.0f*f8::fbm(glm::vec2(pos.x, pos.z), 6, vstate) + 1.0f/16.0f;
@@ -221,9 +224,6 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
     
                 std::shared_ptr<Chunk> chunk = std::make_shared<Chunk>(block_shader, terrain_shader, chunk_pos, terrain, textures, vao, vbo);
 
-                uint32_t state;
-                f8::srand(seed + 0xdeadbeef*f8::randfv(vstate), state);
-
                 // Place trees
                 for(size_t i = 0; i < 3; i++) {
                     // Ensure trees go in center of chunk to prevent runaway generation
@@ -231,7 +231,7 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
                     const glm::vec3 pos = glm::vec3(x, chunk->getTerrainHeight(x + 0.5f, z + 0.5f), z);
                     // Check if ground mostly flat and empty
                     if(chunk->getTerrainHeight(pos.x, pos.z) - glm::floor(pos.y) < 0.5 && !chunk->getBlock(pos) && f8::randb(0.35)) {
-                        int height = f8::randi(5, 8);
+                        int height = f8::randi(5, 8, state);
 
                         // Place tree
                         for(int dy = 0; dy <= height; dy++) {
@@ -255,7 +255,7 @@ class Chunk final : public mcmodel::Drawable, NonCopyable  {
                             }
                         }
                         
-                        if(f8::randb(0.75)) {
+                        if(f8::randb(0.75, state)) {
                             break;
                         }
                     }
