@@ -739,8 +739,8 @@ void MCEngine::run() {
         this->_shader_globals->setUniform("eyePos", this->getPrimaryCamera()->getPosition());
 
         this->_shadows->update(
-            {8, 10, 8},
-            {0, -1, 0},
+            this->getPrimaryCamera()->getPosition(),
+            this->_world->getSunDirection(),
             *this->_pr,
             mcmodel::Lambda([&](glutils::RenderContext& ctx) {
                 ctx.bind(*this->_shaders.primary);

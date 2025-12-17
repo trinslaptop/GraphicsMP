@@ -40,10 +40,17 @@ float shadow() {
         return 0.0;
     }
 
-    float closest = texture(shadowTexture, proj.xy).r;
-    float current = proj.z;
+    float bias = max(0.008*(1.0 - dot(fNormal, getSunDirection())), 0.005);
 
-    return current - 0.008 > closest ? 1.0 : 0.0;
+    float shadow = 0.0;
+    vec2 texelSize = 1.0/textureSize(shadowTexture, 0);
+    for(int x = -1; x <= 1; x++) {
+        for(int y = -1; y <= 1; y++) {
+            shadow += proj.z - bias > texture(shadowTexture, proj.xy + texelSize*vec2(x, y)).r  ? 1.0 : 0.0;        
+        }
+    }
+
+    return min(shadow/9.0, getSunIntensity());
 }
 
 /// Gets the diffuse texture for this fragment, applies tint and frame animation
