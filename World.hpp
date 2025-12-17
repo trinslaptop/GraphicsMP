@@ -356,6 +356,11 @@ class World final : public mcmodel::Drawable, NonCopyable {
             return this->_time;
         }
 
+        /// See daylight.glsl
+        inline glm::vec3 getSunDirection() const {
+            return -glm::vec3(0.0f, sin(2.0f*glutils::PI*this->getTime()/this->_day_length), cos(2.0f*glutils::PI*this->getTime()/this->_day_length));
+        }
+
         /// Gets the minimum y value for this chunk, only meaningful for bottom chunk of world
         inline float getTerrainHeight(const float x, const float z) const {
             const auto iter = this->_chunks.find(Chunk::getChunkPos({x, 0, z}));
