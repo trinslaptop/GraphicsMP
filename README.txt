@@ -1,12 +1,6 @@
 Trin Wasinger (Idril)
 twasinger at mines dot edu
 
-Samvat Dangol (Fuyuzetsu Toyota)
-sdangol1 at mines dot edu
-
-Thuan Nguyen (Jon Snow)
-thuannguyen at mines dot edu
-
 Guild: Colorado School of Mines of Moria
 
 FP (2025-12-17)
@@ -284,23 +278,7 @@ and is lerped with the next as time goes on.
 
 =========================================================================
 
-# Contributions
-
-+ Samvat Dangol - Mac compatibility and bug fixes
-+ Thuan Nguyen - Windows compatibility, bug fixes, and leg swing improvements
-+ Trin Wasinger - Everything else
-
-=========================================================================
-
-# Class Stuff
-
-This was based on Trin's A4 and midterm project.
-
 This assignment took an insane amount of time. I have no idea exactly how much but ***MANY*** full days were spent on it.
-
-Which lab!? (5/10)
-
-This was very a fun assignment, and I think it looks awesome (10/10)!
 
 =========================================================================
 
